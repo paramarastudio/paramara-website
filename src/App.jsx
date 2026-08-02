@@ -78,7 +78,6 @@ export default function App() {
   
   // Multi-Step Upload & Scan State
   const [scanning, setScanning] = useState(false);
-  const [scanStep, setScanStep] = useState(1); // 1: Verify Upload, 2: Cloud Storage, 3: AI Vision OCR
   const [scannedPreview, setScannedPreview] = useState(null);
 
   // Admin User Form State
@@ -220,7 +219,7 @@ export default function App() {
     alert("Data profil admin berhasil diperbarui!");
   };
 
-  // Dual File analysis handler + Animated Multi-Step Upload Feedback
+  // INSTANT AI Vision Scanning Handler (NO SLOW CLOUD WAITING)
   const handleDualAnalysis = async () => {
     const filesToProcess = [fileSlot1, fileSlot2].filter(Boolean);
     if (filesToProcess.length === 0) {
@@ -229,32 +228,13 @@ export default function App() {
     }
 
     setScanning(true);
-    setScanStep(1); // Step 1: Verifikasi File Upload
 
     try {
-      await new Promise(r => setTimeout(r, 600));
-      setScanStep(2); // Step 2: Upload Cloud Storage Firebase
-
-      // Upload Screenshots to Firebase Storage if configured
-      let url1 = null;
-      let url2 = null;
-      if (firebaseStorage && fileSlot1) {
-        url1 = await uploadScreenshotToFirebase(fileSlot1);
-      }
-      if (firebaseStorage && fileSlot2) {
-        url2 = await uploadScreenshotToFirebase(fileSlot2);
-      }
-
-      setScanStep(3); // Step 3: AI Vision OCR Gemini
-
-      // Analyze with Gemini AI
+      // Analyze INSTANTLY with Gemini Vision AI using in-memory Base64
       const result = await analyzeShopeeScreenshots(filesToProcess, apiKey);
       if (!result.grossCommission) {
         result.grossCommission = Math.round((result.revenue || 0) * 0.1);
       }
-
-      if (url1) result.screenshotUrlTop = url1;
-      if (url2) result.screenshotUrlBottom = url2;
 
       setScannedPreview(result);
     } catch (err) {
@@ -264,17 +244,16 @@ export default function App() {
     }
   };
 
+  // Save Session & Asynchronously Upload to Firebase in background
   const handleSaveScannedSession = async () => {
     if (!scannedPreview) return;
 
-    // Save to Firebase Firestore DB if connected
-    if (firebaseStorage) {
-      await saveSessionToFirebase(scannedPreview);
-    }
+    const sessionToSave = { ...scannedPreview };
 
+    // 1. Immediately Save to Local State so UI updates instantly!
     setStudioData(prev => ({
       ...prev,
-      shopeeSessions: [scannedPreview, ...prev.shopeeSessions]
+      shopeeSessions: [sessionToSave, ...prev.shopeeSessions]
     }));
 
     setScannedPreview(null);
@@ -283,7 +262,25 @@ export default function App() {
     setPreviewUrl1(null);
     setPreviewUrl2(null);
     setModalType(null);
-    alert("Semua data metrik & komisi kotor berhasil disimpan ke Cloud!");
+
+    alert("✅ Metrik & Komisi Kotor Berhasil Disimpan!");
+
+    // 2. Asynchronously upload to Firebase Storage in background without blocking user UI
+    if (firebaseStorage) {
+      try {
+        if (fileSlot1) {
+          const url1 = await uploadScreenshotToFirebase(fileSlot1);
+          if (url1) sessionToSave.screenshotUrlTop = url1;
+        }
+        if (fileSlot2) {
+          const url2 = await uploadScreenshotToFirebase(fileSlot2);
+          if (url2) sessionToSave.screenshotUrlBottom = url2;
+        }
+        await saveSessionToFirebase(sessionToSave);
+      } catch (e) {
+        console.warn("Background Firebase upload finished with warning:", e.message);
+      }
+    }
   };
 
   const handleSaveEditedSession = () => {
@@ -1182,7 +1179,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal: DUAL SCREENSHOT SCANNER WITH VISUAL UPLOAD STATUS & ANIMATED PROGRESS */}
+      {/* Modal: DUAL SCREENSHOT SCANNER WITH INSTANT AI SCANNING & DEFERRED BACKGROUND FIREBASE UPLOAD */}
       {modalType === 'scan' && (
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 740 }}>
@@ -1199,13 +1196,13 @@ export default function App() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                   
-                  {/* Slot 1 Dropzone with Visual Upload Feedback */}
+                  {/* Slot 1 Dropzone */}
                   <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: fileSlot1 ? 'rgba(5, 150, 105, 0.05)' : '#F8FAF9', borderColor: fileSlot1 ? 'var(--secondary-emerald)' : 'var(--border-color)' }}>
                     {previewUrl1 ? (
                       <div style={{ textAlign: 'center' }}>
                         <img src={previewUrl1} alt="Screenshot 1" style={{ height: 90, borderRadius: 8, border: '1px solid var(--secondary-emerald)', objectFit: 'cover', marginBottom: 8 }} />
                         <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 1 Berhasil Diunggah!
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 1 Terpilih
                         </div>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{fileSlot1.name}</span>
                       </div>
@@ -1221,13 +1218,13 @@ export default function App() {
                     <input type="file" accept="image/*" onChange={handleFile1Select} style={{ display: 'none' }} />
                   </label>
 
-                  {/* Slot 2 Dropzone with Visual Upload Feedback */}
+                  {/* Slot 2 Dropzone */}
                   <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: fileSlot2 ? 'rgba(5, 150, 105, 0.05)' : '#F8FAF9', borderColor: fileSlot2 ? 'var(--secondary-emerald)' : 'var(--border-color)' }}>
                     {previewUrl2 ? (
                       <div style={{ textAlign: 'center' }}>
                         <img src={previewUrl2} alt="Screenshot 2" style={{ height: 90, borderRadius: 8, border: '1px solid var(--secondary-emerald)', objectFit: 'cover', marginBottom: 8 }} />
                         <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 2 Berhasil Diunggah!
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 2 Terpilih
                         </div>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{fileSlot2.name}</span>
                       </div>
@@ -1245,58 +1242,29 @@ export default function App() {
 
                 </div>
 
-                {/* Upload Status Banner */}
-                {(fileSlot1 || fileSlot2) && (
-                  <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.2)', padding: '10px 14px', borderRadius: 10, fontSize: '0.825rem', color: '#059669', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <CheckCircle style={{ width: 16, height: 16 }} />
-                    <span>{[fileSlot1, fileSlot2].filter(Boolean).length} Gambar Siap Diproses & Ekstraksi AI</span>
-                  </div>
-                )}
-
                 <button 
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
                   onClick={handleDualAnalysis}
                   disabled={!fileSlot1 && !fileSlot2}
                 >
-                  <Sparkles /> Mulai Scan AI Vision ([{[fileSlot1, fileSlot2].filter(Boolean).length}] Foto)
+                  <Sparkles /> Scan AI Vision Instan ([{[fileSlot1, fileSlot2].filter(Boolean).length}] Foto)
                 </button>
               </div>
             )}
 
-            {/* MULTI-STEP ANIMATED SCANNING LOADING UI */}
+            {/* INSTANT SCANNING INDICATOR */}
             {scanning && (
-              <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
                   <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(184, 142, 57, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--accent-gold-border)' }}>
-                    <Sparkles style={{ width: 36, height: 36, color: 'var(--accent-gold)', animation: 'spin 3s linear infinite' }} />
+                    <Sparkles style={{ width: 36, height: 36, color: 'var(--accent-gold)', animation: 'spin 2s linear infinite' }} />
                   </div>
                 </div>
-
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Sistem Sedang Memproses Screenshot HP Anda...</h3>
-
-                {/* STEP PROGRESS INDICATOR */}
-                <div style={{ maxWidth: 460, margin: '0 auto', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                  
-                  {/* Step 1 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', color: scanStep >= 1 ? '#059669' : 'var(--text-dim)', fontWeight: scanStep === 1 ? 700 : 500 }}>
-                    {scanStep > 1 ? <CheckCircle style={{ width: 18, height: 18 }} /> : <Loader2 style={{ width: 18, height: 18, animation: 'spin 1s linear infinite' }} />}
-                    <span>1. Memverifikasi & Mengompres Foto Screenshot ({[fileSlot1, fileSlot2].filter(Boolean).length} file)</span>
-                  </div>
-
-                  {/* Step 2 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', color: scanStep >= 2 ? '#059669' : 'var(--text-dim)', fontWeight: scanStep === 2 ? 700 : 500 }}>
-                    {scanStep > 2 ? <CheckCircle style={{ width: 18, height: 18 }} /> : (scanStep === 2 ? <Loader2 style={{ width: 18, height: 18, animation: 'spin 1s linear infinite' }} /> : <Cloud style={{ width: 18, height: 18 }} />)}
-                    <span>2. Mengunggah ke Cloud Storage Firebase (Permanen)</span>
-                  </div>
-
-                  {/* Step 3 */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', color: scanStep >= 3 ? '#059669' : 'var(--text-dim)', fontWeight: scanStep === 3 ? 700 : 500 }}>
-                    {scanStep === 3 ? <Loader2 style={{ width: 18, height: 18, animation: 'spin 1s linear infinite' }} /> : <Sparkles style={{ width: 18, height: 18 }} />}
-                    <span>3. Gemini AI Vision Membaca GMV, Durasi, CTR & Produk Terjual...</span>
-                  </div>
-
-                </div>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: 6 }}>Gemini AI Vision Membaca Foto Screenshot...</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Mengekstrak GMV, pesanan, CTR & produk terjual secara instan tanpa menunggu upload cloud.
+                </p>
               </div>
             )}
 
@@ -1306,8 +1274,8 @@ export default function App() {
                 <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.2)', padding: '12px 16px', borderRadius: 10, marginBottom: '1.25rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <CheckCircle style={{ width: 20, height: 20 }} />
                   <div>
-                    <strong style={{ fontSize: '0.9rem', display: 'block' }}>Upload & Ekstraksi AI Berhasil!</strong>
-                    <span style={{ fontSize: '0.775rem' }}>Semua metrik dan produk terjual dari foto screenshot telah dibaca dengan akurat.</span>
+                    <strong style={{ fontSize: '0.9rem', display: 'block' }}>Ekstraksi AI Berhasil! (Sangat Cepat)</strong>
+                    <span style={{ fontSize: '0.775rem' }}>Data telah dibaca. Klik tombol simpan untuk menyimpan metrik ke portal & mengunggah foto ke Firebase di latar belakang.</span>
                   </div>
                 </div>
                 
