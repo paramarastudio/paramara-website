@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shopee Live AI Tracker & Analytics - Paramara Studio</title>
+  <meta name="description" content="Platform pelacak dan pemroses data otomatis Shopee Live Streaming menggunakan Google Gemini Vision AI.">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="styles.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- ================= NAVBAR ================= -->
+    <nav class="navbar">
+      <div class="brand-wrapper">
+        <img id="brandLogoImg" class="brand-logo-img" src="" alt="Brand Logo" style="display: none;">
+        <div id="brandLogoFallback" class="brand-logo-fallback">P</div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h1 class="brand-title" id="brandTitleText">Paramara Studio</h1>
+            <span class="brand-badge" id="apiKeyStatusBadge">Demo Mode</span>
+          </div>
+          <p style="font-size: 0.75rem; color: var(--text-dim);">Shopee Live Stream AI Data Tracker</p>
+        </div>
+      </div>
+
+      <div class="nav-actions">
+        <button class="btn btn-secondary btn-sm" id="btnToggleTheme" title="Ganti Tema">🌓 Tema</button>
+        <button class="btn btn-secondary btn-sm" id="btnOpenApiKeyModal">🔑 Gemini Key</button>
+        <button class="btn btn-secondary btn-sm" id="btnOpenGitGuideModal">🐙 Git Multi-Account</button>
+        <button class="btn btn-primary" id="btnOpenScanModal">📸 Scan Screenshot AI</button>
+      </div>
+    </nav>
+
+    <!-- ================= TABS HEADER ================= -->
+    <div class="tabs-header">
+      <button class="tab-btn active" data-target="tabAnalytics">📊 Analytics & Summary</button>
+      <button class="tab-btn" data-target="tabDataSessions">📁 Data Sesi Live</button>
+      <button class="tab-btn" data-target="tabDemographics">🎯 Demografi & Audience</button>
+      <button class="tab-btn" data-target="tabBranding">🎨 Setting Branding Toko</button>
+      <button class="tab-btn" data-target="tabGitGuide">🐙 Panduan GitHub</button>
+    </div>
+
+    <!-- ================= TAB 1: ANALYTICS & SUMMARY ================= -->
+    <div id="tabAnalytics" class="tab-content">
+      
+      <!-- KPI Cards Banner -->
+      <div class="kpi-grid">
+        <div class="glass-card kpi-card" style="--kpi-accent: #00E676;">
+          <div class="kpi-title">Total Omset Penjualan</div>
+          <div class="kpi-value text-success" id="kpiTotalRevenue">Rp 0</div>
+          <div class="kpi-subtext">Penjualan dari sesi live</div>
+        </div>
+
+        <div class="glass-card kpi-card" style="--kpi-accent: #FF5722;">
+          <div class="kpi-title">Total Sesi Live</div>
+          <div class="kpi-value" id="kpiTotalSessions">0 Sesi</div>
+          <div class="kpi-subtext">Terekam & diproses AI</div>
+        </div>
+
+        <div class="glass-card kpi-card" style="--kpi-accent: #7C4DFF;">
+          <div class="kpi-title">Rata-Rata Omset / Sesi</div>
+          <div class="kpi-value" id="kpiAvgRevenue">Rp 0</div>
+          <div class="kpi-subtext">Performansi per stream</div>
+        </div>
+
+        <div class="glass-card kpi-card" style="--kpi-accent: #2979FF;">
+          <div class="kpi-title">Total Penonton (Views)</div>
+          <div class="kpi-value" id="kpiTotalViews">0</div>
+          <div class="kpi-subtext">Akumulasi ditonton</div>
+        </div>
+
+        <div class="glass-card kpi-card" style="--kpi-accent: #FFC107;">
+          <div class="kpi-title">Total Pesanan</div>
+          <div class="kpi-value text-warning" id="kpiTotalOrders">0 Pesanan</div>
+          <div class="kpi-subtext">Produk siap dikirim</div>
+        </div>
+      </div>
+
+      <!-- AI Executive Summary Banner -->
+      <div class="glass-card ai-summary-card">
+        <div class="ai-badge">✨ Gemini Vision AI Executive Summary</div>
+        <div class="ai-summary-text" id="aiExecutiveSummaryText">
+          Memuat ringkasan performa live streaming...
+        </div>
+      </div>
+
+      <!-- Dashboard Charts Grid -->
+      <div class="dashboard-grid">
+        <div class="glass-card chart-card">
+          <div class="chart-header">
+            <h3>📈 Tren Omset & Pesanan Shopee Live</h3>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">Performansi per Sesi</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="revenueTrendChart"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-card chart-card">
+          <div class="chart-header">
+            <h3>🚀 Sumber Penonton (Traffic Source)</h3>
+            <span style="font-size: 0.8rem; color: var(--text-dim);">Sesi Terbaru</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="trafficSourceChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ================= TAB 2: DATA SESI LIVE ================= -->
+    <div id="tabDataSessions" class="tab-content" style="display: none;">
+      <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h3>📁 Tabel Riwayat Sesi Live Streaming</h3>
+            <p style="font-size: 0.85rem; color: var(--text-muted);">Kelola, edit, dan ekspor data laporan Shopee Live.</p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="tableSearchInput" class="form-input" placeholder="🔍 Cari judul atau host..." style="width: 240px;">
+            <button class="btn btn-secondary btn-sm" id="btnExportCSV">📥 Ekspor CSV</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-wrapper glass-card">
+        <table>
+          <thead>
+            <tr>
+              <th>Sesi Live & Waktu</th>
+              <th>Durasi</th>
+              <th>Omset Penjualan</th>
+              <th>Pesanan</th>
+              <th>Total Penonton</th>
+              <th>CTR (%)</th>
+              <th>Aksi</th>
+            </tr>
+          </thead>
+          <tbody id="sessionsTableBody">
+            <!-- Dynamic rows -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ================= TAB 3: DEMOGRAFI AUDIENCE ================= -->
+    <div id="tabDemographics" class="tab-content" style="display: none;">
+      <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h3>🎯 Profil Penonton & Demografi Pembeli</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Hasil analisis demografi (Jenis Kelamin, Umur, Lokasi, Pengikut vs Bukan Pengikut) dari laporan Shopee Live.</p>
+      </div>
+
+      <div id="demographicsDetailsContainer">
+        <!-- Rendered dynamically from session data -->
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="glass-card chart-card">
+          <div class="chart-header">
+            <h3>👥 Distribusi Umur Penonton</h3>
+          </div>
+          <div class="chart-container">
+            <canvas id="ageDistributionChart"></canvas>
+          </div>
+        </div>
+
+        <div class="glass-card chart-card">
+          <div class="chart-header">
+            <h3>🚻 Gender Penonton</h3>
+          </div>
+          <div class="chart-container">
+            <canvas id="viewerGenderChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= TAB 4: SETTING BRANDING ================= -->
+    <div id="tabBranding" class="tab-content" style="display: none;">
+      <div class="glass-card" style="padding: 2rem; max-width: 680px; margin: 0 auto;">
+        <h3>🎨 Pengaturan Branding & Logo Toko</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sesuaikan nama toko, logo branding, dan skema warna aplikasi sesuai preferensi Anda.</p>
+
+        <div class="form-group">
+          <label class="form-label">Nama Studio / Toko</label>
+          <input type="text" id="settingStoreName" class="form-input" value="Paramara Studio">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Upload Logo Branding Toko</label>
+          <input type="file" id="inputLogoFile" accept="image/*" class="form-input">
+          <small style="color: var(--text-dim); display: block; margin-top: 4px;">Pilih file gambar logo (PNG / JPG / WEBP). Logo akan langsung diperbarui di Navbar header.</small>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Warna Utama (Primary Color Palette)</label>
+          <select id="settingPrimaryColor" class="form-select">
+            <option value="#FF5722">Shopee Orange (#FF5722)</option>
+            <option value="#00E676">Emerald Green (#00E676)</option>
+            <option value="#7C4DFF">Royal Purple (#7C4DFF)</option>
+            <option value="#2979FF">Electric Blue (#2979FF)</option>
+            <option value="#FFC107">Amber Gold (#FFC107)</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="btnSaveBranding" style="width: 100%; justify-content: center; margin-top: 1rem;">
+          💾 Simpan Branding Toko
+        </button>
+      </div>
+    </div>
+
+    <!-- ================= TAB 5: PANDUAN GITHUB MULTI-ACCOUNT ================= -->
+    <div id="tabGitGuide" class="tab-content" style="display: none;">
+      <div class="glass-card" style="padding: 2rem;">
+        <h3>🐙 Panduan Push ke Akun GitHub Lain (ParamaraStudio)</h3>
+        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+          Agar push repository ini tidak bentrok dengan akun GitHub utama Anda di Mac, jalankan perintah lokal di bawah ini.
+        </p>
+
+        <h4 style="color: var(--primary); margin-bottom: 0.5rem;">1. Konfigurasi Git Lokal yang Sudah Aktif di Repo Ini:</h4>
+        <div class="code-block">
+git config --local user.name "paramarastudio"
+git config --local user.email "paramarastudio@gmail.com"
+        </div>
+
+        <h4 style="color: var(--primary); margin-top: 1.5rem; margin-bottom: 0.5rem;">2. Cara Push via Personal Access Token (HTTPS):</h4>
+        <div class="code-block">
+git add .
+git commit -m "feat: initial commit Shopee Live AI Tracker"
+git branch -M main
+git remote add origin https://github.com/paramarastudio/shopee-live-ai-tracker.git
+git push -u origin main
+        </div>
+        <p style="font-size: 0.8rem; color: var(--text-dim);">Saat diminta password di Terminal, masukkan <strong>Personal Access Token (PAT)</strong> dari akun GitHub paramarastudio.</p>
+
+        <h4 style="color: var(--primary); margin-top: 1.5rem; margin-bottom: 0.5rem;">3. Verifikasi Konfigurasi Lokal Saat Ini:</h4>
+        <div class="code-block">
+git config --local -l
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <footer>
+      <p>© 2026 <strong>Paramara Studio</strong> — Shopee Live AI Data Tracker Powered by Google Gemini Vision AI</p>
+    </footer>
+
+  </div>
+
+  <!-- ================= MODAL: SCAN SCREENSHOT AI ================= -->
+  <div class="modal-overlay" id="scanModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📸 Scan Screenshot Laporan Shopee Live</h3>
+        <button class="close-btn close-modal-btn">&times;</button>
+      </div>
+
+      <!-- Dropzone -->
+      <div class="dropzone" id="screenshotDropzone">
+        <div class="dropzone-icon">📱</div>
+        <h4 style="margin-bottom: 6px;">Drag & Drop Screenshot Handphone di Sini</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Mendukung gambar tangkapan layar HP Shopee Live (JPG, PNG, WEBP)</p>
+        <button class="btn btn-primary btn-sm">Pilih Gambar File</button>
+        <input type="file" id="screenshotFileInput" accept="image/*" style="display: none;">
+      </div>
+
+      <!-- Loading State -->
+      <div id="scanLoadingState" style="display: none; text-align: center; padding: 3rem 1rem;">
+        <div style="font-size: 2.5rem; margin-bottom: 1rem;" class="animated-pulse">✨🤖✨</div>
+        <h4>Gemini Vision AI Sedang Membaca Screenshot...</h4>
+        <p style="font-size: 0.85rem; color: var(--text-muted);">Mengekstrak omset, durasi, CTR, produk terlaris, dan demografi...</p>
+      </div>
+
+      <!-- Preview & Edit Form -->
+      <div id="scanPreviewForm" style="display: none; margin-top: 1rem;">
+        <h4 style="color: var(--secondary); margin-bottom: 1rem;">✅ Ekstraksi AI Berhasil! Periksa & Konfirmasi Data:</h4>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <div class="form-group">
+            <label class="form-label">Judul Sesi Live</label>
+            <input type="text" id="previewTitle" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Omset Penjualan (Rp)</label>
+            <input type="number" id="previewRevenue" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Pesanan</label>
+            <input type="number" id="previewOrders" class="form-input">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Total Views (Penonton)</label>
+            <input type="number" id="previewViews" class="form-input">
+          </div>
+          <div class="form-group" style="grid-column: span 2;">
+            <label class="form-label">Durasi Live</label>
+            <input type="text" id="previewDuration" class="form-input" placeholder="01:27:11">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Rangkuman AI Insight</label>
+          <div id="previewAISummary" class="ai-summary-text" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;"></div>
+        </div>
+
+        <button class="btn btn-primary" id="btnSaveScannedSession" style="width: 100%; justify-content: center; margin-top: 1rem;">
+          💾 Simpan Data Sesi Live
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: GEMINI API KEY ================= -->
+  <div class="modal-overlay" id="apiKeyModalOverlay">
+    <div class="modal-card" style="max-width: 480px;">
+      <div class="modal-header">
+        <h3>🔑 Pengaturan Gemini API Key</h3>
+        <button class="close-btn close-modal-btn">&times;</button>
+      </div>
+
+      <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">
+        Masukkan Google Gemini API Key Anda untuk mengaktifkan pemrosesan OCR gambar screenshot secara langsung.
+      </p>
+
+      <div class="form-group">
+        <label class="form-label">Gemini API Key</label>
+        <input type="password" id="inputApiKey" class="form-input" placeholder="AIzaSy...">
+        <small style="color: var(--text-dim); display: block; margin-top: 4px;">Dapatkan API Key gratis di <a href="https://aistudio.google.com/" target="_blank" style="color: var(--primary);">Google AI Studio</a>.</small>
+      </div>
+
+      <button class="btn btn-primary" id="btnSaveApiKey" style="width: 100%; justify-content: center; margin-top: 1rem;">
+        💾 Simpan API Key
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DETAIL SESSION ================= -->
+  <div class="modal-overlay" id="detailModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>📊 Detail Sesi Live Streaming</h3>
+        <button class="close-btn close-modal-btn">&times;</button>
+      </div>
+      <div id="detailModalContent"></div>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: GIT GUIDE ================= -->
+  <div class="modal-overlay" id="gitGuideModalOverlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🐙 Panduan GitHub Multi-Account (ParamaraStudio)</h3>
+        <button class="close-btn close-modal-btn">&times;</button>
+      </div>
+      <div style="font-size: 0.9rem; line-height: 1.6;">
+        <p style="margin-bottom: 1rem;">Perintah yang telah dikonfigurasi di folder ini:</p>
+        <div class="code-block">
+git config --local user.name "paramarastudio"
+git config --local user.email "paramarastudio@gmail.com"
+        </div>
+        <p>Dengan konfigurasi `--local` ini, commit di folder `ParamaraStudio` akan selalu menggunakan akun `paramarastudio` tanpa mengubah konfigurasi akun utama Anda di laptop.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main JavaScript App Entry (Module) -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
