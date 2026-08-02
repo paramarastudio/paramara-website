@@ -4,7 +4,7 @@ import {
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
   ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor
+  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Sparkle
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -186,7 +186,7 @@ export default function App() {
   };
 
   // =========================================================================
-  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (Paramara Studio Core Ecosystem)
+  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (100% CONFIDENTIAL & SAFE FROM LEAKS)
   // =========================================================================
   if (viewMode === 'public') {
     return (
@@ -214,9 +214,9 @@ export default function App() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
               <nav style={{ display: 'flex', gap: '1.25rem', fontSize: '0.875rem', fontWeight: 600 }}>
-                <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Portfolio Ventures</a>
+                <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Layanan & Venture</a>
                 <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Live</a>
-                <a href="#lestari" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Lestari Ecosystem</a>
+                <a href="#lestari" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Lestari Edu-Tech</a>
                 <a href="#ijustfound" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>I Just Found (US)</a>
               </nav>
 
@@ -226,7 +226,7 @@ export default function App() {
                 </button>
               ) : (
                 <button className="btn btn-secondary btn-sm" onClick={() => setShowLoginModal(true)}>
-                  <Lock style={{ width: 15, height: 15 }} /> Admin Login
+                  <Lock style={{ width: 15, height: 15 }} /> Portal Admin Login
                 </button>
               )}
             </div>
@@ -240,10 +240,10 @@ export default function App() {
             <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Official Venture Ecosystem & Digital House
           </div>
           <h1 style={{ fontSize: '2.8rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.2, marginBottom: '1.25rem', letterSpacing: '-0.03em' }}>
-            Driving High-Converting Live Commerce, Sustainable Platforms & US Media Engines.
+            Driving High-Converting Live Commerce, Cultural Edu-Tech & International Media Engines.
           </h1>
           <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2.25rem', maxWidth: 780, margin: '0 auto 2.25rem' }}>
-            <strong>Paramara Studio</strong> is a digital venture builder overseeing specialized media and technology operations: Shopee Live Commerce management, the Lestari app ecosystem, and viral US-market product discovery engines.
+            <strong>Paramara Studio</strong> is a digital venture builder overseeing specialized media and technology operations: Shopee Live Commerce stream management, the Lestari traditional dance edu-tech platform, and viral US-market product discovery engines.
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
@@ -262,16 +262,16 @@ export default function App() {
           </div>
         </section>
 
-        {/* VENTURES GRID SECTION */}
+        {/* VENTURES GRID SECTION (SAFE & RAHASIA DARI LEAK DATA METRIK DENGAN PILAR BERSIH) */}
         <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '2rem 2rem 6rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Tiga Pilar Utama Paramara Studio</h2>
-            <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Operasi bisnis, riset platform digital, dan jaringan konten internasional.</p>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Operasi bisnis, edutech kebudayaan, dan jaringan media afiliasi internasional.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
             
-            {/* PILLAR 1: SHOPEE LIVE */}
+            {/* PILLAR 1: SHOPEE LIVE (PRIVASI KLIEN DIJAGA 100% TANPA ANGKA LEAK) */}
             <div className="glass-card" id="shopee" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--primary)' }}>
               <div>
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(8, 47, 38, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--primary)' }}>
@@ -280,51 +280,52 @@ export default function App() {
                 <span className="brand-badge" style={{ marginBottom: 8 }}>E-Commerce Operations</span>
                 <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live Streaming Management</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Operasi pemrosesan live streaming e-commerce berkinerja tinggi. Didukung oleh penyiaran host profesional, strategi GMV penjualan, dan integrasi presisi <strong>Gemini AI Vision Analytics</strong>.
+                  Layanan manajemen & produksi live streaming e-commerce profesional end-to-end. Menyediakan host berbakat, setup penyiaran konversi tinggi, strategi interaksi penonton, dan analitik optimasi performa penjualan.
                 </p>
                 
                 <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>📊 Capaian Metrik:</strong><br/>
-                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Rp 232.500+ GMV / Sesi</span><br/>
-                  <span>• 32.1% CTR Klik Tinggi</span><br/>
-                  <span>• Ekstraksi Presisi Screenshot AI</span>
+                  <strong>⭐ Layanan & Fitur Utama:</strong><br/>
+                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Penyiaran Host Streamer Profesional</span><br/>
+                  <span>• Strategi Konversi Penjualan & Promo Sesi</span><br/>
+                  <span>• Optimasi Analitik Performa Sesi Stream</span>
                 </div>
               </div>
 
               {isAuthenticated ? (
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setActiveTab('tabShopeeTracker'); }}>
-                  Buka AI Live Tracker <ArrowRight style={{ width: 16, height: 16 }} />
+                  Buka Portal Admin Tracker <ArrowRight style={{ width: 16, height: 16 }} />
                 </button>
               ) : (
                 <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowLoginModal(true)}>
-                  <Lock style={{ width: 15, height: 15 }} /> Login Admin Tracker
+                  <Lock style={{ width: 15, height: 15 }} /> Login Internal Admin Portal
                 </button>
               )}
             </div>
 
-            {/* PILLAR 2: LESTARI APP */}
+            {/* PILLAR 2: LESTARI EDU-TECH (DESKRIPSI PERSIS SESUAI APLIKASI) */}
             <div className="glass-card" id="lestari" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--secondary-emerald)' }}>
               <div>
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(5, 150, 105, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--secondary-emerald)' }}>
                   <Leaf style={{ width: 26, height: 26 }} />
                 </div>
                 <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)', marginBottom: 8 }}>
-                  On-Going Platform
+                  Edu-Tech Tari Tradisional Pertama di Indonesia
                 </span>
-                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestari App Ecosystem</h3>
+                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestarikan Tari Tradisional, Lebih Terarah & Interaktif</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Platform aplikasi digital modern berfokus pada keberlanjutan (sustainability), solusi lingkungan, dan pemberdayaan ekosistem digital. Saat ini dalam tahap aktif iterasi pengembangan.
+                  <strong>Lestari</strong> adalah platform pendamping belajar tari tradisional nusantara yang menghubungkan kurikulum terstruktur dengan koreksi presisi langsung dari guru ahli.
                 </p>
 
                 <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>🚀 Status Pengembang:</strong><br/>
-                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Deployment: lestari-app.vercel.app</span><br/>
-                  <span>• Tahap: Active Product Iteration</span>
+                  <strong>💃 Fitur & Ekosistem Lestari:</strong><br/>
+                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Kurikulum Belajar Tari Nusantara Terstruktur</span><br/>
+                  <span>• Umpan Balik & Koreksi Presisi Guru Ahli</span><br/>
+                  <span>• Platform Aplikasi Live: lestari-app.vercel.app</span>
                 </div>
               </div>
 
               <a href="https://lestari-app.vercel.app/" target="_blank" rel="noreferrer" className="btn btn-accent" style={{ width: '100%', justifyContent: 'center' }}>
-                Kunjungi Lestari App <ExternalLink style={{ width: 16, height: 16 }} />
+                Kunjungi Platform Lestari App <ExternalLink style={{ width: 16, height: 16 }} />
               </a>
             </div>
 
@@ -334,7 +335,7 @@ export default function App() {
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(184, 142, 57, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--accent-gold)' }}>
                   <Compass style={{ width: 26, height: 26 }} />
                 </div>
-                <span className="brand-badge" style={{ marginBottom: 8 }}>US Market & Media Hub</span>
+                <span className="brand-badge" style={{ marginBottom: 8 }}>US Consumer Market & Media Hub</span>
                 <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>@I Just Found (US Affiliate)</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
                   Kanal kurasi produk viral dan jaringan media afiliasi Amazon yang ditargetkan secara khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & platform media sosial.
@@ -343,7 +344,7 @@ export default function App() {
                 <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
                   <strong>🇺🇸 Target Segment & Channel:</strong><br/>
                   <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Target Market: United States (US)</span><br/>
-                  <span>• Amazon Affiliate Viral Product Engine</span>
+                  <span>• Amazon Affiliate Viral Product Discovery</span>
                 </div>
               </div>
 
@@ -414,7 +415,7 @@ export default function App() {
   }
 
   // =========================================================================
-  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD
+  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD (PRIVATE DATA ONLY)
   // =========================================================================
   return (
     <div className="admin-layout">
