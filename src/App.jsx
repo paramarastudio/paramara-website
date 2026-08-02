@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus
+  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ShieldCheck, Check
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -37,8 +37,9 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession' | 'addAdmin'
+  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession' | 'addAdmin' | 'editAdmin'
   const [editingSession, setEditingSession] = useState(null);
+  const [editingAdminUser, setEditingAdminUser] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
 
@@ -46,6 +47,9 @@ export default function App() {
   const [newAdminUsername, setNewAdminUsername] = useState("");
   const [newAdminFullName, setNewAdminFullName] = useState("");
   const [newAdminRole, setNewAdminRole] = useState("Admin Operasional");
+
+  // Branding Settings State
+  const [domainNameInput, setDomainNameInput] = useState("paramarastudio.com");
 
   // Dual Screenshot Files State
   const [fileSlot1, setFileSlot1] = useState(null);
@@ -79,7 +83,7 @@ export default function App() {
   // Derived Calculations
   const sessions = studioData.shopeeSessions || [];
   const projects = studioData.clientProjects || [];
-  const adminUsers = studioData.adminUsers || [];
+  const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
 
   const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
   const totalGrossCommission = sessions.reduce((acc, s) => acc + (s.grossCommission || 0), 0);
@@ -111,6 +115,21 @@ export default function App() {
     setNewAdminFullName("");
     setModalType(null);
     alert("Akun Admin berhasil ditambahkan!");
+  };
+
+  // Save Edit Admin User
+  const handleSaveEditedAdmin = (e) => {
+    e.preventDefault();
+    if (!editingAdminUser) return;
+
+    setStudioData(prev => ({
+      ...prev,
+      adminUsers: (prev.adminUsers || []).map(usr => usr.id === editingAdminUser.id ? editingAdminUser : usr)
+    }));
+
+    setEditingAdminUser(null);
+    setModalType(null);
+    alert("Data profil admin berhasil diperbarui!");
   };
 
   // Dual File analysis handler
@@ -332,7 +351,7 @@ export default function App() {
       {/* Main Content Area */}
       <main className="main-content">
         
-        {/* Top Header - CLEAN SINGLE PRIMARY BUTTON */}
+        {/* Top Header */}
         <div className="top-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button className="mobile-nav-toggle" onClick={() => setSidebarOpen(true)}>
@@ -436,11 +455,11 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Shopee Live AI Tracker - CLEAN BANNER WITHOUT DUPLICATE BUTTON */}
+        {/* Tab 2: Shopee Live AI Tracker */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ display: 'flex', alignItem: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                 Ekstraksi data otomatis laporan live streaming Shopee dari screenshot HP bagian atas (GMV & Interaksi) dan bagian bawah (Produk Terjual). Klik tombol <strong>"Input Shopee Live AI"</strong> di atas untuk menambah sesi baru.
               </p>
@@ -482,7 +501,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* DIRECT VISIBLE METRICS GRID INCLUDING GROSS COMMISSION */}
+                    {/* DIRECT VISIBLE METRICS GRID */}
                     <div style={{ 
                       display: 'grid', 
                       gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
@@ -580,13 +599,13 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB MANAJEMEN ADMIN (CRUD) */}
+        {/* TAB MANAJEMEN ADMIN (CRUD & EDIT SELF FOR SUPER ADMIN MALIKH) */}
         {activeTab === 'tabAdminUsers' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UserCheck style={{ color: 'var(--primary)' }} /> Manajemen Akun Admin Paramara Studio</h3>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Kelola hak akses pengguna internal admin portal (Tambah, Edit, & Hapus Akun Admin).</p>
+                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Kelola hak akses pengguna internal admin portal (Tambah, Edit Profil Admin, & Hapus Akun Admin).</p>
               </div>
               <button className="btn btn-primary" onClick={() => setModalType('addAdmin')}>
                 <UserPlus /> + Tambah Akun Admin
@@ -624,8 +643,13 @@ export default function App() {
                         </span>
                       </td>
                       <td>{usr.lastLogin}</td>
-                      <td>
-                        {usr.username !== 'abdumalikh' ? (
+                      <td style={{ display: 'flex', gap: '6px' }}>
+                        {/* EDIT BUTTON FOR SUPER ADMIN MALIKH AND ALL USERS */}
+                        <button className="btn btn-sm btn-secondary" style={{ color: 'var(--primary)' }} onClick={() => { setEditingAdminUser(usr); setModalType('editAdmin'); }}>
+                          <Edit3 style={{ width: 14, height: 14 }} /> Edit Profil
+                        </button>
+
+                        {usr.username !== 'abdumalikh' && (
                           <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
                             if (confirm(`Hapus akun admin ${usr.username}?`)) {
                               setStudioData(prev => ({ ...prev, adminUsers: prev.adminUsers.filter(a => a.id !== usr.id) }));
@@ -633,14 +657,101 @@ export default function App() {
                           }}>
                             <Trash2 style={{ width: 14, height: 14 }} /> Hapus
                           </button>
-                        ) : (
-                          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Utama</span>
                         )}
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* TAB DOMAIN & LOGO STUDIO */}
+        {activeTab === 'tabBranding' && (
+          <div className="tab-content">
+            <div className="glass-card" style={{ padding: '2rem', maxWidth: 680 }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
+                <Globe style={{ color: 'var(--primary)' }} /> Pengaturan Domain & Logo Paramara Studio
+              </h3>
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Sesuaikan nama domain utama studio dan identitas logo official portal admin.
+              </p>
+
+              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+                <img src="/assets/logo.png" alt="Logo Paramara Studio" style={{ width: 110, height: 110, borderRadius: 20, border: '2px solid var(--accent-gold)', boxShadow: '0 8px 24px rgba(184, 142, 57, 0.2)', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
+                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: 8 }}>Official Logo Emblem: Paramara Studio</p>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Domain Utama Studio</label>
+                <input className="form-input" value={domainNameInput} onChange={e => setDomainNameInput(e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Ganti File Logo Official (Opsional)</label>
+                <input type="file" accept="image/*" className="form-input" onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                      alert("Logo berhasil diperbarui!");
+                    };
+                    reader.readAsDataURL(file);
+                  }
+                }} />
+              </div>
+
+              <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={() => alert("Pengaturan Domain & Logo Studio Berhasil Disimpan!")}>
+                <Save /> Simpan Pengaturan Domain & Logo
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* TAB DEPLOYMENT GITHUB */}
+        {activeTab === 'tabGitGuide' && (
+          <div className="tab-content">
+            <div className="glass-card" style={{ padding: '2rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 8 }}>
+                <GitBranch style={{ color: 'var(--primary)' }} /> Status Deployment GitHub & Vercel
+              </h3>
+              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
+                Portal admin <strong>Paramara Studio</strong> secara aktif terhubung dengan repository GitHub dan ter-deploy otomatis di Vercel.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8 }}>octocat GitHub Repository:</h4>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                    <strong>Repository:</strong> paramarastudio/paramara-website<br/>
+                    <strong>Branch:</strong> main<br/>
+                    <strong>Author Config:</strong> paramarastudio &lt;paramarastudio@gmail.com&gt;
+                  </p>
+                  <a href="https://github.com/paramarastudio/paramara-website" target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary" style={{ marginTop: 6 }}>
+                    Buka Repository GitHub &rarr;
+                  </a>
+                </div>
+
+                <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8 }}>▲ Vercel Cloud Hosting:</h4>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                    <strong>Status:</strong> <span className="brand-badge" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>Connected & Active</span><br/>
+                    <strong>Live Domain:</strong> paramara-website.vercel.app<br/>
+                    <strong>Auto Deployment:</strong> Aktif Setiap Commit Push
+                  </p>
+                  <a href="https://paramara-website.vercel.app" target="_blank" rel="noreferrer" className="btn btn-sm btn-primary" style={{ marginTop: 6 }}>
+                    Buka Website Vercel &rarr;
+                  </a>
+                </div>
+              </div>
+
+              <h4 style={{ color: 'var(--primary)', marginBottom: '0.5rem', fontSize: '0.95rem' }}>Perintah Git Config Lokal Aktif di Folder Ini:</h4>
+              <div className="code-block">
+git config --local user.name "paramarastudio"
+git config --local user.email "paramarastudio@gmail.com"
+git remote set-url origin https://github.com/paramarastudio/paramara-website.git
+              </div>
             </div>
           </div>
         )}
@@ -726,6 +837,43 @@ export default function App() {
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
                 <Save /> Simpan Akun Admin
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: EDIT ADMIN USER (SUPER ADMIN MALIKH EDIT HIMSELF) */}
+      {modalType === 'editAdmin' && editingAdminUser && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Edit3 style={{ color: 'var(--primary)' }} /> Edit Profil Admin (@{editingAdminUser.username})</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={handleSaveEditedAdmin}>
+              <div className="form-group">
+                <label className="form-label">Nama Lengkap</label>
+                <input className="form-input" value={editingAdminUser.fullName} onChange={e => setEditingAdminUser({ ...editingAdminUser, fullName: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Email Terdaftar</label>
+                <input className="form-input" value={editingAdminUser.email} onChange={e => setEditingAdminUser({ ...editingAdminUser, email: e.target.value })} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Peran / Hak Akses</label>
+                <select className="form-select" value={editingAdminUser.role} onChange={e => setEditingAdminUser({ ...editingAdminUser, role: e.target.value })}>
+                  <option value="Super Admin">Super Admin</option>
+                  <option value="Admin Operasional">Admin Operasional</option>
+                  <option value="Host Streamer Manager">Host Streamer Manager</option>
+                </select>
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
+                <Save /> Simpan Perubahan Profil Admin
               </button>
             </form>
           </div>
