@@ -4,11 +4,12 @@ import {
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
   ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor
+  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Database
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
 import { analyzeShopeeScreenshots } from './services/geminiService';
+import { uploadScreenshotToSupabase, saveSessionToSupabase, fetchSessionsFromSupabase, supabase } from './services/supabaseService';
 
 export default function App() {
   // Authentication & View Mode State ('public' | 'admin')
@@ -59,7 +60,20 @@ export default function App() {
   const [fileSlot1, setFileSlot1] = useState(null);
   const [fileSlot2, setFileSlot2] = useState(null);
 
-  // Save Studio Data to LocalStorage
+  // Fetch Supabase Sessions on Mount if Connected
+  useEffect(() => {
+    async function loadSupabaseData() {
+      if (supabase) {
+        const cloudSessions = await fetchSessionsFromSupabase();
+        if (cloudSessions && cloudSessions.length > 0) {
+          setStudioData(prev => ({ ...prev, shopeeSessions: cloudSessions }));
+        }
+      }
+    }
+    loadSupabaseData();
+  }, []);
+
+  // Save Studio Data to LocalStorage as fallback
   useEffect(() => {
     localStorage.setItem("paramara_studio_admin_data_v2", JSON.stringify(studioData));
   }, [studioData]);
@@ -72,7 +86,7 @@ export default function App() {
       localStorage.setItem("paramara_auth_session", "true");
       setLoginError("");
       setShowLoginModal(false);
-      setViewMode('admin'); // Switch to Admin Portal
+      setViewMode('admin');
     } else {
       setLoginError("Username atau password tidak cocok. Silakan coba lagi.");
     }
@@ -147,7 +161,7 @@ export default function App() {
     alert("Data profil admin berhasil diperbarui!");
   };
 
-  // Dual File analysis handler
+  // Dual File analysis handler + Supabase Storage Upload
   const handleDualAnalysis = async () => {
     const filesToProcess = [fileSlot1, fileSlot2].filter(Boolean);
     if (filesToProcess.length === 0) {
@@ -157,10 +171,22 @@ export default function App() {
 
     setScanning(true);
     try {
+      // 1. Analyze with Gemini AI
       const result = await analyzeShopeeScreenshots(filesToProcess, apiKey);
       if (!result.grossCommission) {
         result.grossCommission = Math.round((result.revenue || 0) * 0.1);
       }
+
+      // 2. Upload Screenshots to Supabase Storage if configured
+      if (supabase && fileSlot1) {
+        const url1 = await uploadScreenshotToSupabase(fileSlot1);
+        if (url1) result.screenshotUrlTop = url1;
+      }
+      if (supabase && fileSlot2) {
+        const url2 = await uploadScreenshotToSupabase(fileSlot2);
+        if (url2) result.screenshotUrlBottom = url2;
+      }
+
       setScannedPreview(result);
     } catch (err) {
       alert("Gagal membaca screenshot: " + err.message);
@@ -169,17 +195,24 @@ export default function App() {
     }
   };
 
-  const handleSaveScannedSession = () => {
+  const handleSaveScannedSession = async () => {
     if (!scannedPreview) return;
+
+    // Save to Supabase DB if connected
+    if (supabase) {
+      await saveSessionToSupabase(scannedPreview);
+    }
+
     setStudioData(prev => ({
       ...prev,
       shopeeSessions: [scannedPreview, ...prev.shopeeSessions]
     }));
+
     setScannedPreview(null);
     setFileSlot1(null);
     setFileSlot2(null);
     setModalType(null);
-    alert("Semua data metrik & komisi kotor berhasil disimpan!");
+    alert("Semua data metrik & komisi kotor berhasil disimpan ke Cloud!");
   };
 
   const handleSaveEditedSession = () => {
@@ -194,7 +227,7 @@ export default function App() {
   };
 
   // =========================================================================
-  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (100% SAFE & CONFIDENTIAL)
+  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE
   // =========================================================================
   if (viewMode === 'public') {
     return (
@@ -439,7 +472,7 @@ export default function App() {
   }
 
   // =========================================================================
-  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD (SINGLE CLEAN BUTTON)
+  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD
   // =========================================================================
   return (
     <div className="admin-layout">
@@ -463,6 +496,9 @@ export default function App() {
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: 6 }}>
               <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)' }}>
                 Hi Malikh
+              </span>
+              <span className="brand-badge" style={{ background: supabase ? 'rgba(5, 150, 105, 0.1)' : 'rgba(184, 142, 57, 0.1)', color: supabase ? '#059669' : 'var(--accent-gold)' }}>
+                {supabase ? "Cloud Storage Active" : "Local Storage Mode"}
               </span>
             </div>
           </div>
@@ -655,6 +691,11 @@ export default function App() {
                           <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                             <span>🕒 Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
                             <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
+                            {s.screenshotUrlTop && (
+                              <a href={s.screenshotUrlTop} target="_blank" rel="noreferrer" style={{ color: 'var(--secondary-emerald)', textDecoration: 'none', fontWeight: 600 }}>
+                                📁 Cloud File 1 ↗
+                              </a>
+                            )}
                           </div>
                         </div>
 
@@ -878,41 +919,59 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB DEPLOYMENT GITHUB */}
+        {/* TAB DEPLOYMENT GITHUB & SUPABASE CLOUD STATUS */}
         {activeTab === 'tabGitGuide' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '2rem' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 8 }}>
-                <GitBranch style={{ color: 'var(--primary)' }} /> Status Deployment GitHub & Vercel
+                <GitBranch style={{ color: 'var(--primary)' }} /> Status Cloud Architecture (GitHub, Vercel & Supabase)
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                Portal admin <strong>Paramara Studio</strong> secara aktif terhubung dengan repository GitHub dan ter-deploy otomatis di Vercel.
+                Portal admin <strong>Paramara Studio</strong> terhubung dengan Cloud Infrastructure untuk penyimpanan abadi jangka panjang.
               </p>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
+                
+                {/* GitHub */}
                 <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8 }}>octocat GitHub Repository:</h4>
                   <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                    <strong>Repository:</strong> paramarastudio/paramara-website<br/>
+                    <strong>Repo:</strong> paramarastudio/paramara-website<br/>
                     <strong>Branch:</strong> main<br/>
-                    <strong>Author Config:</strong> paramarastudio &lt;paramarastudio@gmail.com&gt;
+                    <strong>Config:</strong> paramarastudio@gmail.com
                   </p>
                   <a href="https://github.com/paramarastudio/paramara-website" target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary" style={{ marginTop: 6 }}>
                     Buka Repository GitHub &rarr;
                   </a>
                 </div>
 
+                {/* Vercel */}
                 <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8 }}>▲ Vercel Cloud Hosting:</h4>
                   <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
                     <strong>Status:</strong> <span className="brand-badge" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>Connected & Active</span><br/>
                     <strong>Live Domain:</strong> paramara-website.vercel.app<br/>
-                    <strong>Auto Deployment:</strong> Aktif Setiap Commit Push
+                    <strong>Auto Deployment:</strong> Commit Push
                   </p>
                   <a href="https://paramara-website.vercel.app" target="_blank" rel="noreferrer" className="btn btn-sm btn-primary" style={{ marginTop: 6 }}>
                     Buka Website Vercel &rarr;
                   </a>
                 </div>
+
+                {/* Supabase Storage */}
+                <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <Database style={{ width: 16, height: 16 }} /> Supabase Storage Cloud:
+                  </h4>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
+                    <strong>Status Integrasi:</strong> <span className="brand-badge" style={{ background: supabase ? 'rgba(5,150,105,0.1)' : 'rgba(184,142,57,0.1)', color: supabase ? '#059669' : 'var(--accent-gold)' }}>{supabase ? "Connected (Cloud Storage)" : "Siap Pasang VITE_SUPABASE_URL"}</span><br/>
+                    <strong>Fungsi:</strong> Simpan Screenshot HP & Data Database Permanen Jangka Panjang
+                  </p>
+                  <a href="https://supabase.com" target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary" style={{ marginTop: 6 }}>
+                    Buka Dashboard Supabase &rarr;
+                  </a>
+                </div>
+
               </div>
             </div>
           </div>
