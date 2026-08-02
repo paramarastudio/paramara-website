@@ -40,7 +40,6 @@ function initStudioData() {
     studioData = INITIAL_STUDIO_DATA;
   }
 
-  // Force logo URL to assets/logo.png
   if (!studioData.studioInfo) studioData.studioInfo = INITIAL_STUDIO_DATA.studioInfo;
   studioData.studioInfo.logoUrl = "assets/logo.png";
   saveStudioData();
@@ -62,7 +61,6 @@ function applyStudioBranding() {
   const brandTitleEl = document.getElementById("brandTitleText");
   if (brandTitleEl) brandTitleEl.textContent = "paramarastudio";
 
-  // Force image src to assets/logo.png with cache buster
   const logoImgEl = document.getElementById("brandLogoImg");
   if (logoImgEl) {
     logoImgEl.src = "assets/logo.png?v=" + Date.now();
@@ -195,6 +193,23 @@ function renderSchedulesTable() {
 // Event Listeners & Modals Logic
 // ==========================================
 function setupEventListeners() {
+  // Mobile Sidebar Drawer Toggle
+  const sidebar = document.getElementById("mainSidebar");
+  const backdrop = document.getElementById("sidebarBackdrop");
+  const btnToggle = document.getElementById("btnToggleMobileSidebar");
+
+  function closeMobileSidebar() {
+    sidebar?.classList.remove("open");
+    backdrop?.classList.remove("active");
+  }
+
+  btnToggle?.addEventListener("click", () => {
+    sidebar?.classList.toggle("open");
+    backdrop?.classList.toggle("active");
+  });
+
+  backdrop?.addEventListener("click", closeMobileSidebar);
+
   // Navigation Tabs in Sidebar
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
@@ -206,12 +221,12 @@ function setupEventListeners() {
       const targetEl = document.getElementById(targetId);
       if (targetEl) targetEl.style.display = "block";
 
-      // Update Top Header Title
       if (VIEW_TITLES[targetId]) {
         document.getElementById("viewHeaderTitle").textContent = VIEW_TITLES[targetId].title;
         document.getElementById("viewHeaderSub").textContent = VIEW_TITLES[targetId].sub;
       }
 
+      closeMobileSidebar();
       refreshIcons();
     });
   });

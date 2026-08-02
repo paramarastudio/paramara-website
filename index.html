@@ -14,10 +14,13 @@
 </head>
 <body>
 
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div class="sidebar-backdrop" id="sidebarBackdrop"></div>
+
   <div class="admin-layout">
     
     <!-- ================= VERTICAL SIDEBAR ================= -->
-    <aside class="sidebar">
+    <aside class="sidebar" id="mainSidebar">
       <div>
         <div class="sidebar-header">
           <div class="brand-wrapper">
@@ -56,9 +59,14 @@
       
       <!-- Top Header Bar -->
       <div class="top-header">
-        <div class="header-title">
-          <h2 id="viewHeaderTitle">Executive Dashboard & Operations</h2>
-          <p id="viewHeaderSub">Ikhtisar statistik pendapatan studio, proyek aktif, dan performa Shopee Live streaming.</p>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <button class="mobile-nav-toggle" id="btnToggleMobileSidebar" aria-label="Toggle Mobile Navigation Menu">
+            <i data-lucide="menu"></i>
+          </button>
+          <div class="header-title">
+            <h2 id="viewHeaderTitle">Executive Dashboard & Operations</h2>
+            <p id="viewHeaderSub">Ikhtisar statistik pendapatan studio, proyek aktif, dan performa Shopee Live streaming.</p>
+          </div>
         </div>
 
         <button class="btn btn-primary" id="btnOpenScanModal"><i data-lucide="camera"></i> Input Shopee Live AI</button>
