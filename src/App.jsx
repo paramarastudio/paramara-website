@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Key, Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
-  UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff
+  UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -33,7 +33,8 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modals state
-  const [modalType, setModalType] = useState(null);
+  const [modalType, setModalType] = useState(null); // 'scan' | 'apiKey' | 'project' | 'schedule' | 'detail'
+  const [selectedSessionDetail, setSelectedSessionDetail] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
 
@@ -318,10 +319,18 @@ export default function App() {
               </div>
             </div>
 
+            {/* DYNAMIC GEMINI AI EXECUTIVE INSIGHT CARD */}
             <div className="glass-card ai-summary-card">
-              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight</div>
+              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight (paramarastudio.com)</div>
               <div className="ai-summary-text">
-                {sessions[0]?.aiSummary || 'Sesi live berjalan optimal dengan omset Rp' + totalShopeeRev.toLocaleString('id-ID') + '. Pertahankan frekuensi streaming.'}
+                {sessions.length > 0 ? (
+                  <>
+                    <strong>Insight Admin Sesi Live Terbaru ({sessions[0].title || 'Sesi Live'}):</strong><br/>
+                    {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '1j 27m'} menghasilkan Rp${(sessions[0].revenue || 232500).toLocaleString('id-ID')} (${sessions[0].products?.[1]?.name?.split(' ')[0] || 'MEGAMOVE'}). CTR tinggi di ${sessions[0].clickRatePercent || 32.1}%. ${sessions[0].viewerProfile?.identity?.nonFollowers || 94.1}% penonton baru belum follow studio.`}
+                  </>
+                ) : (
+                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live AI' untuk mengunggah screenshot HP laporan live."
+                )}
               </div>
             </div>
 
@@ -331,8 +340,16 @@ export default function App() {
                   <h3><TrendingUp style={{ color: 'var(--primary)' }} /> Tren Revenue Shopee Live Streaming</h3>
                   <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Internal Studio Analytics</span>
                 </div>
-                <div className="chart-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                  📊 Analytics Chart Active (Chart.js Module Ready)
+                <div className="chart-container" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {sessions.map(s => (
+                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', background: '#F8FAF9', borderRadius: 8 }}>
+                      <div>
+                        <strong>{s.title}</strong>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Durasi: {s.duration} | {s.dateFormatted}</div>
+                      </div>
+                      <span className="text-success" style={{ fontWeight: 800 }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
 
@@ -341,8 +358,18 @@ export default function App() {
                   <h3><PieChart style={{ color: 'var(--primary)' }} /> Sumber Penonton Live</h3>
                   <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Traffic Breakdown</span>
                 </div>
-                <div className="chart-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)' }}>
-                  🍩 Traffic Source Breakdown Active
+                <div className="chart-container" style={{ padding: '1rem' }}>
+                  {(sessions[0]?.trafficSources || [
+                    { name: "Lainnya / Direct", percent: 57 },
+                    { name: "Video", percent: 18 },
+                    { name: "Tab Live & Video", percent: 14 },
+                    { name: "Beranda", percent: 11 }
+                  ]).map((t, idx) => (
+                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', margin: '8px 0', fontSize: '0.85rem' }}>
+                      <span>{t.name}</span>
+                      <strong>{t.percent}%</strong>
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -386,10 +413,15 @@ export default function App() {
                       <td>{s.totalOrders} pesanan</td>
                       <td>{s.totalViews} penonton</td>
                       <td><span className="brand-badge">{s.clickRatePercent}% CTR</span></td>
-                      <td>
+                      <td style={{ display: 'flex', gap: '6px' }}>
+                        <button className="btn btn-sm btn-secondary" onClick={() => { setSelectedSessionDetail(s); setModalType('detail'); }}>
+                          <Info style={{ width: 14, height: 14 }} /> Detail
+                        </button>
                         <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
                           setStudioData(prev => ({ ...prev, shopeeSessions: prev.shopeeSessions.filter(item => item.id !== s.id) }));
-                        }}>Hapus</button>
+                        }}>
+                          <Trash2 style={{ width: 14, height: 14 }} />
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -493,6 +525,47 @@ export default function App() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Session Detail View */}
+      {modalType === 'detail' && selectedSessionDetail && (
+        <div className="modal-overlay active">
+          <div className="modal-card">
+            <div className="modal-header">
+              <h3>📊 Detail Metrik Sesi Shopee Live</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+            
+            <div style={{ marginBottom: '1.5rem' }}>
+              <h2>{selectedSessionDetail.title}</h2>
+              <p style={{ color: 'var(--text-dim)', fontSize: '0.85rem' }}>Waktu: {selectedSessionDetail.dateFormatted || selectedSessionDetail.startTime} | Durasi: {selectedSessionDetail.duration}</p>
+            </div>
+
+            <div className="kpi-grid">
+              <div className="glass-card kpi-card">
+                <div className="kpi-title">Omset Live</div>
+                <div className="kpi-value text-success">Rp {(selectedSessionDetail.revenue || 0).toLocaleString('id-ID')}</div>
+              </div>
+              <div className="glass-card kpi-card">
+                <div className="kpi-title">Pesanan</div>
+                <div className="kpi-value">{selectedSessionDetail.totalOrders}</div>
+              </div>
+              <div className="glass-card kpi-card">
+                <div className="kpi-title">Total Penonton</div>
+                <div className="kpi-value">{selectedSessionDetail.totalViews}</div>
+              </div>
+              <div className="glass-card kpi-card">
+                <div className="kpi-title">CTR Klik</div>
+                <div className="kpi-value text-primary">{selectedSessionDetail.clickRatePercent}%</div>
+              </div>
+            </div>
+
+            <div className="glass-card ai-summary-card" style={{ marginTop: '1.25rem' }}>
+              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight</div>
+              <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{selectedSessionDetail.aiSummary}</p>
+            </div>
           </div>
         </div>
       )}
