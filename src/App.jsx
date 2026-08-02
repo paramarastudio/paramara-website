@@ -2,14 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Key, Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
-  CalendarPlus, UploadCloud, File, CheckCircle, Save, Menu, X, ArrowRight
+  UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
 import { analyzeShopeeScreenshot } from './services/geminiService';
 
 export default function App() {
-  const [mode, setMode] = useState('admin'); // 'admin' | 'public'
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem("paramara_auth_session") === "true";
+  });
+  
+  const [loginUsername, setLoginUsername] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loginError, setLoginError] = useState("");
+
+  // Portal Navigation State
   const [activeTab, setActiveTab] = useState('tabAnalytics');
   const [studioData, setStudioData] = useState(() => {
     const saved = localStorage.getItem("paramara_studio_admin_data");
@@ -27,15 +37,34 @@ export default function App() {
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
 
-  // Save to LocalStorage
+  // Save Studio Data to LocalStorage
   useEffect(() => {
     localStorage.setItem("paramara_studio_admin_data", JSON.stringify(studioData));
   }, [studioData]);
 
+  // Handle Login Authentication
+  const handleLoginSubmit = (e) => {
+    e.preventDefault();
+    if (loginUsername.trim() === "abdumalikh" && loginPassword === "Ygj80kq91j!") {
+      setIsAuthenticated(true);
+      localStorage.setItem("paramara_auth_session", "true");
+      setLoginError("");
+    } else {
+      setLoginError("Username atau password tidak cocok. Silakan coba lagi.");
+    }
+  };
+
+  // Handle Logout
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem("paramara_auth_session");
+    setLoginUsername("");
+    setLoginPassword("");
+  };
+
   // Derived Calculations
   const sessions = studioData.shopeeSessions || [];
   const projects = studioData.clientProjects || [];
-  const schedules = studioData.liveSchedules || [];
 
   const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
@@ -69,6 +98,117 @@ export default function App() {
     alert("Data sesi Shopee Live berhasil diinput ke portal admin!");
   };
 
+  // ==========================================
+  // UNAUTHENTICATED LOGIN SCREEN
+  // ==========================================
+  if (!isAuthenticated) {
+    return (
+      <div style={{ 
+        minHeight: '100vh', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'center', 
+        background: 'var(--bg-main)',
+        padding: '1.5rem'
+      }}>
+        <div className="glass-card" style={{ 
+          maxWidth: 420, 
+          width: '100%', 
+          padding: '2.5rem 2rem',
+          borderRadius: 20,
+          boxShadow: '0 20px 40px rgba(8, 47, 38, 0.08)'
+        }}>
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <img src="assets/logo.png" alt="Paramara Studio" style={{ 
+              width: 84, 
+              height: 84, 
+              borderRadius: 16, 
+              border: '2px solid var(--accent-gold)', 
+              boxShadow: '0 8px 20px rgba(184, 142, 57, 0.2)',
+              marginBottom: '1rem'
+            }} />
+            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 4 }}>paramarastudio.com</h1>
+            <span className="brand-badge" style={{ fontSize: '0.65rem' }}>INTERNAL ADMIN PORTAL ACCESS</span>
+          </div>
+
+          <form onSubmit={handleLoginSubmit}>
+            {loginError && (
+              <div style={{ 
+                background: 'rgba(211, 47, 47, 0.08)', 
+                color: '#D32F2F', 
+                padding: '10px 14px', 
+                borderRadius: 10, 
+                fontSize: '0.825rem', 
+                marginBottom: '1.25rem',
+                border: '1px solid rgba(211, 47, 47, 0.2)',
+                fontWeight: 600
+              }}>
+                {loginError}
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <User style={{ width: 15, height: 15 }} /> Username
+              </label>
+              <input 
+                type="text" 
+                className="form-input" 
+                placeholder="Masukkan username admin"
+                value={loginUsername}
+                onChange={e => setLoginUsername(e.target.value)}
+                required
+              />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1.75rem' }}>
+              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Lock style={{ width: 15, height: 15 }} /> Password
+              </label>
+              <div style={{ position: 'relative' }}>
+                <input 
+                  type={showPassword ? "text" : "password"}
+                  className="form-input" 
+                  placeholder="Masukkan password admin"
+                  value={loginPassword}
+                  onChange={e => setLoginPassword(e.target.value)}
+                  required
+                />
+                <button 
+                  type="button"
+                  style={{
+                    position: 'absolute',
+                    right: 12,
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--text-dim)',
+                    cursor: 'pointer'
+                  }}
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '0.95rem' }}>
+              <Lock style={{ width: 18, height: 18 }} /> Masuk ke Admin Portal
+            </button>
+          </form>
+
+          <p style={{ textAlign: 'center', fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: '2rem' }}>
+            © 2026 <strong>paramarastudio.com</strong> — Authorized Access Only
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // ==========================================
+  // AUTHENTICATED ADMIN PORTAL DASHBOARD
+  // ==========================================
   return (
     <div className="admin-layout">
       
@@ -90,9 +230,8 @@ export default function App() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-              <span className="brand-badge">INTERNAL PORTAL</span>
-              <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.08)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.25)' }}>
-                {apiKey ? 'API Active' : 'Demo Mode'}
+              <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)' }}>
+                User: abdumalikh
               </span>
             </div>
           </div>
@@ -123,8 +262,8 @@ export default function App() {
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={() => setModalType('apiKey')}>
             <Key /> Gemini API Key
           </button>
-          <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={() => setModalType('git')}>
-            <Terminal /> Git Config
+          <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', color: '#D32F2F' }} onClick={handleLogout}>
+            <LogOut /> Keluar / Logout
           </button>
         </div>
       </aside>
@@ -140,7 +279,7 @@ export default function App() {
             </button>
             <div className="header-title">
               <h2>Executive Dashboard & Studio Operations</h2>
-              <p>Ikhtisar statistik pendapatan studio, proyek aktif, dan performa Shopee Live streaming.</p>
+              <p>Selamat datang kembali, <strong>abdumalikh</strong>! Ikhtisar pendapatan dan aktivitas studio.</p>
             </div>
           </div>
 
@@ -305,7 +444,7 @@ export default function App() {
 
         {/* Footer */}
         <footer>
-          <p>© 2026 <strong>paramarastudio.com</strong> — Internal Admin Portal & Operations Hub</p>
+          <p>© 2026 <strong>paramarastudio.com</strong> — Authorized Admin Portal for abdumalikh</p>
         </footer>
       </main>
 
