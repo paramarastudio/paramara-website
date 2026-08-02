@@ -6,18 +6,18 @@ export const INITIAL_STUDIO_DATA = {
   studioInfo: {
     name: "paramarastudio.com",
     tagline: "Internal Admin & Operations Portal",
-    logoUrl: "assets/logo.png",
+    logoUrl: "/assets/logo.png",
     primaryColor: "#082F26",
     themeMode: "light"
   },
 
-  // 1. Shopee Live Streams Analytics
+  // 1. Shopee Live Streams Analytics from HP Screenshot
   shopeeSessions: [
     {
       id: "session_001",
       title: "APOTEK 24 JAM DISC UP TO 50%",
       host: "Apotek Official Host",
-      startTime: "2026-08-01T21:37:00",
+      startTime: "01-08-2026 21:37",
       duration: "01:27:11",
       dateFormatted: "01-08-2026 21:37",
       
@@ -39,8 +39,7 @@ export const INITIAL_STUDIO_DATA = {
       trafficSources: [
         { name: "Video", percent: 18.0 },
         { name: "Tab Live & Video", percent: 14.0 },
-        { name: "Beranda", percent: 11.0 },
-        { name: "Lainnya / Direct", percent: 57.0 }
+        { name: "Beranda", percent: 11.0 }
       ],
 
       products: [
@@ -52,14 +51,14 @@ export const INITIAL_STUDIO_DATA = {
           cartAdds: 2
         },
         {
-          name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL...",
+          name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI",
           price: 250000,
           revenue: 232500,
           clicks: 2,
           cartAdds: 1
         },
         {
-          name: "NOW Supplements, Vitamin D-3 1000 IU",
+          name: "NOW Supplements, Vitamin D-3 1000 IU, 180 Softgels",
           price: 199900,
           revenue: 0,
           clicks: 1,
@@ -67,32 +66,7 @@ export const INITIAL_STUDIO_DATA = {
         }
       ],
 
-      viewerProfile: {
-        gender: { male: 47.1, female: 41.2, unknown: 11.8 },
-        identity: { followers: 5.9, nonFollowers: 94.1 },
-        ageDistribution: [
-          { range: "18-24", percent: 6.0 },
-          { range: "25-34", percent: 29.0 },
-          { range: "35-44", percent: 29.0 },
-          { range: "45+", percent: 6.0 },
-          { range: "Tdk Diketahui", percent: 29.0 }
-        ]
-      },
-
-      buyerProfile: {
-        gender: { male: 50.0, female: 50.0 },
-        identity: { followers: 0.0, nonFollowers: 100.0 },
-        ageDistribution: [
-          { range: "35-44", percent: 50.0 },
-          { range: "45+", percent: 50.0 }
-        ],
-        locations: [
-          { city: "KOTA TANGERANG", percent: 50.0 },
-          { city: "KOTA SURABAYA", percent: 50.0 }
-        ]
-      },
-
-      aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE). CTR tinggi di 32.1%. 94.1% penonton baru belum follow studio."
+      aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%. 28 total penonton dengan rata-rata durasi 00:00:50."
     }
   ],
 

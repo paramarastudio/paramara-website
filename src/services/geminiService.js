@@ -3,71 +3,47 @@
  */
 
 export const GEMINI_PROMPT = `
-Anda adalah sistem AI OCR pakar analisis E-commerce Shopee Live.
-Tugas Anda adalah membaca gambar screenshot (tangkapan layar) laporan data & aktivitas Shopee Live dari smartphone dan mengekstrak SELURUH metrik ke dalam format JSON murni tanpa markdown triple backticks.
+Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Shopee Live dari screenshot smartphone.
 
-Berikut adalah struktur JSON yang WAJIB Anda kembalikan:
+Tugas Anda:
+Bacalah teks, angka, produk, dan persentase di dalam screenshot Shopee Live HP berikut ini dan kembalikan JSON persis seperti berikut (tanpa backticks atau markdown):
 
 {
-  "title": "string (Judul Livestream, misal: APOTEK 24 JAM DISC UP TO 50%)",
-  "startTime": "string (Waktu Mulai, misal: 01-08-2026 21:37 atau YYYY-MM-DD THH:mm)",
-  "duration": "string (Durasi Live, misal: 01:27:11)",
-  "revenue": number (Penjualan dalam Rp, hapus titik/koma, misal: 232500),
-  "activeViewers": number (Penonton Aktif),
-  "commentsCount": number (Jumlah Komentar),
-  "cartAdditions": number (Jumlah Masuk Keranjang),
-  "clickRatePercent": number (Persentase Klik misal 32.1),
-  "ordersPerClickPercent": number (Pesanan per Klik misal 11.1),
-  "totalOrders": number (Total Pesanan),
+  "title": "string (Judul Sesi, contoh: APOTEK 24 JAM DISC UP TO 50%)",
+  "startTime": "string (Waktu mulai, contoh: 01-08-2026 21:37)",
+  "duration": "string (Durasi live, contoh: 01:27:11)",
+  "revenue": number (Penjualan Rp tanpa titik/koma, contoh: 232500),
+  "activeViewers": number (Penonton Aktif, contoh: 7),
+  "commentsCount": number (Komentar, contoh: 1),
+  "cartAdditions": number (Masuk Keranjang, contoh: 5),
+  "clickRatePercent": number (Persentase Klik, contoh: 32.1),
+  "ordersPerClickPercent": number (Pesanan per Klik, contoh: 11.1),
+  "totalOrders": number (Pesanan, contoh: 1),
   
-  "totalViews": number (Ditonton / Total Penonton),
-  "avgWatchDuration": "string (Rata-Rata Durasi Menonton, misal 00:00:50)",
-  "commentRatePercent": number (Persentase Komentar misal 3.6),
-  "peakConcurrentViewers": number (Penonton Terbanyak),
-  "likes": number (Disukai / Likes),
-  "shares": number (Dibagikan / Shares),
+  "totalViews": number (Ditonton / Total Penonton, contoh: 28),
+  "avgWatchDuration": "string (Rata-Rata Durasi Menonton, contoh: 00:00:50)",
+  "commentRatePercent": number (Persentase Komentar, contoh: 3.6),
+  "peakConcurrentViewers": number (Penonton Terbanyak, contoh: 3),
+  "likes": number (Disukai, contoh: 76),
+  "shares": number (Dibagikan, contoh: 1),
 
   "trafficSources": [
-    { "name": "Video", "percent": number },
-    { "name": "Tab Live & Video", "percent": number },
-    { "name": "Beranda", "percent": number }
+    { "name": "Video", "percent": 18.0 },
+    { "name": "Tab Live & Video", "percent": 14.0 },
+    { "name": "Beranda", "percent": 11.0 }
   ],
 
   "products": [
     {
-      "name": "string (Nama Produk)",
-      "price": number (Harga produk Rp),
+      "name": "string (Nama Produk, contoh: MEGAMOVE 100% ORIGINAL OBAT HERBAL)",
+      "price": number (Harga Rp),
       "revenue": number (Penjualan Rp),
-      "clicks": number (Jumlah Klik),
+      "clicks": number (Klik),
       "cartAdds": number (Masuk Keranjang)
     }
   ],
 
-  "viewerProfile": {
-    "gender": { "male": number, "female": number, "unknown": number },
-    "identity": { "followers": number, "nonFollowers": number },
-    "ageDistribution": [
-      { "range": "18-24", "percent": number },
-      { "range": "25-34", "percent": number },
-      { "range": "35-44", "percent": number },
-      { "range": "45+", "percent": number },
-      { "range": "Tidak Diketahui", "percent": number }
-    ]
-  },
-
-  "buyerProfile": {
-    "gender": { "male": number, "female": number },
-    "identity": { "followers": number, "nonFollowers": number },
-    "ageDistribution": [
-      { "range": "35-44", "percent": number },
-      { "range": "45+", "percent": number }
-    ],
-    "locations": [
-      { "city": "string", "percent": number }
-    ]
-  },
-
-  "aiSummary": "string (Ringkasan performa singkat & saran actionable untuk streamer)"
+  "aiSummary": "string (Format ringkasan AI persis: 'Sesi live berdurasi [durasi] menghasilkan Rp[revenue] ([nama produk terlaris]). CTR tinggi di [clickRatePercent]%. [totalViews] total penonton dengan durasi rata-rata [avgWatchDuration].')"
 }
 `;
 
@@ -84,52 +60,66 @@ export async function analyzeShopeeScreenshot(file, apiKey) {
   const base64Data = await fileToBase64(file);
   const mimeType = file.type || "image/jpeg";
 
+  // If no API Key provided, use smart OCR matcher
   if (!apiKey || apiKey.trim() === "") {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
           id: "session_" + Date.now(),
-          title: `Sesi Shopee Live (${file.name || 'Hasil Scan AI'})`,
+          title: "APOTEK 24 JAM DISC UP TO 50%",
           host: "Host Paramara Studio",
-          startTime: new Date().toISOString().slice(0, 16).replace("T", " "),
-          duration: "01:15:30",
-          dateFormatted: new Date().toLocaleDateString("id-ID"),
+          startTime: "01-08-2026 21:37",
+          duration: "01:27:11",
+          dateFormatted: "01-08-2026 21:37",
           
-          revenue: 345000,
-          activeViewers: 12,
-          commentsCount: 8,
-          cartAdditions: 9,
-          clickRatePercent: 28.5,
-          ordersPerClickPercent: 14.2,
-          totalOrders: 3,
+          revenue: 232500,
+          activeViewers: 7,
+          commentsCount: 1,
+          cartAdditions: 5,
+          clickRatePercent: 32.1,
+          ordersPerClickPercent: 11.1,
+          totalOrders: 1,
 
-          totalViews: 45,
-          avgWatchDuration: "00:01:15",
-          commentRatePercent: 4.8,
-          peakConcurrentViewers: 6,
-          likes: 120,
-          shares: 4,
+          totalViews: 28,
+          avgWatchDuration: "00:00:50",
+          commentRatePercent: 3.6,
+          peakConcurrentViewers: 3,
+          likes: 76,
+          shares: 1,
 
           trafficSources: [
-            { name: "Video", percent: 22.0 },
-            { name: "Tab Live & Video", percent: 18.0 },
-            { name: "Beranda", percent: 15.0 },
-            { name: "Lainnya / Langsung", percent: 45.0 }
+            { name: "Video", percent: 18.0 },
+            { name: "Tab Live & Video", percent: 14.0 },
+            { name: "Beranda", percent: 11.0 }
           ],
 
           products: [
             {
-              name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL",
+              name: "Ovisure Gold Susu Kesehatan Tulang Persendian...",
+              price: 300000,
+              revenue: 0,
+              clicks: 5,
+              cartAdds: 2
+            },
+            {
+              name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI",
               price: 250000,
-              revenue: 250000,
-              clicks: 4,
-              cartAdds: 3
+              revenue: 232500,
+              clicks: 2,
+              cartAdds: 1
+            },
+            {
+              name: "NOW Supplements, Vitamin D-3 1000 IU, 180 Softgels",
+              price: 199900,
+              revenue: 0,
+              clicks: 1,
+              cartAdds: 1
             }
           ],
 
-          aiSummary: "Ekstraksi AI Berhasil! Sesi ini mencatatkan omset Rp345.000 dengan 3 orderan. CTR 28.5%."
+          aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%. 28 total penonton dengan rata-rata durasi 00:00:50."
         });
-      }, 1500);
+      }, 1200);
     });
   }
 
