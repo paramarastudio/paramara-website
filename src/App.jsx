@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, ShieldCheck, UserPlus
+  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -46,7 +46,6 @@ export default function App() {
   const [newAdminUsername, setNewAdminUsername] = useState("");
   const [newAdminFullName, setNewAdminFullName] = useState("");
   const [newAdminRole, setNewAdminRole] = useState("Admin Operasional");
-  const [newAdminPassword, setNewAdminPassword] = useState("");
 
   // Dual Screenshot Files State
   const [fileSlot1, setFileSlot1] = useState(null);
@@ -110,7 +109,6 @@ export default function App() {
 
     setNewAdminUsername("");
     setNewAdminFullName("");
-    setNewAdminPassword("");
     setModalType(null);
     alert("Akun Admin berhasil ditambahkan!");
   };
@@ -334,7 +332,7 @@ export default function App() {
       {/* Main Content Area */}
       <main className="main-content">
         
-        {/* Top Header */}
+        {/* Top Header - CLEAN SINGLE PRIMARY BUTTON */}
         <div className="top-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <button className="mobile-nav-toggle" onClick={() => setSidebarOpen(true)}>
@@ -438,19 +436,14 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Shopee Live AI Tracker */}
+        {/* Tab 2: Shopee Live AI Tracker - CLEAN BANNER WITHOUT DUPLICATE BUTTON */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                <div>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Setiap sesi dilengkapi fitur Edit Data & Pencatatan Komisi Kotor Studio.</p>
-                </div>
-                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
-                  <Camera /> Scan 2 Screenshot Baru
-                </button>
-              </div>
+              <h3 style={{ display: 'flex', alignItem: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                Ekstraksi data otomatis laporan live streaming Shopee dari screenshot HP bagian atas (GMV & Interaksi) dan bagian bawah (Produk Terjual). Klik tombol <strong>"Input Shopee Live AI"</strong> di atas untuk menambah sesi baru.
+              </p>
             </div>
 
             {/* EXPANDABLE EXECUTIVE SESSION CARDS */}
