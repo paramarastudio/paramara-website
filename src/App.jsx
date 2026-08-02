@@ -4,7 +4,7 @@ import {
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
   ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Sparkle
+  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -186,7 +186,7 @@ export default function App() {
   };
 
   // =========================================================================
-  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (100% CONFIDENTIAL & SAFE FROM LEAKS)
+  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (100% SAFE & CONFIDENTIAL)
   // =========================================================================
   if (viewMode === 'public') {
     return (
@@ -217,7 +217,7 @@ export default function App() {
                 <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Layanan & Venture</a>
                 <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Live</a>
                 <a href="#lestari" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Lestari Edu-Tech</a>
-                <a href="#ijustfound" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>I Just Found (US)</a>
+                <a href="#ijustfound" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>I Just Found This!</a>
               </nav>
 
               {isAuthenticated ? (
@@ -262,7 +262,7 @@ export default function App() {
           </div>
         </section>
 
-        {/* VENTURES GRID SECTION (SAFE & RAHASIA DARI LEAK DATA METRIK DENGAN PILAR BERSIH) */}
+        {/* VENTURES GRID SECTION */}
         <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '2rem 2rem 6rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
             <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Tiga Pilar Utama Paramara Studio</h2>
@@ -271,7 +271,7 @@ export default function App() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
             
-            {/* PILLAR 1: SHOPEE LIVE (PRIVASI KLIEN DIJAGA 100% TANPA ANGKA LEAK) */}
+            {/* PILLAR 1: SHOPEE LIVE */}
             <div className="glass-card" id="shopee" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--primary)' }}>
               <div>
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(8, 47, 38, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--primary)' }}>
@@ -302,7 +302,7 @@ export default function App() {
               )}
             </div>
 
-            {/* PILLAR 2: LESTARI EDU-TECH (DESKRIPSI PERSIS SESUAI APLIKASI) */}
+            {/* PILLAR 2: LESTARI EDU-TECH */}
             <div className="glass-card" id="lestari" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--secondary-emerald)' }}>
               <div>
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(5, 150, 105, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--secondary-emerald)' }}>
@@ -329,27 +329,44 @@ export default function App() {
               </a>
             </div>
 
-            {/* PILLAR 3: I JUST FOUND (US MARKET AMAZON AFFILIATE) */}
+            {/* PILLAR 3: I JUST FOUND THIS! (US MARKET AMAZON AFFILIATE) */}
             <div className="glass-card" id="ijustfound" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--accent-gold)' }}>
               <div>
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(184, 142, 57, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--accent-gold)' }}>
                   <Compass style={{ width: 26, height: 26 }} />
                 </div>
                 <span className="brand-badge" style={{ marginBottom: 8 }}>US Consumer Market & Media Hub</span>
-                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>@I Just Found (US Affiliate)</h3>
+                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>I Just Found This! (US Market)</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Kanal kurasi produk viral dan jaringan media afiliasi Amazon yang ditargetkan secara khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & platform media sosial.
+                  Kanal kurasi produk viral dan media afiliasi Amazon yang ditargetkan secara khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & media sosial.
                 </p>
 
                 <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>🇺🇸 Target Segment & Channel:</strong><br/>
-                  <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Target Market: United States (US)</span><br/>
-                  <span>• Amazon Affiliate Viral Product Discovery</span>
+                  <strong>🇺🇸 Channel Profile & Niche:</strong><br/>
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Account: @productijustfound</span><br/>
+                  <span>• Bio: Amazon Finds | Everything You Need!</span><br/>
+                  <span>• Target Audience: United States (US) Market</span>
                 </div>
               </div>
 
-              <a href="https://uk.pinterest.com/productijustfound/" target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', color: 'var(--accent-gold)', borderColor: 'var(--accent-gold-border)' }}>
-                Buka Channel Pinterest @productijustfound <ExternalLink style={{ width: 16, height: 16 }} />
+              {/* RAPI, FITTED BUTTON WITHOUT TEXT OVERFLOW */}
+              <a 
+                href="https://uk.pinterest.com/productijustfound/" 
+                target="_blank" 
+                rel="noreferrer" 
+                className="btn" 
+                style={{ 
+                  width: '100%', 
+                  justify: 'center', 
+                  color: 'var(--accent-gold)', 
+                  background: 'rgba(184, 142, 57, 0.08)', 
+                  border: '1px solid var(--accent-gold-border)',
+                  padding: '10px 14px',
+                  fontSize: '0.875rem',
+                  fontWeight: 700
+                }}
+              >
+                📌 Pinterest @productijustfound <ExternalLink style={{ width: 15, height: 15, flexShrink: 0, marginLeft: 4 }} />
               </a>
             </div>
 
