@@ -7,6 +7,9 @@
   <meta name="description" content="Portal internal admin paramarastudio.com untuk manajemen proyek studio, jadwal live host, dan pemrosesan data Shopee Live AI.">
   
   <link rel="stylesheet" href="styles.css">
+  
+  <!-- Lucide Icons CDN & Chart.js -->
+  <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -21,27 +24,27 @@
           <div style="display: flex; align-items: center; gap: 8px;">
             <h1 class="brand-title" id="brandTitleText">paramarastudio.com</h1>
             <span class="brand-badge">INTERNAL PORTAL</span>
-            <span class="brand-badge" id="apiKeyStatusBadge" style="background: rgba(0, 168, 107, 0.15); color: #00A86B; border-color: rgba(0, 168, 107, 0.3);">Demo Mode</span>
+            <span class="brand-badge" id="apiKeyStatusBadge" style="background: rgba(5, 150, 105, 0.08); color: #059669; border-color: rgba(5, 150, 105, 0.25);">Demo Mode</span>
           </div>
           <p style="font-size: 0.75rem; color: var(--text-dim);" id="brandTaglineText">Internal Admin & Operations Hub</p>
         </div>
       </div>
 
       <div class="nav-actions">
-        <button class="btn btn-secondary btn-sm" id="btnOpenApiKeyModal">🔑 Gemini Key</button>
-        <button class="btn btn-secondary btn-sm" id="btnOpenGitGuideModal">🐙 Git Config</button>
-        <button class="btn btn-primary" id="btnOpenScanModal">📸 Input Shopee Live AI</button>
+        <button class="btn btn-secondary btn-sm" id="btnOpenApiKeyModal"><i data-lucide="key"></i> Gemini Key</button>
+        <button class="btn btn-secondary btn-sm" id="btnOpenGitGuideModal"><i data-lucide="terminal"></i> Git Config</button>
+        <button class="btn btn-primary" id="btnOpenScanModal"><i data-lucide="camera"></i> Input Shopee Live AI</button>
       </div>
     </nav>
 
     <!-- ================= TABS HEADER ================= -->
     <div class="tabs-header">
-      <button class="tab-btn active" data-target="tabAnalytics">📊 Executive Dashboard</button>
-      <button class="tab-btn" data-target="tabShopeeTracker">📹 Shopee Live AI Tracker</button>
-      <button class="tab-btn" data-target="tabProjects">💼 Proyek & Klien Studio</button>
-      <button class="tab-btn" data-target="tabSchedules">📅 Jadwal Live & Host</button>
-      <button class="tab-btn" data-target="tabBranding">🎨 Domain & Logo Studio</button>
-      <button class="tab-btn" data-target="tabGitGuide">🐙 Deployment GitHub</button>
+      <button class="tab-btn active" data-target="tabAnalytics"><i data-lucide="layout-dashboard"></i> Executive Dashboard</button>
+      <button class="tab-btn" data-target="tabShopeeTracker"><i data-lucide="video"></i> Shopee Live AI Tracker</button>
+      <button class="tab-btn" data-target="tabProjects"><i data-lucide="briefcase"></i> Proyek & Klien Studio</button>
+      <button class="tab-btn" data-target="tabSchedules"><i data-lucide="calendar"></i> Jadwal Live & Host</button>
+      <button class="tab-btn" data-target="tabBranding"><i data-lucide="globe"></i> Domain & Logo Studio</button>
+      <button class="tab-btn" data-target="tabGitGuide"><i data-lucide="git-branch"></i> Deployment GitHub</button>
     </div>
 
     <!-- ================= TAB 1: EXECUTIVE DASHBOARD ================= -->
@@ -49,7 +52,7 @@
       
       <!-- Studio KPI Grid -->
       <div class="kpi-grid">
-        <div class="glass-card kpi-card" style="--kpi-accent: #00A86B;">
+        <div class="glass-card kpi-card" style="--kpi-accent: #059669;">
           <div class="kpi-title">Total Pendapatan Studio</div>
           <div class="kpi-value text-success" id="kpiTotalCombinedIncome">Rp 0</div>
           <div class="kpi-subtext">Live Stream + Proyek Studio</div>
@@ -61,13 +64,13 @@
           <div class="kpi-subtext">Dari hasil scan screenshot AI</div>
         </div>
 
-        <div class="glass-card kpi-card" style="--kpi-accent: #063B30;">
+        <div class="glass-card kpi-card" style="--kpi-accent: #082F26;">
           <div class="kpi-title">Proyek Klien Aktif</div>
           <div class="kpi-value" id="kpiActiveProjects">0 Proyek</div>
           <div class="kpi-subtext">Dalam pengerjaan tim studio</div>
         </div>
 
-        <div class="glass-card kpi-card" style="--kpi-accent: #00A86B;">
+        <div class="glass-card kpi-card" style="--kpi-accent: #059669;">
           <div class="kpi-title">Total Sesi Live Terekam</div>
           <div class="kpi-value" id="kpiTotalLiveSessions">0 Sesi</div>
           <div class="kpi-subtext">Diproses oleh Gemini AI</div>
@@ -76,7 +79,7 @@
 
       <!-- AI Executive Summary Banner -->
       <div class="glass-card ai-summary-card">
-        <div class="ai-badge">✨ Gemini AI Executive Insight (paramarastudio.com)</div>
+        <div class="ai-badge"><i data-lucide="sparkles" style="width:14px; height:14px;"></i> Gemini AI Executive Insight (paramarastudio.com)</div>
         <div class="ai-summary-text" id="aiExecutiveSummaryText">
           Memuat ringkasan performa internal studio...
         </div>
@@ -86,8 +89,8 @@
       <div class="dashboard-grid">
         <div class="glass-card chart-card">
           <div class="chart-header">
-            <h3>📈 Tren Revenue Shopee Live Streaming</h3>
-            <span style="font-size: 0.8rem; color: var(--text-dim);">Internal Studio Analytics</span>
+            <h3><i data-lucide="trending-up" style="color: var(--primary);"></i> Tren Revenue Shopee Live Streaming</h3>
+            <span style="font-size: 0.775rem; color: var(--text-dim);">Internal Studio Analytics</span>
           </div>
           <div class="chart-container">
             <canvas id="revenueTrendChart"></canvas>
@@ -96,8 +99,8 @@
 
         <div class="glass-card chart-card">
           <div class="chart-header">
-            <h3>🚀 Sumber Penonton Live</h3>
-            <span style="font-size: 0.8rem; color: var(--text-dim);">Traffic Breakdown</span>
+            <h3><i data-lucide="pie-chart" style="color: var(--primary);"></i> Sumber Penonton Live</h3>
+            <span style="font-size: 0.775rem; color: var(--text-dim);">Traffic Breakdown</span>
           </div>
           <div class="chart-container">
             <canvas id="trafficSourceChart"></canvas>
@@ -109,14 +112,14 @@
 
     <!-- ================= TAB 2: SHOPEE LIVE AI TRACKER ================= -->
     <div id="tabShopeeTracker" class="tab-content" style="display: none;">
-      <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
+      <div class="glass-card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div>
-            <h3>📹 Modul Pemrosesan Data Shopee Live Streaming (AI Scan)</h3>
-            <p style="font-size: 0.85rem; color: var(--text-muted);">Admin dapat mengunggah screenshot HP laporan live untuk diekstrak otomatis oleh Gemini AI.</p>
+            <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="video" style="color: var(--primary);"></i> Modul Pemrosesan Data Shopee Live Streaming (AI Scan)</h3>
+            <p style="font-size: 0.825rem; color: var(--text-muted);">Admin dapat mengunggah screenshot HP laporan live untuk diekstrak otomatis oleh Gemini AI.</p>
           </div>
           <button class="btn btn-primary" onclick="document.getElementById('btnOpenScanModal').click()">
-            📸 Scan Screenshot Baru
+            <i data-lucide="camera"></i> Scan Screenshot Baru
           </button>
         </div>
       </div>
@@ -143,12 +146,12 @@
 
     <!-- ================= TAB 3: PROYEK & KLIEN STUDIO ================= -->
     <div id="tabProjects" class="tab-content" style="display: none;">
-      <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div class="glass-card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-          <h3>💼 Manajemen Proyek & Klien paramarastudio.com</h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted);">Kelola kontrak jasa live streaming, produksi konten, dan anggaran klien.</p>
+          <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="briefcase" style="color: var(--primary);"></i> Manajemen Proyek & Klien paramarastudio.com</h3>
+          <p style="font-size: 0.825rem; color: var(--text-muted);">Kelola kontrak jasa live streaming, produksi konten, dan anggaran klien.</p>
         </div>
-        <button class="btn btn-accent" id="btnOpenAddProjectModal">➕ Input Proyek Baru</button>
+        <button class="btn btn-accent" id="btnOpenAddProjectModal"><i data-lucide="plus-circle"></i> Input Proyek Baru</button>
       </div>
 
       <div class="table-wrapper glass-card">
@@ -172,12 +175,12 @@
 
     <!-- ================= TAB 4: JADWAL STREAM & HOST ================= -->
     <div id="tabSchedules" class="tab-content" style="display: none;">
-      <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+      <div class="glass-card" style="padding: 1.25rem 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-          <h3>📅 Jadwal Live Streaming Tim Host Studio</h3>
-          <p style="font-size: 0.85rem; color: var(--text-muted);">Jadwal penugasan streamer dan persiapan sesi live streaming studio.</p>
+          <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="calendar" style="color: var(--primary);"></i> Jadwal Live Streaming Tim Host Studio</h3>
+          <p style="font-size: 0.825rem; color: var(--text-muted);">Jadwal penugasan streamer dan persiapan sesi live streaming studio.</p>
         </div>
-        <button class="btn btn-primary" id="btnOpenAddScheduleModal">➕ Tambah Jadwal Stream</button>
+        <button class="btn btn-primary" id="btnOpenAddScheduleModal"><i data-lucide="calendar-plus"></i> Tambah Jadwal Stream</button>
       </div>
 
       <div class="table-wrapper glass-card">
@@ -200,13 +203,13 @@
 
     <!-- ================= TAB 5: DOMAIN & LOGO ================= -->
     <div id="tabBranding" class="tab-content" style="display: none;">
-      <div class="glass-card" style="padding: 2rem; max-width: 680px; margin: 0 auto;">
-        <h3>🎨 Pengaturan Domain & Logo Studio</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sesuaikan domain utama studio dan logo official portal admin.</p>
+      <div class="glass-card" style="padding: 2rem; max-width: 660px; margin: 0 auto;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;"><i data-lucide="globe" style="color: var(--primary);"></i> Pengaturan Domain & Logo Studio</h3>
+        <p style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sesuaikan domain utama studio dan logo official portal admin.</p>
 
         <div style="text-align: center; margin-bottom: 1.5rem;">
-          <img src="assets/logo.jpg" style="width: 120px; height: 120px; border-radius: 16px; border: 3px solid var(--accent-gold); box-shadow: var(--shadow-lg);">
-          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Official Logo: Paramara Studio</p>
+          <img src="assets/logo.jpg" style="width: 110px; height: 110px; border-radius: 16px; border: 2px solid var(--accent-gold); box-shadow: var(--shadow-hover);">
+          <p style="font-size: 0.825rem; color: var(--text-muted); margin-top: 8px;">Official Logo: Paramara Studio</p>
         </div>
 
         <div class="form-group">
@@ -220,7 +223,7 @@
         </div>
 
         <button class="btn btn-primary" id="btnSaveBranding" style="width: 100%; justify-content: center; margin-top: 1rem;">
-          💾 Simpan Pengaturan Portal
+          <i data-lucide="save"></i> Simpan Pengaturan Portal
         </button>
       </div>
     </div>
@@ -228,12 +231,12 @@
     <!-- ================= TAB 6: DEPLOYMENT GITHUB ================= -->
     <div id="tabGitGuide" class="tab-content" style="display: none;">
       <div class="glass-card" style="padding: 2rem;">
-        <h3>🐙 Konfigurasi Deployment GitHub (paramarastudio.com)</h3>
-        <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
+        <h3 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;"><i data-lucide="git-branch" style="color: var(--primary);"></i> Konfigurasi Deployment GitHub (paramarastudio.com)</h3>
+        <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem;">
           Aplikasi admin portal ini dikonfigurasikan di belakang repository akun <strong>paramarastudio</strong>.
         </p>
 
-        <h4 style="color: var(--primary); margin-bottom: 0.5rem;">Perintah Git Lokal Aktif di Folder Ini:</h4>
+        <h4 style="color: var(--primary); margin-bottom: 0.5rem; font-size: 0.95rem;">Perintah Git Lokal Aktif di Folder Ini:</h4>
         <div class="code-block">
 git config --local user.name "paramarastudio"
 git config --local user.email "paramarastudio@gmail.com"
@@ -252,25 +255,25 @@ git config --local user.email "paramarastudio@gmail.com"
   <div class="modal-overlay" id="scanModalOverlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>📸 Input & Scan Screenshot Shopee Live</h3>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="camera" style="color: var(--primary);"></i> Input & Scan Screenshot Shopee Live</h3>
         <button class="close-btn close-modal-btn">&times;</button>
       </div>
 
       <div class="dropzone" id="screenshotDropzone">
-        <div class="dropzone-icon">📱</div>
+        <div style="display: flex; justify-content: center; margin-bottom: 1rem;"><i data-lucide="upload-cloud" style="width: 44px; height: 44px; color: var(--primary);"></i></div>
         <h4 style="margin-bottom: 6px;">Upload Screenshot HP Laporan Live di Sini</h4>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Gemini AI akan membaca omset, pesanan, durasi, CTR, dan demografi</p>
-        <button class="btn btn-primary btn-sm">Pilih Gambar Screenshot</button>
+        <p style="font-size: 0.825rem; color: var(--text-muted); margin-bottom: 1rem;">Gemini AI akan membaca omset, pesanan, durasi, CTR, dan demografi</p>
+        <button class="btn btn-primary btn-sm"><i data-lucide="file"></i> Pilih Gambar Screenshot</button>
         <input type="file" id="screenshotFileInput" accept="image/*" style="display: none;">
       </div>
 
       <div id="scanLoadingState" style="display: none; text-align: center; padding: 3rem 1rem;">
-        <div style="font-size: 2.5rem; margin-bottom: 1rem;">✨🤖✨</div>
+        <div style="display: flex; justify-content: center; margin-bottom: 1rem;"><i data-lucide="sparkles" style="width: 44px; height: 44px; color: var(--accent-gold);" class="animated-pulse"></i></div>
         <h4>Gemini Vision AI Sedang Mengekstrak Data...</h4>
       </div>
 
       <div id="scanPreviewForm" style="display: none; margin-top: 1rem;">
-        <h4 style="color: #00A86B; margin-bottom: 1rem;">✅ Periksa & Konfirmasi Data Laporan:</h4>
+        <h4 style="color: var(--secondary-emerald); margin-bottom: 1rem; display: flex; align-items: center; gap: 8px;"><i data-lucide="check-circle"></i> Periksa & Konfirmasi Data Laporan:</h4>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
@@ -301,16 +304,16 @@ git config --local user.email "paramarastudio@gmail.com"
         </div>
 
         <button class="btn btn-primary" id="btnSaveScannedSession" style="width: 100%; justify-content: center; margin-top: 1rem;">
-          💾 Simpan Data ke Admin Portal
+          <i data-lucide="save"></i> Simpan Data ke Admin Portal
         </button>
       </div>
     </div>
   </div>
 
   <div class="modal-overlay" id="projectModalOverlay">
-    <div class="modal-card" style="max-width: 540px;">
+    <div class="modal-card" style="max-width: 520px;">
       <div class="modal-header">
-        <h3>💼 Input Proyek & Klien Studio Baru</h3>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="briefcase" style="color: var(--primary);"></i> Input Proyek & Klien Studio Baru</h3>
         <button class="close-btn close-modal-btn">&times;</button>
       </div>
 
@@ -344,15 +347,15 @@ git config --local user.email "paramarastudio@gmail.com"
       </div>
 
       <button class="btn btn-accent" id="btnSaveProject" style="width: 100%; justify-content: center; margin-top: 1rem;">
-        💾 Simpan Proyek Klien
+        <i data-lucide="save"></i> Simpan Proyek Klien
       </button>
     </div>
   </div>
 
   <div class="modal-overlay" id="scheduleModalOverlay">
-    <div class="modal-card" style="max-width: 500px;">
+    <div class="modal-card" style="max-width: 480px;">
       <div class="modal-header">
-        <h3>📅 Tambah Jadwal Stream Host</h3>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="calendar" style="color: var(--primary);"></i> Tambah Jadwal Stream Host</h3>
         <button class="close-btn close-modal-btn">&times;</button>
       </div>
 
@@ -372,15 +375,15 @@ git config --local user.email "paramarastudio@gmail.com"
       </div>
 
       <button class="btn btn-primary" id="btnSaveSchedule" style="width: 100%; justify-content: center; margin-top: 1rem;">
-        💾 Simpan Jadwal Stream
+        <i data-lucide="save"></i> Simpan Jadwal Stream
       </button>
     </div>
   </div>
 
   <div class="modal-overlay" id="apiKeyModalOverlay">
-    <div class="modal-card" style="max-width: 480px;">
+    <div class="modal-card" style="max-width: 460px;">
       <div class="modal-header">
-        <h3>🔑 Pengaturan Gemini API Key</h3>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="key" style="color: var(--primary);"></i> Pengaturan Gemini API Key</h3>
         <button class="close-btn close-modal-btn">&times;</button>
       </div>
 
@@ -390,7 +393,7 @@ git config --local user.email "paramarastudio@gmail.com"
       </div>
 
       <button class="btn btn-primary" id="btnSaveApiKey" style="width: 100%; justify-content: center; margin-top: 1rem;">
-        💾 Simpan API Key
+        <i data-lucide="save"></i> Simpan API Key
       </button>
     </div>
   </div>
@@ -408,7 +411,7 @@ git config --local user.email "paramarastudio@gmail.com"
   <div class="modal-overlay" id="gitGuideModalOverlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>🐙 Deployment Portal Admin (paramarastudio.com)</h3>
+        <h3 style="display: flex; align-items: center; gap: 8px;"><i data-lucide="git-branch" style="color: var(--primary);"></i> Deployment Portal Admin (paramarastudio.com)</h3>
         <button class="close-btn close-modal-btn">&times;</button>
       </div>
       <div style="font-size: 0.9rem; line-height: 1.6;">

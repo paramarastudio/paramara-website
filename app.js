@@ -15,7 +15,6 @@ let currentScannedData = null;
 document.addEventListener("DOMContentLoaded", () => {
   initStudioData();
   applyStudioBranding();
-  initTheme();
   setupEventListeners();
   renderAllViews();
 });
@@ -32,10 +31,8 @@ function initStudioData() {
     studioData = INITIAL_STUDIO_DATA;
   }
 
-  // Force logo URL & light mode
   if (!studioData.studioInfo) studioData.studioInfo = INITIAL_STUDIO_DATA.studioInfo;
   studioData.studioInfo.logoUrl = "assets/logo.jpg";
-  studioData.studioInfo.themeMode = "light";
   saveStudioData();
 }
 
@@ -43,14 +40,18 @@ function saveStudioData() {
   localStorage.setItem("paramara_studio_admin_data", JSON.stringify(studioData));
 }
 
+function refreshIcons() {
+  if (typeof lucide !== 'undefined') {
+    lucide.createIcons();
+  }
+}
+
 function applyStudioBranding() {
   const info = studioData.studioInfo || INITIAL_STUDIO_DATA.studioInfo;
 
-  // Title & Tagline
   const brandTitleEl = document.getElementById("brandTitleText");
   if (brandTitleEl) brandTitleEl.textContent = info.name || "paramarastudio.com";
 
-  // Logo Preview
   const logoImgEl = document.getElementById("brandLogoImg");
   if (logoImgEl) {
     logoImgEl.src = "assets/logo.jpg";
@@ -59,10 +60,6 @@ function applyStudioBranding() {
 
   const inputName = document.getElementById("settingStoreName");
   if (inputName) inputName.value = info.name;
-}
-
-function initTheme() {
-  document.documentElement.setAttribute("data-theme", "light");
 }
 
 // ==========================================
@@ -75,6 +72,7 @@ function renderAllViews() {
   renderShopeeSessionsTable();
   renderProjectsTable();
   renderSchedulesTable();
+  refreshIcons();
 }
 
 function renderKPICards() {
@@ -126,7 +124,7 @@ function renderShopeeSessionsTable() {
       <td class="text-success" style="font-weight: 700;">Rp ${(s.revenue || 0).toLocaleString('id-ID')}</td>
       <td>${s.totalOrders || 0} pesanan</td>
       <td>${s.totalViews || 0} penonton</td>
-      <td><span class="brand-badge" style="background: rgba(6,59,48,0.08); color: var(--primary);">${s.clickRatePercent || 0}% CTR</span></td>
+      <td><span class="brand-badge" style="background: rgba(8,47,38,0.06); color: var(--primary);">${s.clickRatePercent || 0}% CTR</span></td>
       <td>
         <button class="btn btn-sm btn-secondary" onclick="window.viewSessionDetails('${s.id}')">Detail</button>
         <button class="btn btn-sm btn-secondary" style="color: #D32F2F;" onclick="window.deleteShopeeSession('${s.id}')">Hapus</button>
@@ -150,7 +148,7 @@ function renderProjectsTable() {
       <td><strong>${p.clientName}</strong></td>
       <td>${p.projectTitle}<br/><small style="color: var(--text-dim);">${p.category}</small></td>
       <td class="text-success" style="font-weight: 700;">Rp ${(p.budget || 0).toLocaleString('id-ID')}</td>
-      <td><span class="brand-badge" style="background: ${p.status === 'Aktif' ? 'rgba(0,168,107,0.15)' : 'rgba(0,0,0,0.05)'}; color: ${p.status === 'Aktif' ? '#00A86B' : 'var(--text-muted)'};">${p.status}</span></td>
+      <td><span class="brand-badge" style="background: ${p.status === 'Aktif' ? 'rgba(5,150,105,0.1)' : 'rgba(0,0,0,0.05)'}; color: ${p.status === 'Aktif' ? '#059669' : 'var(--text-muted)'};">${p.status}</span></td>
       <td>${p.deadline}</td>
       <td>
         <button class="btn btn-sm btn-secondary" style="color: #D32F2F;" onclick="window.deleteStudioProject('${p.id}')">Hapus</button>
@@ -174,7 +172,7 @@ function renderSchedulesTable() {
       <td><strong>${sch.title}</strong></td>
       <td>${sch.hostName}</td>
       <td>${sch.scheduleTime}</td>
-      <td><span class="brand-badge" style="background: rgba(184,142,57,0.15); color: #B88E39;">${sch.status}</span></td>
+      <td><span class="brand-badge" style="background: var(--accent-gold-subtle); color: var(--accent-gold);">${sch.status}</span></td>
       <td>
         <button class="btn btn-sm btn-secondary" style="color: #D32F2F;" onclick="window.deleteLiveSchedule('${sch.id}')">Hapus</button>
       </td>
@@ -196,6 +194,7 @@ function setupEventListeners() {
       const targetId = btn.getAttribute("data-target");
       const targetEl = document.getElementById(targetId);
       if (targetEl) targetEl.style.display = "block";
+      refreshIcons();
     });
   });
 
@@ -221,9 +220,7 @@ function setupEventListeners() {
     apiKey = document.getElementById("inputApiKey").value.trim();
     localStorage.setItem("gemini_api_key", apiKey);
     const statusEl = document.getElementById("apiKeyStatusBadge");
-    if (statusEl) {
-      statusEl.textContent = apiKey ? "Gemini API Active" : "Demo Mode";
-    }
+    if (statusEl) statusEl.textContent = apiKey ? "Gemini API Active" : "Demo Mode";
     closeModal("apiKeyModalOverlay");
   });
 
@@ -365,6 +362,7 @@ async function handleFileAnalysis(file) {
 
     if (loadingEl) loadingEl.style.display = "none";
     if (formEl) formEl.style.display = "block";
+    refreshIcons();
 
   } catch (error) {
     alert("Gagal membaca screenshot: " + error.message);
@@ -436,6 +434,7 @@ window.viewSessionDetails = function(sessionId) {
 
 function openModal(id) {
   document.getElementById(id)?.classList.add("active");
+  refreshIcons();
 }
 
 function closeModal(id) {
