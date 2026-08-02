@@ -64,7 +64,7 @@ export async function analyzeShopeeScreenshots(files, passedApiKey) {
   // Use Environment Variable or passed API Key
   const activeKey = passedApiKey || import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
 
-  // If no active key is configured, use precision fallback
+  // If no active key is configured, use fallback precision simulation
   if (!activeKey || activeKey.trim() === "") {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -100,29 +100,15 @@ export async function analyzeShopeeScreenshots(files, passedApiKey) {
 
           products: [
             {
-              name: "Ovisure Gold Susu Kesehatan Tulang Persendian...",
-              price: 300000,
-              revenue: 0,
-              clicks: 5,
-              cartAdds: 2
-            },
-            {
               name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI",
               price: 250000,
               revenue: 232500,
               clicks: 2,
               cartAdds: 1
-            },
-            {
-              name: "NOW Supplements, Vitamin D-3 1000 IU, 180 Softgels",
-              price: 199900,
-              revenue: 0,
-              clicks: 1,
-              cartAdds: 1
             }
           ],
 
-          aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%. 28 total penonton dengan rata-rata durasi 00:00:50."
+          aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%."
         });
       }, 1200);
     });
@@ -141,35 +127,55 @@ export async function analyzeShopeeScreenshots(files, passedApiKey) {
     })
   );
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey.trim()}`;
+  // List of candidate Gemini Vision models to try with automatic fallback
+  const modelsToTry = [
+    "gemini-2.0-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+    "gemini-2.5-flash",
+    "gemini-1.5-pro"
+  ];
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
-      generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
-    })
-  });
+  let lastErrorText = "";
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`Gemini API Response Error: ${errorText}`);
+  for (const modelName of modelsToTry) {
+    try {
+      const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${activeKey.trim()}`;
+
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
+          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+        
+        if (text) {
+          const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
+          const parsed = JSON.parse(cleanJson);
+          parsed.id = "session_" + Date.now();
+          parsed.dateFormatted = parsed.startTime || new Date().toLocaleString("id-ID");
+          
+          if (!parsed.grossCommission && parsed.revenue) {
+            parsed.grossCommission = Math.round(parsed.revenue * 0.1);
+          }
+
+          return parsed;
+        }
+      } else {
+        lastErrorText = await response.text();
+        console.warn(`Model ${modelName} returned status ${response.status}. Trying next model...`);
+      }
+    } catch (err) {
+      lastErrorText = err.message;
+      console.warn(`Model ${modelName} fetch error: ${err.message}. Trying next model...`);
+    }
   }
 
-  const data = await response.json();
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  
-  if (!text) throw new Error("Gemini AI tidak mengembalikan respons teks.");
-
-  const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-  const parsed = JSON.parse(cleanJson);
-  parsed.id = "session_" + Date.now();
-  parsed.dateFormatted = parsed.startTime || new Date().toLocaleString("id-ID");
-  
-  if (!parsed.grossCommission && parsed.revenue) {
-    parsed.grossCommission = Math.round(parsed.revenue * 0.1);
-  }
-
-  return parsed;
+  throw new Error(`Gemini API Error across candidate models: ${lastErrorText}`);
 }
