@@ -439,7 +439,7 @@ export default function App() {
   }
 
   // =========================================================================
-  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD (CLEAN & ACCURATE)
+  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD (SINGLE CLEAN BUTTON)
   // =========================================================================
   return (
     <div className="admin-layout">
@@ -566,7 +566,7 @@ export default function App() {
                     {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Kotor Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}
                   </>
                 ) : (
-                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live AI (2 Foto)' untuk mengunggah screenshot HP laporan live."
+                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live AI (2 Foto)' di atas untuk mengunggah screenshot HP laporan live."
                 )}
               </div>
             </div>
@@ -640,7 +640,7 @@ export default function App() {
               )}
             </div>
 
-            {/* EXPANDABLE EXECUTIVE SESSION CARDS */}
+            {/* EXPANDABLE EXECUTIVE SESSION CARDS OR CLEAN ZERO STATE */}
             {sessions.length > 0 ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                 {sessions.map(s => {
@@ -774,12 +774,9 @@ export default function App() {
                   <Camera style={{ width: 32, height: 32 }} />
                 </div>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Belum Ada Data Sesi Shopee Live</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: 460, margin: '0 auto 1.5rem' }}>
-                  Seluruh data sample sebelumnya telah dibersihkan. Klik tombol di bawah untuk mengunggah screenshot HP laporan live Anda yang sebenarnya.
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto' }}>
+                  Seluruh data sample sebelumnya telah dibersihkan. Gunakan tombol <strong>"Input Shopee Live AI (2 Foto)"</strong> di pojok kanan atas untuk mengekstrak laporan HP Anda.
                 </p>
-                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
-                  <Camera /> Input Shopee Live AI (2 Foto Screenshot)
-                </button>
               </div>
             )}
 
