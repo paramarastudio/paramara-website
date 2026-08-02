@@ -271,20 +271,20 @@ export default function App() {
           position: 'sticky', 
           top: 0, 
           zIndex: 100,
-          padding: '0.875rem 2rem'
+          padding: '0.75rem 1.25rem'
         }}>
-          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div className="public-header-container" style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap' }}>
             
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 42, height: 42, borderRadius: 10, border: '1px solid var(--accent-gold-border)', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--accent-gold-border)', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
               <div>
-                <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.1 }}>Paramara Studio</h1>
-                <span style={{ fontSize: '0.675rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.04em' }}>DIGITAL VENTURES & MEDIA ENGINE</span>
+                <h1 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.1 }}>Paramara Studio</h1>
+                <span style={{ fontSize: '0.625rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.03em' }}>DIGITAL VENTURES</span>
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-              <nav style={{ display: 'flex', gap: '1.25rem', fontSize: '0.875rem', fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
+              <nav className="public-nav-links" style={{ display: 'flex', gap: '1.25rem', fontSize: '0.875rem', fontWeight: 600 }}>
                 <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Layanan & Venture</a>
                 <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Live</a>
                 <a href="#lestari" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Lestari Edu-Tech</a>
@@ -293,11 +293,11 @@ export default function App() {
 
               {isAuthenticated ? (
                 <button className="btn btn-primary btn-sm" onClick={() => setViewMode('admin')}>
-                  <Monitor style={{ width: 15, height: 15 }} /> Buka Admin Portal
+                  <Monitor style={{ width: 14, height: 14 }} /> Admin Portal
                 </button>
               ) : (
                 <button className="btn btn-secondary btn-sm" onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                  <Lock style={{ width: 15, height: 15 }} /> Portal Admin Login
+                  <Lock style={{ width: 14, height: 14 }} /> Portal Admin Login
                 </button>
               )}
             </div>
@@ -306,51 +306,51 @@ export default function App() {
         </header>
 
         {/* HERO SECTION */}
-        <section style={{ padding: '5rem 2rem 4rem', textAlign: 'center', maxWidth: 960, margin: '0 auto' }}>
-          <div className="brand-badge" style={{ marginBottom: '1.25rem', padding: '6px 16px', fontSize: '0.75rem' }}>
-            <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Official Venture Ecosystem & Digital House
+        <section className="public-hero-section" style={{ padding: '4rem 1.5rem 3rem', textAlign: 'center', maxWidth: 960, margin: '0 auto' }}>
+          <div className="brand-badge" style={{ marginBottom: '1rem', padding: '6px 14px', fontSize: '0.75rem', display: 'inline-flex' }}>
+            <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Official Venture Ecosystem
           </div>
-          <h1 style={{ fontSize: '2.8rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.2, marginBottom: '1.25rem', letterSpacing: '-0.03em' }}>
+          <h1 className="public-hero-title" style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.25, marginBottom: '1rem', letterSpacing: '-0.03em' }}>
             Driving High-Converting Live Commerce, Cultural Edu-Tech & International Media Engines.
           </h1>
-          <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2.25rem', maxWidth: 780, margin: '0 auto 2.25rem' }}>
+          <p className="public-hero-desc" style={{ fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2rem', maxWidth: 780, margin: '0 auto 2rem' }}>
             <strong>Paramara Studio</strong> is a digital venture builder overseeing specialized media and technology operations: Shopee Live Commerce stream management, the Lestari traditional dance edu-tech platform, and viral US-market product discovery engines.
           </p>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
-            <a href="#ventures" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
-              Jelajahi Venture & Portfolio <ArrowRight style={{ width: 18, height: 18 }} />
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', flexWrap: 'wrap' }}>
+            <a href="#ventures" className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
+              Jelajahi Venture & Portfolio <ArrowRight style={{ width: 16, height: 16 }} />
             </a>
             {isAuthenticated ? (
-              <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }} onClick={() => setViewMode('admin')}>
-                <Monitor style={{ width: 18, height: 18 }} /> Buka Portal Admin Studio
+              <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '0.9rem' }} onClick={() => setViewMode('admin')}>
+                <Monitor style={{ width: 16, height: 16 }} /> Buka Portal Admin Studio
               </button>
             ) : (
-              <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                <Lock style={{ width: 18, height: 18 }} /> Portal Admin Login (/admin)
+              <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '0.9rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
+                <Lock style={{ width: 16, height: 16 }} /> Portal Admin Login (/admin)
               </button>
             )}
           </div>
         </section>
 
         {/* VENTURES GRID SECTION */}
-        <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '2rem 2rem 6rem' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Tiga Pilar Utama Paramara Studio</h2>
-            <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Operasi bisnis, edutech kebudayaan, dan jaringan media afiliasi internasional.</p>
+        <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '1.5rem 1.25rem 5rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Tiga Pilar Utama Paramara Studio</h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Operasi bisnis, edutech kebudayaan, dan jaringan media afiliasi internasional.</p>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
             
             {/* PILLAR 1: SHOPEE LIVE */}
-            <div className="glass-card" id="shopee" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--primary)' }}>
+            <div className="glass-card" id="shopee" style={{ padding: '1.75rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--primary)' }}>
               <div>
-                <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(8, 47, 38, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--primary)' }}>
-                  <Video style={{ width: 26, height: 26 }} />
+                <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(8, 47, 38, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)' }}>
+                  <Video style={{ width: 24, height: 24 }} />
                 </div>
                 <span className="brand-badge" style={{ marginBottom: 8 }}>E-Commerce Operations</span>
-                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live Streaming Management</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live Streaming Management</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
                   Layanan manajemen & produksi live streaming e-commerce profesional end-to-end. Menyediakan host berbakat, setup penyiaran konversi tinggi, strategi interaksi penonton, dan analitik optimasi performa penjualan.
                 </p>
                 
@@ -374,16 +374,16 @@ export default function App() {
             </div>
 
             {/* PILLAR 2: LESTARI EDU-TECH */}
-            <div className="glass-card" id="lestari" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--secondary-emerald)' }}>
+            <div className="glass-card" id="lestari" style={{ padding: '1.75rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--secondary-emerald)' }}>
               <div>
-                <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(5, 150, 105, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--secondary-emerald)' }}>
-                  <Leaf style={{ width: 26, height: 26 }} />
+                <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(5, 150, 105, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--secondary-emerald)' }}>
+                  <Leaf style={{ width: 24, height: 24 }} />
                 </div>
                 <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)', marginBottom: 8 }}>
                   Edu-Tech Tari Tradisional Pertama di Indonesia
                 </span>
-                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestarikan Tari Tradisional, Lebih Terarah & Interaktif</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestarikan Tari Tradisional, Lebih Terarah & Interaktif</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
                   <strong>Lestari</strong> adalah platform pendamping belajar tari tradisional nusantara yang menghubungkan kurikulum terstruktur dengan koreksi presisi langsung dari guru ahli.
                 </p>
 
@@ -401,14 +401,14 @@ export default function App() {
             </div>
 
             {/* PILLAR 3: I JUST FOUND THIS! */}
-            <div className="glass-card" id="ijustfound" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--accent-gold)' }}>
+            <div className="glass-card" id="ijustfound" style={{ padding: '1.75rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--accent-gold)' }}>
               <div>
-                <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(184, 142, 57, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--accent-gold)' }}>
-                  <Compass style={{ width: 26, height: 26 }} />
+                <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(184, 142, 57, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--accent-gold)' }}>
+                  <Compass style={{ width: 24, height: 24 }} />
                 </div>
                 <span className="brand-badge" style={{ marginBottom: 8 }}>US Consumer Market & Media Hub</span>
-                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>I Just Found This! (US Market)</h3>
-                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>I Just Found This! (US Market)</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
                   Kanal kurasi produk viral dan media afiliasi Amazon yang ditargetkan secara khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & media sosial.
                 </p>
 
@@ -444,13 +444,13 @@ export default function App() {
         </section>
 
         {/* PUBLIC FOOTER */}
-        <footer style={{ background: '#FFFFFF', borderTop: '1px solid var(--border-color)', padding: '2.5rem 2rem', textAlign: 'center' }}>
+        <footer style={{ background: '#FFFFFF', borderTop: '1px solid var(--border-color)', padding: '2rem 1.25rem', textAlign: 'center' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 32, height: 32, borderRadius: 8 }} onError={(e) => { e.target.src = '/logo.png'; }} />
-              <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>Paramara Studio</strong>
+              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 30, height: 30, borderRadius: 8 }} onError={(e) => { e.target.src = '/logo.png'; }} />
+              <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>Paramara Studio</strong>
             </div>
-            <p style={{ fontSize: '0.825rem', color: 'var(--text-dim)' }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
               © 2026 <strong>Paramara Studio</strong>. All rights reserved. Operating Digital Commerce & Media Ecosystem.
             </p>
           </div>
@@ -467,13 +467,13 @@ export default function App() {
   // If visiting /admin but not authenticated, render Admin Login Page!
   if (!isAuthenticated) {
     return (
-      <div style={{ background: 'var(--bg-main)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
-        <div className="glass-card" style={{ maxWidth: 420, width: '100%', padding: '2.5rem 2rem' }}>
+      <div style={{ background: 'var(--bg-main)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem 1rem' }}>
+        <div className="glass-card" style={{ maxWidth: 420, width: '100%', padding: '2rem 1.5rem' }}>
           
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 56, height: 56, borderRadius: 14, border: '2px solid var(--accent-gold)', marginBottom: '0.75rem', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
-            <h2 style={{ fontSize: '1.4rem', color: 'var(--primary)', fontWeight: 800 }}>Paramara Studio</h2>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.04em' }}>AUTHORIZED ADMIN PORTAL (/admin)</span>
+          <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
+            <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 52, height: 52, borderRadius: 14, border: '2px solid var(--accent-gold)', marginBottom: '0.75rem', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
+            <h2 style={{ fontSize: '1.3rem', color: 'var(--primary)', fontWeight: 800 }}>Paramara Studio</h2>
+            <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.04em' }}>AUTHORIZED ADMIN PORTAL (/admin)</span>
           </div>
 
           <form onSubmit={handleLoginSubmit}>
