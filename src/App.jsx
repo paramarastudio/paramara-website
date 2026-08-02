@@ -557,6 +557,7 @@ export default function App() {
             <button className="btn btn-secondary" onClick={() => setViewMode('public')}>
               <Globe /> Homepage Publik
             </button>
+            {/* SINGLE GLOBAL ACTION BUTTON - NO DUPLICATE BUTTONS */}
             <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
               <Camera /> Input Shopee Live AI (2 Foto)
             </button>
