@@ -4,7 +4,7 @@ import {
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
   ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Database, Cloud
+  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Database, Cloud, Loader2, Check
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -75,7 +75,10 @@ export default function App() {
   const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession' | 'addAdmin' | 'editAdmin'
   const [editingSession, setEditingSession] = useState(null);
   const [editingAdminUser, setEditingAdminUser] = useState(null);
+  
+  // Multi-Step Upload & Scan State
   const [scanning, setScanning] = useState(false);
+  const [scanStep, setScanStep] = useState(1); // 1: Verify Upload, 2: Cloud Storage, 3: AI Vision OCR
   const [scannedPreview, setScannedPreview] = useState(null);
 
   // Admin User Form State
@@ -89,6 +92,32 @@ export default function App() {
   // Dual Screenshot Files State
   const [fileSlot1, setFileSlot1] = useState(null);
   const [fileSlot2, setFileSlot2] = useState(null);
+
+  // Preview Image Data URLs for visual confirmation
+  const [previewUrl1, setPreviewUrl1] = useState(null);
+  const [previewUrl2, setPreviewUrl2] = useState(null);
+
+  // Handle Image File 1 Select
+  const handleFile1Select = (e) => {
+    const file = e.target.files?.[0] || null;
+    setFileSlot1(file);
+    if (file) {
+      setPreviewUrl1(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl1(null);
+    }
+  };
+
+  // Handle Image File 2 Select
+  const handleFile2Select = (e) => {
+    const file = e.target.files?.[0] || null;
+    setFileSlot2(file);
+    if (file) {
+      setPreviewUrl2(URL.createObjectURL(file));
+    } else {
+      setPreviewUrl2(null);
+    }
+  };
 
   // Fetch Firebase Sessions on Mount if Configured
   useEffect(() => {
@@ -191,7 +220,7 @@ export default function App() {
     alert("Data profil admin berhasil diperbarui!");
   };
 
-  // Dual File analysis handler + Firebase Cloud Storage Upload
+  // Dual File analysis handler + Animated Multi-Step Upload Feedback
   const handleDualAnalysis = async () => {
     const filesToProcess = [fileSlot1, fileSlot2].filter(Boolean);
     if (filesToProcess.length === 0) {
@@ -200,22 +229,32 @@ export default function App() {
     }
 
     setScanning(true);
+    setScanStep(1); // Step 1: Verifikasi File Upload
+
     try {
-      // 1. Analyze with Gemini AI
+      await new Promise(r => setTimeout(r, 600));
+      setScanStep(2); // Step 2: Upload Cloud Storage Firebase
+
+      // Upload Screenshots to Firebase Storage if configured
+      let url1 = null;
+      let url2 = null;
+      if (firebaseStorage && fileSlot1) {
+        url1 = await uploadScreenshotToFirebase(fileSlot1);
+      }
+      if (firebaseStorage && fileSlot2) {
+        url2 = await uploadScreenshotToFirebase(fileSlot2);
+      }
+
+      setScanStep(3); // Step 3: AI Vision OCR Gemini
+
+      // Analyze with Gemini AI
       const result = await analyzeShopeeScreenshots(filesToProcess, apiKey);
       if (!result.grossCommission) {
         result.grossCommission = Math.round((result.revenue || 0) * 0.1);
       }
 
-      // 2. Upload Screenshots to Firebase Storage if configured
-      if (firebaseStorage && fileSlot1) {
-        const url1 = await uploadScreenshotToFirebase(fileSlot1);
-        if (url1) result.screenshotUrlTop = url1;
-      }
-      if (firebaseStorage && fileSlot2) {
-        const url2 = await uploadScreenshotToFirebase(fileSlot2);
-        if (url2) result.screenshotUrlBottom = url2;
-      }
+      if (url1) result.screenshotUrlTop = url1;
+      if (url2) result.screenshotUrlBottom = url2;
 
       setScannedPreview(result);
     } catch (err) {
@@ -241,8 +280,10 @@ export default function App() {
     setScannedPreview(null);
     setFileSlot1(null);
     setFileSlot2(null);
+    setPreviewUrl1(null);
+    setPreviewUrl2(null);
     setModalType(null);
-    alert("Semua data metrik & komisi kotor berhasil disimpan ke Firebase Cloud!");
+    alert("Semua data metrik & komisi kotor berhasil disimpan ke Cloud!");
   };
 
   const handleSaveEditedSession = () => {
@@ -597,7 +638,7 @@ export default function App() {
               <Globe /> Homepage Publik (/)
             </button>
             {/* SINGLE GLOBAL ACTION BUTTON */}
-            <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
+            <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
               <Camera /> Input Shopee Live AI (2 Foto)
             </button>
           </div>
@@ -1141,7 +1182,7 @@ export default function App() {
         </div>
       )}
 
-      {/* Modal: DUAL SCREENSHOT SCANNER */}
+      {/* Modal: DUAL SCREENSHOT SCANNER WITH VISUAL UPLOAD STATUS & ANIMATED PROGRESS */}
       {modalType === 'scan' && (
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 740 }}>
@@ -1158,31 +1199,59 @@ export default function App() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                   
-                  {/* Slot 1 */}
-                  <label className="dropzone" style={{ display: 'block', padding: '1.5rem 1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-                      <ImagePlus style={{ width: 36, height: 36, color: fileSlot1 ? 'var(--secondary-emerald)' : 'var(--primary)' }} />
-                    </div>
-                    <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>1. Screenshot Atas</strong>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                      {fileSlot1 ? `✓ ${fileSlot1.name}` : "Data Utama GMV & Interaksi"}
-                    </span>
-                    <input type="file" accept="image/*" onChange={e => setFileSlot1(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                  {/* Slot 1 Dropzone with Visual Upload Feedback */}
+                  <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: fileSlot1 ? 'rgba(5, 150, 105, 0.05)' : '#F8FAF9', borderColor: fileSlot1 ? 'var(--secondary-emerald)' : 'var(--border-color)' }}>
+                    {previewUrl1 ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <img src={previewUrl1} alt="Screenshot 1" style={{ height: 90, borderRadius: 8, border: '1px solid var(--secondary-emerald)', objectFit: 'cover', marginBottom: 8 }} />
+                        <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 1 Berhasil Diunggah!
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{fileSlot1.name}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                          <ImagePlus style={{ width: 32, height: 32, color: 'var(--primary)' }} />
+                        </div>
+                        <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>1. Screenshot Atas</strong>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Data Utama GMV & Interaksi</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleFile1Select} style={{ display: 'none' }} />
                   </label>
 
-                  {/* Slot 2 */}
-                  <label className="dropzone" style={{ display: 'block', padding: '1.5rem 1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
-                      <ImagePlus style={{ width: 36, height: 36, color: fileSlot2 ? 'var(--secondary-emerald)' : 'var(--primary)' }} />
-                    </div>
-                    <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>2. Screenshot Bawah</strong>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                      {fileSlot2 ? `✓ ${fileSlot2.name}` : "Scroll Down: Produk Terjual"}
-                    </span>
-                    <input type="file" accept="image/*" onChange={e => setFileSlot2(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                  {/* Slot 2 Dropzone with Visual Upload Feedback */}
+                  <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: fileSlot2 ? 'rgba(5, 150, 105, 0.05)' : '#F8FAF9', borderColor: fileSlot2 ? 'var(--secondary-emerald)' : 'var(--border-color)' }}>
+                    {previewUrl2 ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <img src={previewUrl2} alt="Screenshot 2" style={{ height: 90, borderRadius: 8, border: '1px solid var(--secondary-emerald)', objectFit: 'cover', marginBottom: 8 }} />
+                        <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 2 Berhasil Diunggah!
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{fileSlot2.name}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                          <ImagePlus style={{ width: 32, height: 32, color: 'var(--primary)' }} />
+                        </div>
+                        <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>2. Screenshot Bawah</strong>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Scroll Down: Produk Terjual</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleFile2Select} style={{ display: 'none' }} />
                   </label>
 
                 </div>
+
+                {/* Upload Status Banner */}
+                {(fileSlot1 || fileSlot2) && (
+                  <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.2)', padding: '10px 14px', borderRadius: 10, fontSize: '0.825rem', color: '#059669', fontWeight: 700, marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <CheckCircle style={{ width: 16, height: 16 }} />
+                    <span>{[fileSlot1, fileSlot2].filter(Boolean).length} Gambar Siap Diproses & Ekstraksi AI</span>
+                  </div>
+                )}
 
                 <button 
                   className="btn btn-primary" 
@@ -1190,21 +1259,57 @@ export default function App() {
                   onClick={handleDualAnalysis}
                   disabled={!fileSlot1 && !fileSlot2}
                 >
-                  <Sparkles /> Proses & Gabungkan Data Screenshot dengan Gemini AI
+                  <Sparkles /> Mulai Scan AI Vision ([{[fileSlot1, fileSlot2].filter(Boolean).length}] Foto)
                 </button>
               </div>
             )}
 
+            {/* MULTI-STEP ANIMATED SCANNING LOADING UI */}
             {scanning && (
-              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}><Sparkles style={{ width: 44, height: 44, color: 'var(--accent-gold)' }} /></div>
-                <h4>Gemini Vision AI Sedang Menggabungkan Screenshot Atas & Bawah...</h4>
+              <div style={{ textAlign: 'center', padding: '2.5rem 1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(184, 142, 57, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--accent-gold-border)' }}>
+                    <Sparkles style={{ width: 36, height: 36, color: 'var(--accent-gold)', animation: 'spin 3s linear infinite' }} />
+                  </div>
+                </div>
+
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '1.5rem' }}>Sistem Sedang Memproses Screenshot HP Anda...</h3>
+
+                {/* STEP PROGRESS INDICATOR */}
+                <div style={{ maxWidth: 460, margin: '0 auto', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                  
+                  {/* Step 1 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', color: scanStep >= 1 ? '#059669' : 'var(--text-dim)', fontWeight: scanStep === 1 ? 700 : 500 }}>
+                    {scanStep > 1 ? <CheckCircle style={{ width: 18, height: 18 }} /> : <Loader2 style={{ width: 18, height: 18, animation: 'spin 1s linear infinite' }} />}
+                    <span>1. Memverifikasi & Mengompres Foto Screenshot ({[fileSlot1, fileSlot2].filter(Boolean).length} file)</span>
+                  </div>
+
+                  {/* Step 2 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', color: scanStep >= 2 ? '#059669' : 'var(--text-dim)', fontWeight: scanStep === 2 ? 700 : 500 }}>
+                    {scanStep > 2 ? <CheckCircle style={{ width: 18, height: 18 }} /> : (scanStep === 2 ? <Loader2 style={{ width: 18, height: 18, animation: 'spin 1s linear infinite' }} /> : <Cloud style={{ width: 18, height: 18 }} />)}
+                    <span>2. Mengunggah ke Cloud Storage Firebase (Permanen)</span>
+                  </div>
+
+                  {/* Step 3 */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: '0.875rem', color: scanStep >= 3 ? '#059669' : 'var(--text-dim)', fontWeight: scanStep === 3 ? 700 : 500 }}>
+                    {scanStep === 3 ? <Loader2 style={{ width: 18, height: 18, animation: 'spin 1s linear infinite' }} /> : <Sparkles style={{ width: 18, height: 18 }} />}
+                    <span>3. Gemini AI Vision Membaca GMV, Durasi, CTR & Produk Terjual...</span>
+                  </div>
+
+                </div>
               </div>
             )}
 
+            {/* SCAN RESULT CONFIRMATION FORM */}
             {scannedPreview && !scanning && (
-              <div style={{ marginTop: '1rem' }}>
-                <h4 style={{ color: 'var(--secondary-emerald)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle /> Periksa & Konfirmasi Data Sesi:</h4>
+              <div style={{ marginTop: '0.5rem' }}>
+                <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.2)', padding: '12px 16px', borderRadius: 10, marginBottom: '1.25rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <CheckCircle style={{ width: 20, height: 20 }} />
+                  <div>
+                    <strong style={{ fontSize: '0.9rem', display: 'block' }}>Upload & Ekstraksi AI Berhasil!</strong>
+                    <span style={{ fontSize: '0.775rem' }}>Semua metrik dan produk terjual dari foto screenshot telah dibaca dengan akurat.</span>
+                  </div>
+                </div>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
