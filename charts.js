@@ -1,5 +1,5 @@
 /**
- * Chart.js Integration Module for Shopee Live AI Tracker
+ * Chart.js Integration Module for paramarastudio.com (Deep Emerald & Gold Theme)
  */
 
 let revenueChartInstance = null;
@@ -8,30 +8,20 @@ let viewerGenderChartInstance = null;
 let ageDistributionChartInstance = null;
 
 export function renderDashboardCharts(sessions) {
-  if (typeof Chart === 'undefined') {
-    console.warn("Chart.js belum dimuat.");
-    return;
-  }
+  if (typeof Chart === 'undefined') return;
 
-  // 1. Revenue & Views Trend Chart
   renderRevenueTrendChart(sessions);
-
-  // 2. Traffic Sources Breakdown Chart (Aggregate or latest session)
   renderTrafficChart(sessions);
-
-  // 3. Demographics Charts
-  renderDemographicCharts(sessions[0]); // latest session demo
+  renderDemographicCharts(sessions[0]);
 }
 
 function renderRevenueTrendChart(sessions) {
   const ctx = document.getElementById("revenueTrendChart")?.getContext("2d");
   if (!ctx) return;
 
-  if (revenueChartInstance) {
-    revenueChartInstance.destroy();
-  }
+  if (revenueChartInstance) revenueChartInstance.destroy();
 
-  const sortedSessions = [...sessions].reverse(); // oldest to newest
+  const sortedSessions = [...sessions].reverse();
   const labels = sortedSessions.map(s => s.dateFormatted || s.startTime || "Live");
   const revenues = sortedSessions.map(s => s.revenue || 0);
   const orders = sortedSessions.map(s => s.totalOrders || 0);
@@ -44,8 +34,8 @@ function renderRevenueTrendChart(sessions) {
         {
           label: 'Omset Penjualan (Rp)',
           data: revenues,
-          borderColor: '#FF5722',
-          backgroundColor: 'rgba(255, 87, 34, 0.15)',
+          borderColor: '#C5A059',
+          backgroundColor: 'rgba(197, 160, 89, 0.15)',
           borderWidth: 3,
           fill: true,
           tension: 0.35,
@@ -66,14 +56,9 @@ function renderRevenueTrendChart(sessions) {
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      interaction: {
-        mode: 'index',
-        intersect: false,
-      },
+      interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: {
-          labels: { color: '#94A3B8', font: { family: 'Inter', size: 12 } }
-        },
+        legend: { labels: { color: '#95B0A6', font: { family: 'Inter', size: 12 } } },
         tooltip: {
           callbacks: {
             label: function(context) {
@@ -86,24 +71,14 @@ function renderRevenueTrendChart(sessions) {
         }
       },
       scales: {
-        x: {
-          ticks: { color: '#64748B' },
-          grid: { color: 'rgba(255,255,255,0.05)' }
-        },
+        x: { ticks: { color: '#5E7A70' }, grid: { color: 'rgba(197,160,89,0.08)' } },
         y: {
-          type: 'linear',
-          display: true,
-          position: 'left',
-          ticks: {
-            color: '#FF5722',
-            callback: (val) => 'Rp ' + val.toLocaleString('id-ID')
-          },
-          grid: { color: 'rgba(255,255,255,0.05)' }
+          type: 'linear', display: true, position: 'left',
+          ticks: { color: '#C5A059', callback: (val) => 'Rp ' + val.toLocaleString('id-ID') },
+          grid: { color: 'rgba(197,160,89,0.08)' }
         },
         y1: {
-          type: 'linear',
-          display: true,
-          position: 'right',
+          type: 'linear', display: true, position: 'right',
           ticks: { color: '#00E676', precision: 0 },
           grid: { drawOnChartArea: false }
         }
@@ -116,9 +91,7 @@ function renderTrafficChart(sessions) {
   const ctx = document.getElementById("trafficSourceChart")?.getContext("2d");
   if (!ctx) return;
 
-  if (trafficChartInstance) {
-    trafficChartInstance.destroy();
-  }
+  if (trafficChartInstance) trafficChartInstance.destroy();
 
   const latestSession = sessions[0] || {};
   const sources = latestSession.trafficSources || [
@@ -134,19 +107,16 @@ function renderTrafficChart(sessions) {
       labels: sources.map(s => s.name),
       datasets: [{
         data: sources.map(s => s.percent),
-        backgroundColor: ['#2979FF', '#7C4DFF', '#00E676', '#FF5722'],
+        backgroundColor: ['#C5A059', '#00E676', '#9C27B0', '#2979FF'],
         borderWidth: 2,
-        borderColor: '#0B0E14'
+        borderColor: '#051612'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: {
-          position: 'bottom',
-          labels: { color: '#94A3B8', font: { family: 'Inter', size: 11 } }
-        }
+        legend: { position: 'bottom', labels: { color: '#95B0A6', font: { family: 'Inter', size: 11 } } }
       },
       cutout: '70%'
     }
@@ -156,7 +126,6 @@ function renderTrafficChart(sessions) {
 function renderDemographicCharts(session) {
   if (!session) return;
 
-  // Viewer Gender Chart
   const ctxGender = document.getElementById("viewerGenderChart")?.getContext("2d");
   if (ctxGender) {
     if (viewerGenderChartInstance) viewerGenderChartInstance.destroy();
@@ -167,18 +136,17 @@ function renderDemographicCharts(session) {
         labels: ['Laki-laki', 'Perempuan', 'Tidak Diketahui'],
         datasets: [{
           data: [g.male, g.female, g.unknown],
-          backgroundColor: ['#FF5252', '#00E676', '#2979FF']
+          backgroundColor: ['#C5A059', '#00E676', '#2979FF']
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#94A3B8' } } }
+        plugins: { legend: { labels: { color: '#95B0A6' } } }
       }
     });
   }
 
-  // Age Distribution Chart
   const ctxAge = document.getElementById("ageDistributionChart")?.getContext("2d");
   if (ctxAge) {
     if (ageDistributionChartInstance) ageDistributionChartInstance.destroy();
@@ -196,7 +164,7 @@ function renderDemographicCharts(session) {
         datasets: [{
           label: 'Persentase Umur (%)',
           data: ages.map(a => a.percent),
-          backgroundColor: '#FFC107',
+          backgroundColor: '#C5A059',
           borderRadius: 6
         }]
       },
@@ -205,8 +173,8 @@ function renderDemographicCharts(session) {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: { ticks: { color: '#94A3B8' } },
-          y: { ticks: { color: '#94A3B8', callback: v => v + '%' } }
+          x: { ticks: { color: '#95B0A6' } },
+          y: { ticks: { color: '#95B0A6', callback: v => v + '%' } }
         }
       }
     });

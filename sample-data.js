@@ -6,8 +6,8 @@ export const INITIAL_STUDIO_DATA = {
   studioInfo: {
     name: "paramarastudio.com",
     tagline: "Internal Admin & Operations Portal",
-    logoUrl: "",
-    primaryColor: "#FF5722",
+    logoUrl: "assets/logo.jpg",
+    primaryColor: "#C5A059",
     themeMode: "dark"
   },
 
