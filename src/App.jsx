@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
-  Key, Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
+  Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2
 } from 'lucide-react';
 
@@ -29,11 +29,12 @@ export default function App() {
     return INITIAL_STUDIO_DATA;
   });
   
-  const [apiKey, setApiKey] = useState(() => localStorage.getItem("gemini_api_key") || "");
+  // Secure Gemini API Key from Environment Variable or Session
+  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'apiKey' | 'project' | 'schedule' | 'detail'
+  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'detail'
   const [selectedSessionDetail, setSelectedSessionDetail] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
@@ -235,6 +236,9 @@ export default function App() {
               <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)' }}>
                 User: abdumalikh
               </span>
+              <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.08)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.25)' }}>
+                Gemini AI Vision Active
+              </span>
             </div>
           </div>
 
@@ -261,9 +265,6 @@ export default function App() {
         </div>
 
         <div className="sidebar-footer">
-          <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start' }} onClick={() => setModalType('apiKey')}>
-            <Key /> Gemini API Key
-          </button>
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', color: '#D32F2F' }} onClick={handleLogout}>
             <LogOut /> Keluar / Logout
           </button>
@@ -566,25 +567,6 @@ export default function App() {
               <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight</div>
               <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{selectedSessionDetail.aiSummary}</p>
             </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Gemini API Key */}
-      {modalType === 'apiKey' && (
-        <div className="modal-overlay active">
-          <div className="modal-card" style={{ maxWidth: 460 }}>
-            <div className="modal-header">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Key style={{ color: 'var(--primary)' }} /> Pengaturan Gemini API Key</h3>
-              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
-            </div>
-            <div className="form-group">
-              <label className="form-label">Gemini API Key</label>
-              <input className="form-input" type="password" value={apiKey} onChange={e => setApiKey(e.target.value)} placeholder="AIzaSy..." />
-            </div>
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={() => { localStorage.setItem("gemini_api_key", apiKey); setModalType(null); }}>
-              <Save /> Simpan API Key
-            </button>
           </div>
         </div>
       )}

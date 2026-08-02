@@ -1,0 +1,30 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Node modules
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment variables & secrets (NEVER COMMIT TO GITHUB)
+.env
+.env.local
+.env.production
+.env.development
+secrets.json
+
+# Editor directories
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
