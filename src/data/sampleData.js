@@ -4,12 +4,34 @@
 
 export const INITIAL_STUDIO_DATA = {
   studioInfo: {
-    name: "paramarastudio.com",
-    tagline: "Internal Admin & Operations Portal",
+    name: "Paramara Studio",
+    tagline: "",
     logoUrl: "/assets/logo.png",
     primaryColor: "#082F26",
     themeMode: "light"
   },
+
+  // Admin Users List (CRUD)
+  adminUsers: [
+    {
+      id: "admin_001",
+      username: "abdumalikh",
+      fullName: "Abdumalik",
+      role: "Super Admin",
+      email: "paramarastudio@gmail.com",
+      status: "Aktif",
+      lastLogin: "Hari ini 16:45"
+    },
+    {
+      id: "admin_002",
+      username: "admin_operasional",
+      fullName: "Tim Admin Operasional",
+      role: "Admin Operasional",
+      email: "ops@paramarastudio.com",
+      status: "Aktif",
+      lastLogin: "Kemarin 14:20"
+    }
+  ],
 
   // 1. Shopee Live Streams Analytics from HP Screenshot
   shopeeSessions: [
@@ -22,7 +44,7 @@ export const INITIAL_STUDIO_DATA = {
       dateFormatted: "01-08-2026 21:37",
       
       revenue: 232500,
-      grossCommission: 23250, // 10% Komisi Kotor Studio
+      grossCommission: 23250,
       activeViewers: 7,
       commentsCount: 1,
       cartAdditions: 5,
@@ -67,7 +89,7 @@ export const INITIAL_STUDIO_DATA = {
         }
       ],
 
-      aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI) dengan estimasi Komisi Kotor Rp23.250. CTR tinggi di 32.1%."
+      aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI) dengan Komisi Kotor Rp23.250. CTR tinggi di 32.1%."
     }
   ],
 

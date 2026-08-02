@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ChevronDown, ChevronUp, ImagePlus, Edit3, DollarSign
+  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, ShieldCheck, UserPlus
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -37,10 +37,16 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession'
+  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession' | 'addAdmin'
   const [editingSession, setEditingSession] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
+
+  // Admin User Form State
+  const [newAdminUsername, setNewAdminUsername] = useState("");
+  const [newAdminFullName, setNewAdminFullName] = useState("");
+  const [newAdminRole, setNewAdminRole] = useState("Admin Operasional");
+  const [newAdminPassword, setNewAdminPassword] = useState("");
 
   // Dual Screenshot Files State
   const [fileSlot1, setFileSlot1] = useState(null);
@@ -74,12 +80,40 @@ export default function App() {
   // Derived Calculations
   const sessions = studioData.shopeeSessions || [];
   const projects = studioData.clientProjects || [];
+  const adminUsers = studioData.adminUsers || [];
 
   const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
   const totalGrossCommission = sessions.reduce((acc, s) => acc + (s.grossCommission || 0), 0);
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
   const totalCombinedIncome = totalShopeeRev + totalProjectRev;
   const activeProjectsCount = projects.filter(p => p.status === "Aktif").length;
+
+  // Add Admin User
+  const handleAddAdminUser = (e) => {
+    e.preventDefault();
+    if (!newAdminUsername || !newAdminFullName) return;
+
+    const newAdmin = {
+      id: "admin_" + Date.now(),
+      username: newAdminUsername.trim().toLowerCase(),
+      fullName: newAdminFullName.trim(),
+      role: newAdminRole,
+      email: `${newAdminUsername.trim().toLowerCase()}@paramarastudio.com`,
+      status: "Aktif",
+      lastLogin: "Baru dibuat"
+    };
+
+    setStudioData(prev => ({
+      ...prev,
+      adminUsers: [...(prev.adminUsers || []), newAdmin]
+    }));
+
+    setNewAdminUsername("");
+    setNewAdminFullName("");
+    setNewAdminPassword("");
+    setModalType(null);
+    alert("Akun Admin berhasil ditambahkan!");
+  };
 
   // Dual File analysis handler
   const handleDualAnalysis = async () => {
@@ -92,7 +126,6 @@ export default function App() {
     setScanning(true);
     try {
       const result = await analyzeShopeeScreenshots(filesToProcess, apiKey);
-      // Auto-calculate 10% default gross commission if not set
       if (!result.grossCommission) {
         result.grossCommission = Math.round((result.revenue || 0) * 0.1);
       }
@@ -158,7 +191,7 @@ export default function App() {
               marginBottom: '1rem',
               objectFit: 'cover'
             }} onError={(e) => { e.target.src = '/logo.png'; }} />
-            <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 4 }}>paramarastudio.com</h1>
+            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 4 }}>Paramara Studio</h1>
             <span className="brand-badge" style={{ fontSize: '0.65rem' }}>INTERNAL ADMIN PORTAL ACCESS</span>
           </div>
 
@@ -230,7 +263,7 @@ export default function App() {
           </form>
 
           <p style={{ textAlign: 'center', fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: '2rem' }}>
-            © 2026 <strong>paramarastudio.com</strong> — Authorized Access Only
+            © 2026 <strong>Paramara Studio</strong> — Authorized Access Only
           </p>
         </div>
       </div>
@@ -256,16 +289,12 @@ export default function App() {
             <div className="brand-wrapper">
               <img className="brand-logo-img" src="/assets/logo.png" alt="Paramara Studio Logo" onError={(e) => { e.target.src = '/logo.png'; }} />
               <div>
-                <h1 className="brand-title">paramarastudio</h1>
-                <p style={{ fontSize: '0.725rem', color: 'var(--text-dim)' }}>.com admin portal</p>
+                <h1 className="brand-title" style={{ fontSize: '1.25rem' }}>Paramara Studio</h1>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: 6 }}>
               <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)' }}>
-                User: abdumalikh
-              </span>
-              <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.08)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.25)' }}>
-                Gemini AI Vision Active
+                Hi Malikh
               </span>
             </div>
           </div>
@@ -282,6 +311,9 @@ export default function App() {
             </button>
             <button className={`tab-btn ${activeTab === 'tabSchedules' ? 'active' : ''}`} onClick={() => { setActiveTab('tabSchedules'); setSidebarOpen(false); }}>
               <Calendar /> Jadwal Live & Host
+            </button>
+            <button className={`tab-btn ${activeTab === 'tabAdminUsers' ? 'active' : ''}`} onClick={() => { setActiveTab('tabAdminUsers'); setSidebarOpen(false); }}>
+              <UserCheck /> Manajemen Admin
             </button>
             <button className={`tab-btn ${activeTab === 'tabBranding' ? 'active' : ''}`} onClick={() => { setActiveTab('tabBranding'); setSidebarOpen(false); }}>
               <Globe /> Domain & Logo Studio
@@ -310,7 +342,7 @@ export default function App() {
             </button>
             <div className="header-title">
               <h2>Executive Dashboard & Studio Operations</h2>
-              <p>Manajemen Shopee Live AI, komisi kotor studio, dan proyek klien.</p>
+              <p>Selamat datang kembali, <strong>Malikh</strong>! Ikhtisar aktivitas Paramara Studio.</p>
             </div>
           </div>
 
@@ -350,7 +382,7 @@ export default function App() {
 
             {/* DYNAMIC GEMINI AI EXECUTIVE INSIGHT CARD */}
             <div className="glass-card ai-summary-card">
-              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight (paramarastudio.com)</div>
+              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight (Paramara Studio)</div>
               <div className="ai-summary-text">
                 {sessions.length > 0 ? (
                   <>
@@ -406,7 +438,7 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Shopee Live AI Tracker - WITH EDIT & GROSS COMMISSION */}
+        {/* Tab 2: Shopee Live AI Tracker */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
@@ -555,12 +587,77 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 3: Projects */}
+        {/* TAB MANAJEMEN ADMIN (CRUD) */}
+        {activeTab === 'tabAdminUsers' && (
+          <div className="tab-content">
+            <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UserCheck style={{ color: 'var(--primary)' }} /> Manajemen Akun Admin Paramara Studio</h3>
+                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Kelola hak akses pengguna internal admin portal (Tambah, Edit, & Hapus Akun Admin).</p>
+              </div>
+              <button className="btn btn-primary" onClick={() => setModalType('addAdmin')}>
+                <UserPlus /> + Tambah Akun Admin
+              </button>
+            </div>
+
+            <div className="table-wrapper glass-card">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Username & Nama Lengkap</th>
+                    <th>Peran / Role</th>
+                    <th>Email Terdaftar</th>
+                    <th>Status</th>
+                    <th>Login Terakhir</th>
+                    <th>Aksi Admin</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminUsers.map(usr => (
+                    <tr key={usr.id}>
+                      <td>
+                        <strong>{usr.fullName}</strong>
+                        <div style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>@{usr.username}</div>
+                      </td>
+                      <td>
+                        <span className="brand-badge" style={{ background: usr.role === 'Super Admin' ? 'rgba(184, 142, 57, 0.1)' : 'rgba(8, 47, 38, 0.06)', color: usr.role === 'Super Admin' ? 'var(--accent-gold)' : 'var(--primary)' }}>
+                          {usr.role}
+                        </span>
+                      </td>
+                      <td>{usr.email}</td>
+                      <td>
+                        <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>
+                          {usr.status}
+                        </span>
+                      </td>
+                      <td>{usr.lastLogin}</td>
+                      <td>
+                        {usr.username !== 'abdumalikh' ? (
+                          <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
+                            if (confirm(`Hapus akun admin ${usr.username}?`)) {
+                              setStudioData(prev => ({ ...prev, adminUsers: prev.adminUsers.filter(a => a.id !== usr.id) }));
+                            }
+                          }}>
+                            <Trash2 style={{ width: 14, height: 14 }} /> Hapus
+                          </button>
+                        ) : (
+                          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Utama</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4: Projects */}
         {activeTab === 'tabProjects' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Briefcase style={{ color: 'var(--primary)' }} /> Manajemen Proyek & Klien paramarastudio.com</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Briefcase style={{ color: 'var(--primary)' }} /> Manajemen Proyek & Klien Studio</h3>
                 <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Kelola kontrak jasa live streaming, produksi konten, dan anggaran klien.</p>
               </div>
               <button className="btn btn-accent" onClick={() => setModalType('project')}><PlusCircle /> Input Proyek Baru</button>
@@ -601,11 +698,48 @@ export default function App() {
 
         {/* Footer */}
         <footer>
-          <p>© 2026 <strong>paramarastudio.com</strong> — Authorized Admin Portal for abdumalikh</p>
+          <p>© 2026 <strong>Paramara Studio</strong> — Authorized Admin Portal for Malikh</p>
         </footer>
       </main>
 
-      {/* Modal: DUAL SCREENSHOT SCANNER WITH GROSS COMMISSION */}
+      {/* Modal: ADD ADMIN USER */}
+      {modalType === 'addAdmin' && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 480 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UserPlus style={{ color: 'var(--primary)' }} /> Tambah Akun Admin Baru</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={handleAddAdminUser}>
+              <div className="form-group">
+                <label className="form-label">Username Admin</label>
+                <input className="form-input" placeholder="contoh: admin_lina" value={newAdminUsername} onChange={e => setNewAdminUsername(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Nama Lengkap</label>
+                <input className="form-input" placeholder="contoh: Lina Safitri" value={newAdminFullName} onChange={e => setNewAdminFullName(e.target.value)} required />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Peran / Hak Akses</label>
+                <select className="form-select" value={newAdminRole} onChange={e => setNewAdminRole(e.target.value)}>
+                  <option value="Admin Operasional">Admin Operasional</option>
+                  <option value="Host Streamer Manager">Host Streamer Manager</option>
+                  <option value="Super Admin">Super Admin</option>
+                </select>
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }}>
+                <Save /> Simpan Akun Admin
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: DUAL SCREENSHOT SCANNER */}
       {modalType === 'scan' && (
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 740 }}>
