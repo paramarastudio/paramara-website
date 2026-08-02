@@ -9,6 +9,15 @@ let studioData = {};
 let apiKey = localStorage.getItem("gemini_api_key") || "";
 let currentScannedData = null;
 
+const VIEW_TITLES = {
+  tabAnalytics: { title: "Executive Dashboard & Operations", sub: "Ikhtisar statistik pendapatan studio, proyek aktif, dan performa Shopee Live streaming." },
+  tabShopeeTracker: { title: "Shopee Live AI Data Tracker", sub: "Modul pemrosesan data otomatis laporan Shopee Live dari screenshot HP menggunakan Gemini Vision AI." },
+  tabProjects: { title: "Manajemen Proyek & Klien Studio", sub: "Kelola kontrak jasa live streaming, produksi konten video, dan alokasi budget studio." },
+  tabSchedules: { title: "Jadwal Live Streaming & Host", sub: "Penjadwalan penugasan host streamer dan persiapan jam tayang live streaming studio." },
+  tabBranding: { title: "Pengaturan Domain & Logo Studio", sub: "Pengaturan nama domain utama studio dan logo official portal admin." },
+  tabGitGuide: { title: "Konfigurasi Deployment GitHub", sub: "Status repository lokal dan panduan autentikasi push ke akun GitHub paramarastudio." }
+};
+
 // ==========================================
 // Initialization
 // ==========================================
@@ -31,7 +40,6 @@ function initStudioData() {
     studioData = INITIAL_STUDIO_DATA;
   }
 
-  // Guarantee logo is always set to official Paramara Studio logo
   if (!studioData.studioInfo) studioData.studioInfo = INITIAL_STUDIO_DATA.studioInfo;
   studioData.studioInfo.logoUrl = "assets/logo.jpg";
   saveStudioData();
@@ -51,9 +59,8 @@ function applyStudioBranding() {
   const info = studioData.studioInfo || INITIAL_STUDIO_DATA.studioInfo;
 
   const brandTitleEl = document.getElementById("brandTitleText");
-  if (brandTitleEl) brandTitleEl.textContent = info.name || "paramarastudio.com";
+  if (brandTitleEl) brandTitleEl.textContent = "paramarastudio";
 
-  // Force image src to assets/logo.jpg with cache buster
   const logoImgEl = document.getElementById("brandLogoImg");
   if (logoImgEl) {
     logoImgEl.src = "assets/logo.jpg?v=" + Date.now();
@@ -186,7 +193,7 @@ function renderSchedulesTable() {
 // Event Listeners & Modals Logic
 // ==========================================
 function setupEventListeners() {
-  // Navigation Tabs
+  // Navigation Tabs in Sidebar
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -196,6 +203,13 @@ function setupEventListeners() {
       const targetId = btn.getAttribute("data-target");
       const targetEl = document.getElementById(targetId);
       if (targetEl) targetEl.style.display = "block";
+
+      // Update Top Header Title
+      if (VIEW_TITLES[targetId]) {
+        document.getElementById("viewHeaderTitle").textContent = VIEW_TITLES[targetId].title;
+        document.getElementById("viewHeaderSub").textContent = VIEW_TITLES[targetId].sub;
+      }
+
       refreshIcons();
     });
   });
