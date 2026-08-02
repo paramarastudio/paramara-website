@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="id" data-theme="dark">
+<html lang="id" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -16,20 +16,18 @@
     <!-- ================= NAVBAR ================= -->
     <nav class="navbar">
       <div class="brand-wrapper">
-        <img id="brandLogoImg" class="brand-logo-img" src="" alt="Brand Logo" style="display: none;">
-        <div id="brandLogoFallback" class="brand-logo-fallback">P</div>
+        <img id="brandLogoImg" class="brand-logo-img" src="assets/logo.jpg" alt="Paramara Studio Logo">
         <div>
           <div style="display: flex; align-items: center; gap: 8px;">
             <h1 class="brand-title" id="brandTitleText">paramarastudio.com</h1>
-            <span class="brand-badge" style="background: rgba(124, 77, 255, 0.15); color: #B388FF; border-color: rgba(124, 77, 255, 0.3);">INTERNAL PORTAL</span>
-            <span class="brand-badge" id="apiKeyStatusBadge">Demo Mode</span>
+            <span class="brand-badge">INTERNAL PORTAL</span>
+            <span class="brand-badge" id="apiKeyStatusBadge" style="background: rgba(0, 168, 107, 0.15); color: #00A86B; border-color: rgba(0, 168, 107, 0.3);">Demo Mode</span>
           </div>
           <p style="font-size: 0.75rem; color: var(--text-dim);" id="brandTaglineText">Internal Admin & Operations Hub</p>
         </div>
       </div>
 
       <div class="nav-actions">
-        <button class="btn btn-secondary btn-sm" id="btnToggleTheme" title="Ganti Tema">🌓 Tema</button>
         <button class="btn btn-secondary btn-sm" id="btnOpenApiKeyModal">🔑 Gemini Key</button>
         <button class="btn btn-secondary btn-sm" id="btnOpenGitGuideModal">🐙 Git Config</button>
         <button class="btn btn-primary" id="btnOpenScanModal">📸 Input Shopee Live AI</button>
@@ -42,7 +40,7 @@
       <button class="tab-btn" data-target="tabShopeeTracker">📹 Shopee Live AI Tracker</button>
       <button class="tab-btn" data-target="tabProjects">💼 Proyek & Klien Studio</button>
       <button class="tab-btn" data-target="tabSchedules">📅 Jadwal Live & Host</button>
-      <button class="tab-btn" data-target="tabBranding">🎨 Domain & Branding</button>
+      <button class="tab-btn" data-target="tabBranding">🎨 Domain & Logo Studio</button>
       <button class="tab-btn" data-target="tabGitGuide">🐙 Deployment GitHub</button>
     </div>
 
@@ -51,25 +49,25 @@
       
       <!-- Studio KPI Grid -->
       <div class="kpi-grid">
-        <div class="glass-card kpi-card" style="--kpi-accent: #00E676;">
+        <div class="glass-card kpi-card" style="--kpi-accent: #00A86B;">
           <div class="kpi-title">Total Pendapatan Studio</div>
           <div class="kpi-value text-success" id="kpiTotalCombinedIncome">Rp 0</div>
           <div class="kpi-subtext">Live Stream + Proyek Studio</div>
         </div>
 
-        <div class="glass-card kpi-card" style="--kpi-accent: #FF5722;">
+        <div class="glass-card kpi-card" style="--kpi-accent: #B88E39;">
           <div class="kpi-title">Omset Shopee Live</div>
-          <div class="kpi-value" id="kpiShopeeRevenue">Rp 0</div>
+          <div class="kpi-value text-warning" id="kpiShopeeRevenue">Rp 0</div>
           <div class="kpi-subtext">Dari hasil scan screenshot AI</div>
         </div>
 
-        <div class="glass-card kpi-card" style="--kpi-accent: #7C4DFF;">
+        <div class="glass-card kpi-card" style="--kpi-accent: #063B30;">
           <div class="kpi-title">Proyek Klien Aktif</div>
           <div class="kpi-value" id="kpiActiveProjects">0 Proyek</div>
           <div class="kpi-subtext">Dalam pengerjaan tim studio</div>
         </div>
 
-        <div class="glass-card kpi-card" style="--kpi-accent: #2979FF;">
+        <div class="glass-card kpi-card" style="--kpi-accent: #00A86B;">
           <div class="kpi-title">Total Sesi Live Terekam</div>
           <div class="kpi-value" id="kpiTotalLiveSessions">0 Sesi</div>
           <div class="kpi-subtext">Diproses oleh Gemini AI</div>
@@ -200,11 +198,16 @@
       </div>
     </div>
 
-    <!-- ================= TAB 5: DOMAIN & BRANDING ================= -->
+    <!-- ================= TAB 5: DOMAIN & LOGO ================= -->
     <div id="tabBranding" class="tab-content" style="display: none;">
       <div class="glass-card" style="padding: 2rem; max-width: 680px; margin: 0 auto;">
-        <h3>🎨 Pengaturan Domain & Branding Portal</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sesuaikan domain utama studio, logo internal portal, dan skema warna aplikasi.</p>
+        <h3>🎨 Pengaturan Domain & Logo Studio</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sesuaikan domain utama studio dan logo official portal admin.</p>
+
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <img src="assets/logo.jpg" style="width: 120px; height: 120px; border-radius: 16px; border: 3px solid var(--accent-gold); box-shadow: var(--shadow-lg);">
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">Official Logo: Paramara Studio</p>
+        </div>
 
         <div class="form-group">
           <label class="form-label">Domain Utama Studio</label>
@@ -212,19 +215,8 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Upload Logo Branding Studio</label>
+          <label class="form-label">Ganti File Logo (Opsional)</label>
           <input type="file" id="inputLogoFile" accept="image/*" class="form-input">
-          <small style="color: var(--text-dim); display: block; margin-top: 4px;">Pilih logo PNG/JPG. Logo akan langsung di-render di Navbar Admin Portal.</small>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Warna Utama Portal (Primary Theme)</label>
-          <select id="settingPrimaryColor" class="form-select">
-            <option value="#FF5722">Shopee Orange (#FF5722)</option>
-            <option value="#00E676">Emerald Green (#00E676)</option>
-            <option value="#7C4DFF">Royal Purple (#7C4DFF)</option>
-            <option value="#2979FF">Electric Blue (#2979FF)</option>
-          </select>
         </div>
 
         <button class="btn btn-primary" id="btnSaveBranding" style="width: 100%; justify-content: center; margin-top: 1rem;">
@@ -278,7 +270,7 @@ git config --local user.email "paramarastudio@gmail.com"
       </div>
 
       <div id="scanPreviewForm" style="display: none; margin-top: 1rem;">
-        <h4 style="color: var(--secondary); margin-bottom: 1rem;">✅ Periksa & Konfirmasi Data Laporan:</h4>
+        <h4 style="color: #00A86B; margin-bottom: 1rem;">✅ Periksa & Konfirmasi Data Laporan:</h4>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
           <div class="form-group">
@@ -305,7 +297,7 @@ git config --local user.email "paramarastudio@gmail.com"
 
         <div class="form-group">
           <label class="form-label">Rangkuman AI Insight</label>
-          <div id="previewAISummary" class="ai-summary-text" style="background: rgba(255,255,255,0.03); padding: 12px; border-radius: 8px;"></div>
+          <div id="previewAISummary" class="ai-summary-text" style="background: #F8FAF9; padding: 12px; border-radius: 8px; border: 1px solid var(--border-color);"></div>
         </div>
 
         <button class="btn btn-primary" id="btnSaveScannedSession" style="width: 100%; justify-content: center; margin-top: 1rem;">

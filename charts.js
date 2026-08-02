@@ -1,5 +1,5 @@
 /**
- * Chart.js Integration Module for paramarastudio.com (Deep Emerald & Gold Theme)
+ * Chart.js Integration Module for paramarastudio.com (Clean Permanent Light Mode)
  */
 
 let revenueChartInstance = null;
@@ -34,8 +34,8 @@ function renderRevenueTrendChart(sessions) {
         {
           label: 'Omset Penjualan (Rp)',
           data: revenues,
-          borderColor: '#C5A059',
-          backgroundColor: 'rgba(197, 160, 89, 0.15)',
+          borderColor: '#063B30',
+          backgroundColor: 'rgba(6, 59, 48, 0.08)',
           borderWidth: 3,
           fill: true,
           tension: 0.35,
@@ -44,7 +44,7 @@ function renderRevenueTrendChart(sessions) {
         {
           label: 'Total Pesanan',
           data: orders,
-          borderColor: '#00E676',
+          borderColor: '#B88E39',
           backgroundColor: 'transparent',
           borderWidth: 2,
           borderDash: [5, 5],
@@ -58,7 +58,7 @@ function renderRevenueTrendChart(sessions) {
       maintainAspectRatio: false,
       interaction: { mode: 'index', intersect: false },
       plugins: {
-        legend: { labels: { color: '#95B0A6', font: { family: 'Inter', size: 12 } } },
+        legend: { labels: { color: '#436359', font: { family: 'Inter', size: 12, weight: 'bold' } } },
         tooltip: {
           callbacks: {
             label: function(context) {
@@ -71,15 +71,15 @@ function renderRevenueTrendChart(sessions) {
         }
       },
       scales: {
-        x: { ticks: { color: '#5E7A70' }, grid: { color: 'rgba(197,160,89,0.08)' } },
+        x: { ticks: { color: '#76948B' }, grid: { color: 'rgba(6,59,48,0.06)' } },
         y: {
           type: 'linear', display: true, position: 'left',
-          ticks: { color: '#C5A059', callback: (val) => 'Rp ' + val.toLocaleString('id-ID') },
-          grid: { color: 'rgba(197,160,89,0.08)' }
+          ticks: { color: '#063B30', callback: (val) => 'Rp ' + val.toLocaleString('id-ID') },
+          grid: { color: 'rgba(6,59,48,0.06)' }
         },
         y1: {
           type: 'linear', display: true, position: 'right',
-          ticks: { color: '#00E676', precision: 0 },
+          ticks: { color: '#B88E39', precision: 0 },
           grid: { drawOnChartArea: false }
         }
       }
@@ -107,16 +107,16 @@ function renderTrafficChart(sessions) {
       labels: sources.map(s => s.name),
       datasets: [{
         data: sources.map(s => s.percent),
-        backgroundColor: ['#C5A059', '#00E676', '#9C27B0', '#2979FF'],
-        borderWidth: 2,
-        borderColor: '#051612'
+        backgroundColor: ['#063B30', '#B88E39', '#00A86B', '#2979FF'],
+        borderWidth: 3,
+        borderColor: '#FFFFFF'
       }]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
-        legend: { position: 'bottom', labels: { color: '#95B0A6', font: { family: 'Inter', size: 11 } } }
+        legend: { position: 'bottom', labels: { color: '#436359', font: { family: 'Inter', size: 11, weight: 'bold' } } }
       },
       cutout: '70%'
     }
@@ -136,13 +136,13 @@ function renderDemographicCharts(session) {
         labels: ['Laki-laki', 'Perempuan', 'Tidak Diketahui'],
         datasets: [{
           data: [g.male, g.female, g.unknown],
-          backgroundColor: ['#C5A059', '#00E676', '#2979FF']
+          backgroundColor: ['#063B30', '#B88E39', '#2979FF']
         }]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: { legend: { labels: { color: '#95B0A6' } } }
+        plugins: { legend: { labels: { color: '#436359' } } }
       }
     });
   }
@@ -164,7 +164,7 @@ function renderDemographicCharts(session) {
         datasets: [{
           label: 'Persentase Umur (%)',
           data: ages.map(a => a.percent),
-          backgroundColor: '#C5A059',
+          backgroundColor: '#063B30',
           borderRadius: 6
         }]
       },
@@ -173,8 +173,8 @@ function renderDemographicCharts(session) {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-          x: { ticks: { color: '#95B0A6' } },
-          y: { ticks: { color: '#95B0A6', callback: v => v + '%' } }
+          x: { ticks: { color: '#436359' } },
+          y: { ticks: { color: '#436359', callback: v => v + '%' } }
         }
       }
     });

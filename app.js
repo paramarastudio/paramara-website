@@ -30,14 +30,13 @@ function initStudioData() {
     }
   } else {
     studioData = INITIAL_STUDIO_DATA;
-    saveStudioData();
   }
 
-  // Ensure default arrays exist
-  if (!studioData.shopeeSessions) studioData.shopeeSessions = INITIAL_STUDIO_DATA.shopeeSessions;
-  if (!studioData.clientProjects) studioData.clientProjects = INITIAL_STUDIO_DATA.clientProjects;
-  if (!studioData.liveSchedules) studioData.liveSchedules = INITIAL_STUDIO_DATA.liveSchedules;
+  // Force logo URL & light mode
   if (!studioData.studioInfo) studioData.studioInfo = INITIAL_STUDIO_DATA.studioInfo;
+  studioData.studioInfo.logoUrl = "assets/logo.jpg";
+  studioData.studioInfo.themeMode = "light";
+  saveStudioData();
 }
 
 function saveStudioData() {
@@ -49,41 +48,21 @@ function applyStudioBranding() {
 
   // Title & Tagline
   const brandTitleEl = document.getElementById("brandTitleText");
-  if (brandTitleEl) brandTitleEl.textContent = info.name || "Paramara Studio";
-
-  const brandTaglineEl = document.getElementById("brandTaglineText");
-  if (brandTaglineEl) brandTaglineEl.textContent = info.tagline || "Internal Admin Portal";
+  if (brandTitleEl) brandTitleEl.textContent = info.name || "paramarastudio.com";
 
   // Logo Preview
   const logoImgEl = document.getElementById("brandLogoImg");
-  const logoFallbackEl = document.getElementById("brandLogoFallback");
-
-  if (info.logoUrl) {
-    if (logoImgEl) {
-      logoImgEl.src = info.logoUrl;
-      logoImgEl.style.display = "block";
-    }
-    if (logoFallbackEl) logoFallbackEl.style.display = "none";
-  } else {
-    if (logoImgEl) logoImgEl.style.display = "none";
-    if (logoFallbackEl) {
-      logoFallbackEl.style.display = "flex";
-      logoFallbackEl.textContent = (info.name[0] || "P").toUpperCase();
-    }
+  if (logoImgEl) {
+    logoImgEl.src = "assets/logo.jpg";
+    logoImgEl.style.display = "block";
   }
 
-  // CSS Colors
-  document.documentElement.style.setProperty("--primary", info.primaryColor || "#FF5722");
-  document.documentElement.style.setProperty("--primary-glow", `${info.primaryColor || '#FF5722'}40`);
-
-  // Fill Settings Inputs
   const inputName = document.getElementById("settingStoreName");
   if (inputName) inputName.value = info.name;
 }
 
 function initTheme() {
-  const theme = studioData.studioInfo?.themeMode || "dark";
-  document.documentElement.setAttribute("data-theme", theme);
+  document.documentElement.setAttribute("data-theme", "light");
 }
 
 // ==========================================
@@ -147,10 +126,10 @@ function renderShopeeSessionsTable() {
       <td class="text-success" style="font-weight: 700;">Rp ${(s.revenue || 0).toLocaleString('id-ID')}</td>
       <td>${s.totalOrders || 0} pesanan</td>
       <td>${s.totalViews || 0} penonton</td>
-      <td><span class="brand-badge">${s.clickRatePercent || 0}% CTR</span></td>
+      <td><span class="brand-badge" style="background: rgba(6,59,48,0.08); color: var(--primary);">${s.clickRatePercent || 0}% CTR</span></td>
       <td>
         <button class="btn btn-sm btn-secondary" onclick="window.viewSessionDetails('${s.id}')">Detail</button>
-        <button class="btn btn-sm btn-secondary" style="color: #FF5252;" onclick="window.deleteShopeeSession('${s.id}')">Hapus</button>
+        <button class="btn btn-sm btn-secondary" style="color: #D32F2F;" onclick="window.deleteShopeeSession('${s.id}')">Hapus</button>
       </td>
     </tr>
   `).join("");
@@ -171,10 +150,10 @@ function renderProjectsTable() {
       <td><strong>${p.clientName}</strong></td>
       <td>${p.projectTitle}<br/><small style="color: var(--text-dim);">${p.category}</small></td>
       <td class="text-success" style="font-weight: 700;">Rp ${(p.budget || 0).toLocaleString('id-ID')}</td>
-      <td><span class="brand-badge" style="background: ${p.status === 'Aktif' ? 'rgba(0,230,118,0.15)' : 'rgba(255,255,255,0.08)'}; color: ${p.status === 'Aktif' ? '#00E676' : 'var(--text-muted)'};">${p.status}</span></td>
+      <td><span class="brand-badge" style="background: ${p.status === 'Aktif' ? 'rgba(0,168,107,0.15)' : 'rgba(0,0,0,0.05)'}; color: ${p.status === 'Aktif' ? '#00A86B' : 'var(--text-muted)'};">${p.status}</span></td>
       <td>${p.deadline}</td>
       <td>
-        <button class="btn btn-sm btn-secondary" style="color: #FF5252;" onclick="window.deleteStudioProject('${p.id}')">Hapus</button>
+        <button class="btn btn-sm btn-secondary" style="color: #D32F2F;" onclick="window.deleteStudioProject('${p.id}')">Hapus</button>
       </td>
     </tr>
   `).join("");
@@ -195,9 +174,9 @@ function renderSchedulesTable() {
       <td><strong>${sch.title}</strong></td>
       <td>${sch.hostName}</td>
       <td>${sch.scheduleTime}</td>
-      <td><span class="brand-badge">${sch.status}</span></td>
+      <td><span class="brand-badge" style="background: rgba(184,142,57,0.15); color: #B88E39;">${sch.status}</span></td>
       <td>
-        <button class="btn btn-sm btn-secondary" style="color: #FF5252;" onclick="window.deleteLiveSchedule('${sch.id}')">Hapus</button>
+        <button class="btn btn-sm btn-secondary" style="color: #D32F2F;" onclick="window.deleteLiveSchedule('${sch.id}')">Hapus</button>
       </td>
     </tr>
   `).join("");
@@ -244,7 +223,6 @@ function setupEventListeners() {
     const statusEl = document.getElementById("apiKeyStatusBadge");
     if (statusEl) {
       statusEl.textContent = apiKey ? "Gemini API Active" : "Demo Mode";
-      statusEl.className = apiKey ? "brand-badge text-success" : "brand-badge";
     }
     closeModal("apiKeyModalOverlay");
   });
@@ -343,9 +321,7 @@ function setupEventListeners() {
 
   // Save Branding Settings
   document.getElementById("btnSaveBranding")?.addEventListener("click", () => {
-    studioData.studioInfo.name = document.getElementById("settingStoreName").value || "Paramara Studio";
-    studioData.studioInfo.primaryColor = document.getElementById("settingPrimaryColor").value || "#FF5722";
-    
+    studioData.studioInfo.name = document.getElementById("settingStoreName").value || "paramarastudio.com";
     saveStudioData();
     applyStudioBranding();
     alert("Pengaturan Admin Portal Berhasil Disimpan!");
@@ -363,13 +339,6 @@ function setupEventListeners() {
       };
       reader.readAsDataURL(file);
     }
-  });
-
-  // Theme Toggle Button
-  document.getElementById("btnToggleTheme")?.addEventListener("click", () => {
-    studioData.studioInfo.themeMode = studioData.studioInfo.themeMode === "dark" ? "light" : "dark";
-    saveStudioData();
-    initTheme();
   });
 }
 
