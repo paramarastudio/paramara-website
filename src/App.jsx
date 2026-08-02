@@ -3,11 +3,11 @@ import {
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ChevronDown, ChevronUp
+  ChevronDown, ChevronUp, ImagePlus
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
-import { analyzeShopeeScreenshot } from './services/geminiService';
+import { analyzeShopeeScreenshots } from './services/geminiService';
 
 export default function App() {
   // Authentication State
@@ -38,9 +38,12 @@ export default function App() {
   
   // Modals state
   const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'detail'
-  const [selectedSessionDetail, setSelectedSessionDetail] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
+
+  // Dual Screenshot Files State
+  const [fileSlot1, setFileSlot1] = useState(null);
+  const [fileSlot2, setFileSlot2] = useState(null);
 
   // Save Studio Data to LocalStorage
   useEffect(() => {
@@ -76,14 +79,17 @@ export default function App() {
   const totalCombinedIncome = totalShopeeRev + totalProjectRev;
   const activeProjectsCount = projects.filter(p => p.status === "Aktif").length;
 
-  // File analysis handler
-  const handleFileUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  // Dual File analysis handler
+  const handleDualAnalysis = async () => {
+    const filesToProcess = [fileSlot1, fileSlot2].filter(Boolean);
+    if (filesToProcess.length === 0) {
+      alert("Mohon pilih minimal 1 foto screenshot!");
+      return;
+    }
 
     setScanning(true);
     try {
-      const result = await analyzeShopeeScreenshot(file, apiKey);
+      const result = await analyzeShopeeScreenshots(filesToProcess, apiKey);
       setScannedPreview(result);
     } catch (err) {
       alert("Gagal membaca screenshot: " + err.message);
@@ -99,8 +105,10 @@ export default function App() {
       shopeeSessions: [scannedPreview, ...prev.shopeeSessions]
     }));
     setScannedPreview(null);
+    setFileSlot1(null);
+    setFileSlot2(null);
     setModalType(null);
-    alert("Semua data metrik Shopee Live berhasil disimpan!");
+    alert("Semua data metrik & produk Shopee Live berhasil disimpan!");
   };
 
   // ==========================================
@@ -285,12 +293,12 @@ export default function App() {
             </button>
             <div className="header-title">
               <h2>Executive Dashboard & Studio Operations</h2>
-              <p>Selamat datang kembali, <strong>abdumalikh</strong>! Seluruh metrik tampil tanpa perlu scroll horizontal.</p>
+              <p>Dukungan Dual-Screenshot Upload untuk membaca laporan bagian Atas & Bawah.</p>
             </div>
           </div>
 
-          <button className="btn btn-primary" onClick={() => setModalType('scan')}>
-            <Camera /> Input Shopee Live AI
+          <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
+            <Camera /> Input Shopee Live AI (2 Foto)
           </button>
         </div>
 
@@ -381,17 +389,17 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Shopee Live AI Tracker - EXPANDABLE CARDS (NO HORIZONTAL SCROLL) */}
+        {/* Tab 2: Shopee Live AI Tracker - DUAL SCREENSHOT CARDS */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
-                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live Streaming (AI Scan)</h3>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Seluruh metrik langsung terlihat lengkap di layar tanpa scroll ke kanan.</p>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Anda dapat mengunggah 2 foto screenshot sekaligus (Screenshot Atas + Screenshot Bawah Produk Terjual).</p>
                 </div>
-                <button className="btn btn-primary" onClick={() => setModalType('scan')}>
-                  <Camera /> Scan Screenshot Baru
+                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
+                  <Camera /> Scan 2 Screenshot Baru
                 </button>
               </div>
             </div>
@@ -416,7 +424,7 @@ export default function App() {
                       <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <button className="btn btn-sm btn-secondary" onClick={() => setExpandedSessionId(isExpanded ? null : s.id)}>
                           {isExpanded ? <ChevronUp style={{ width: 15, height: 15 }} /> : <ChevronDown style={{ width: 15, height: 15 }} />}
-                          {isExpanded ? "Tutup Ringkasan" : "Lihat Metrik Lengkap"}
+                          {isExpanded ? "Tutup Detail" : "Lihat Metrik & Produk Terjual"}
                         </button>
                         <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
                           setStudioData(prev => ({ ...prev, shopeeSessions: prev.shopeeSessions.filter(item => item.id !== s.id) }));
@@ -426,7 +434,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* DIRECT VISIBLE METRICS GRID (ALL IN 1 SCREEN) */}
+                    {/* DIRECT VISIBLE METRICS GRID */}
                     <div style={{ 
                       display: 'grid', 
                       gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
@@ -470,21 +478,24 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* EXPANDABLE ACCORDION CONTENT */}
+                    {/* EXPANDABLE ACCORDION CONTENT WITH PRODUCTS FROM SCREENSHOT 2 */}
                     {isExpanded && (
                       <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1rem' }}>
                           <div>
-                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>🛒 Performa Produk Terjual:</h4>
+                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                              🛒 Rincian Produk Terjual (Screenshot Bawah):
+                            </h4>
                             {(s.products || [
-                              { name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL", price: 250000, revenue: 232500, clicks: 2, cartAdds: 1 },
-                              { name: "Ovisure Gold Susu Kesehatan Tulang", price: 300000, revenue: 0, clicks: 5, cartAdds: 2 }
+                              { name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI", price: 250000, revenue: 232500, clicks: 2, cartAdds: 1 },
+                              { name: "Ovisure Gold Susu Kesehatan Tulang", price: 300000, revenue: 0, clicks: 5, cartAdds: 2 },
+                              { name: "NOW Supplements, Vitamin D-3 1000 IU", price: 199900, revenue: 0, clicks: 1, cartAdds: 1 }
                             ]).map((prod, idx) => (
-                              <div key={idx} style={{ padding: '6px 10px', background: '#FFFFFF', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-                                <strong>{prod.name}</strong>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 2 }}>
+                              <div key={idx} style={{ padding: '8px 12px', background: '#FFFFFF', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
+                                <strong style={{ color: 'var(--primary)' }}>{prod.name}</strong>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 4 }}>
                                   <span>{prod.clicks} Klik | {prod.cartAdds} Keranjang</span>
-                                  <strong className="text-success">Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
+                                  <strong className="text-success" style={{ fontWeight: 700 }}>Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
                                 </div>
                               </div>
                             ))}
@@ -492,12 +503,12 @@ export default function App() {
 
                           <div>
                             <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>📊 Interaksi & Traffic:</h4>
-                            <div style={{ background: '#FFFFFF', padding: '10px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                            <div style={{ background: '#FFFFFF', padding: '12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                                 <span>Penonton Terbanyak:</span>
                                 <strong>{s.peakConcurrentViewers || 3} orang</strong>
                               </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                                 <span>Disukai (Likes):</span>
                                 <strong>{s.likes || 76} likes</strong>
                               </div>
@@ -574,35 +585,70 @@ export default function App() {
         </footer>
       </main>
 
-      {/* Modal: Screenshot Scan */}
+      {/* Modal: DUAL SCREENSHOT SCANNER */}
       {modalType === 'scan' && (
         <div className="modal-overlay active">
-          <div className="modal-card" style={{ maxWidth: 720 }}>
+          <div className="modal-card" style={{ maxWidth: 740 }}>
             <div className="modal-header">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera style={{ color: 'var(--primary)' }} /> Input & Scan Screenshot Shopee Live</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera style={{ color: 'var(--primary)' }} /> Dual Screenshot AI Scanner</h3>
               <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
             </div>
 
             {!scannedPreview && !scanning && (
-              <label className="dropzone" style={{ display: 'block' }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}><UploadCloud style={{ width: 44, height: 44, color: 'var(--primary)' }} /></div>
-                <h4 style={{ marginBottom: '6px' }}>Upload Screenshot HP Laporan Live di Sini</h4>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1rem' }}>Gemini AI akan membaca seluruh metrik (Penjualan, Pesanan, Komentar, CTR, Interaksi, Produk & Traffic)</p>
-                <span className="btn btn-primary btn-sm"><File /> Pilih Gambar Screenshot</span>
-                <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
-              </label>
+              <div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                  Unggah 2 foto screenshot HP sekaligus: <strong>Screenshot Atas</strong> (Data Utama GMV & Interaksi) + <strong>Screenshot Bawah</strong> (Detail Produk Terjual).
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                  
+                  {/* Slot 1: Screenshot Atas */}
+                  <label className="dropzone" style={{ display: 'block', padding: '1.5rem 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                      <ImagePlus style={{ width: 36, height: 36, color: fileSlot1 ? 'var(--secondary-emerald)' : 'var(--primary)' }} />
+                    </div>
+                    <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>1. Screenshot Atas</strong>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                      {fileSlot1 ? `✓ ${fileSlot1.name}` : "Data Utama GMV & Interaksi"}
+                    </span>
+                    <input type="file" accept="image/*" onChange={e => setFileSlot1(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                  </label>
+
+                  {/* Slot 2: Screenshot Bawah */}
+                  <label className="dropzone" style={{ display: 'block', padding: '1.5rem 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                      <ImagePlus style={{ width: 36, height: 36, color: fileSlot2 ? 'var(--secondary-emerald)' : 'var(--primary)' }} />
+                    </div>
+                    <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>2. Screenshot Bawah</strong>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                      {fileSlot2 ? `✓ ${fileSlot2.name}` : "Scroll Down: Produk Terjual"}
+                    </span>
+                    <input type="file" accept="image/*" onChange={e => setFileSlot2(e.target.files?.[0] || null)} style={{ display: 'none' }} />
+                  </label>
+
+                </div>
+
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+                  onClick={handleDualAnalysis}
+                  disabled={!fileSlot1 && !fileSlot2}
+                >
+                  <Sparkles /> Proses & Gabungkan Data Screenshot dengan Gemini AI
+                </button>
+              </div>
             )}
 
             {scanning && (
               <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}><Sparkles style={{ width: 44, height: 44, color: 'var(--accent-gold)' }} /></div>
-                <h4>Gemini Vision AI Sedang Mengekstrak Seluruh Metrik Screenshot...</h4>
+                <h4>Gemini Vision AI Sedang Menggabungkan Screenshot Atas & Bawah...</h4>
               </div>
             )}
 
             {scannedPreview && !scanning && (
               <div style={{ marginTop: '1rem' }}>
-                <h4 style={{ color: 'var(--secondary-emerald)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle /> Periksa & Konfirmasi Seluruh Metrik Ter-Scan:</h4>
+                <h4 style={{ color: 'var(--secondary-emerald)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle /> Hasil Gabungan Dua Screenshot Ter-Scan:</h4>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -623,39 +669,24 @@ export default function App() {
                     <input className="form-input" type="number" value={scannedPreview.totalOrders} onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: parseInt(e.target.value) || 0 })} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Penonton Aktif</label>
-                    <input className="form-input" type="number" value={scannedPreview.activeViewers || 7} onChange={e => setScannedPreview({ ...scannedPreview, activeViewers: parseInt(e.target.value) || 0 })} />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Persentase Klik (CTR %)</label>
+                    <label className="form-label">CTR Klik %</label>
                     <input className="form-input" type="number" step="0.1" value={scannedPreview.clickRatePercent} onChange={e => setScannedPreview({ ...scannedPreview, clickRatePercent: parseFloat(e.target.value) || 0 })} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Pesanan per Klik (%)</label>
-                    <input className="form-input" type="number" step="0.1" value={scannedPreview.ordersPerClickPercent || 11.1} onChange={e => setScannedPreview({ ...scannedPreview, ordersPerClickPercent: parseFloat(e.target.value) || 0 })} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Masuk Keranjang</label>
-                    <input className="form-input" type="number" value={scannedPreview.cartAdditions || 5} onChange={e => setScannedPreview({ ...scannedPreview, cartAdditions: parseInt(e.target.value) || 0 })} />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Ditonton (Total Views)</label>
-                    <input className="form-input" type="number" value={scannedPreview.totalViews || 28} onChange={e => setScannedPreview({ ...scannedPreview, totalViews: parseInt(e.target.value) || 0 })} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Rata-Rata Menonton</label>
-                    <input className="form-input" value={scannedPreview.avgWatchDuration || "00:00:50"} onChange={e => setScannedPreview({ ...scannedPreview, avgWatchDuration: e.target.value })} />
-                  </div>
-                  <div className="form-group">
-                    <label className="form-label">Disukai (Likes)</label>
-                    <input className="form-input" type="number" value={scannedPreview.likes || 76} onChange={e => setScannedPreview({ ...scannedPreview, likes: parseInt(e.target.value) || 0 })} />
                   </div>
                 </div>
 
+                {/* Extracted Products List Preview */}
+                <div style={{ marginTop: '1rem', background: '#F8FAF9', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                  <strong style={{ fontSize: '0.85rem', color: 'var(--primary)', display: 'block', marginBottom: 6 }}>📦 Produk Terjual Terbaca dari Screenshot Bawah:</strong>
+                  {(scannedPreview.products || []).map((p, idx) => (
+                    <div key={idx} style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', margin: '4px 0' }}>
+                      <span>{p.name}</span>
+                      <strong className="text-success">Rp {(p.revenue || 0).toLocaleString('id-ID')} ({p.clicks} klik)</strong>
+                    </div>
+                  ))}
+                </div>
+
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveScannedSession}>
-                  <Save /> Simpan Seluruh Metrik Data ke Admin Portal
+                  <Save /> Simpan Seluruh Metrik & Produk ke Admin Portal
                 </button>
               </div>
             )}

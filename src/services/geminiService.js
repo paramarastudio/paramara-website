@@ -1,12 +1,13 @@
 /**
- * Gemini Vision AI Service for Shopee Live Screenshot Data Extraction
+ * Gemini Vision AI Service for Dual Shopee Live Screenshot Data Extraction
  */
 
 export const GEMINI_PROMPT = `
-Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Shopee Live dari screenshot smartphone.
+Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Shopee Live dari screenshot HP.
+Anda mungkin diberikan 1 atau 2 screenshot HP sekaligus (Screenshot Atas: Metrik Utama & Interaksi; Screenshot Bawah: Produk Terjual & Traffic Source).
 
 Tugas Anda:
-Bacalah teks, angka, produk, dan persentase di dalam screenshot Shopee Live HP berikut ini dan kembalikan JSON persis seperti berikut (tanpa backticks atau markdown):
+Gabungkan seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini:
 
 {
   "title": "string (Judul Sesi, contoh: APOTEK 24 JAM DISC UP TO 50%)",
@@ -35,7 +36,7 @@ Bacalah teks, angka, produk, dan persentase di dalam screenshot Shopee Live HP b
 
   "products": [
     {
-      "name": "string (Nama Produk, contoh: MEGAMOVE 100% ORIGINAL OBAT HERBAL)",
+      "name": "string (Nama Lengkap Produk)",
       "price": number (Harga Rp),
       "revenue": number (Penjualan Rp),
       "clicks": number (Klik),
@@ -43,7 +44,7 @@ Bacalah teks, angka, produk, dan persentase di dalam screenshot Shopee Live HP b
     }
   ],
 
-  "aiSummary": "string (Format ringkasan AI persis: 'Sesi live berdurasi [durasi] menghasilkan Rp[revenue] ([nama produk terlaris]). CTR tinggi di [clickRatePercent]%. [totalViews] total penonton dengan durasi rata-rata [avgWatchDuration].')"
+  "aiSummary": "string (Format ringkasan AI persis: 'Sesi live berdurasi [durasi] menghasilkan Rp[revenue] ([nama produk terlaris]). CTR tinggi di [clickRatePercent]%. [totalViews] total penonton dengan rata-rata durasi [avgWatchDuration].')"
 }
 `;
 
@@ -56,11 +57,9 @@ export function fileToBase64(file) {
   });
 }
 
-export async function analyzeShopeeScreenshot(file, apiKey) {
-  const base64Data = await fileToBase64(file);
-  const mimeType = file.type || "image/jpeg";
-
-  // If no API Key provided, use smart OCR matcher
+export async function analyzeShopeeScreenshots(files, apiKey) {
+  const fileArray = Array.isArray(files) ? files : [files];
+  
   if (!apiKey || apiKey.trim() === "") {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -119,9 +118,22 @@ export async function analyzeShopeeScreenshot(file, apiKey) {
 
           aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%. 28 total penonton dengan rata-rata durasi 00:00:50."
         });
-      }, 1200);
+      }, 1500);
     });
   }
+
+  // Convert all files to inline_data parts
+  const imageParts = await Promise.all(
+    fileArray.map(async (file) => {
+      const base64 = await fileToBase64(file);
+      return {
+        inline_data: {
+          mime_type: file.type || "image/jpeg",
+          data: base64
+        }
+      };
+    })
+  );
 
   const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
 
@@ -129,7 +141,7 @@ export async function analyzeShopeeScreenshot(file, apiKey) {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
-      contents: [{ parts: [{ text: GEMINI_PROMPT }, { inline_data: { mime_type: mimeType, data: base64Data } }] }],
+      contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
       generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
     })
   });
