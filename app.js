@@ -1,62 +1,66 @@
-import { INITIAL_SESSIONS } from './sample-data.js';
+import { INITIAL_STUDIO_DATA } from './sample-data.js';
 import { analyzeShopeeScreenshot } from './gemini-service.js';
 import { renderDashboardCharts } from './charts.js';
 
 // ==========================================
-// Application State
+// Paramara Studio Admin Portal State
 // ==========================================
-let sessions = [];
+let studioData = {};
 let apiKey = localStorage.getItem("gemini_api_key") || "";
-let brandConfig = JSON.parse(localStorage.getItem("brand_config") || JSON.stringify({
-  storeName: "Paramara Studio",
-  logoUrl: "",
-  primaryColor: "#FF5722",
-  themeMode: "dark"
-}));
-
-let currentScannedData = null; // Temporary scanned data before user saves
+let currentScannedData = null;
 
 // ==========================================
 // Initialization
 // ==========================================
 document.addEventListener("DOMContentLoaded", () => {
-  initSessionsData();
-  applyBrandConfig();
+  initStudioData();
+  applyStudioBranding();
   initTheme();
   setupEventListeners();
   renderAllViews();
 });
 
-function initSessionsData() {
-  const saved = localStorage.getItem("shopee_live_sessions");
+function initStudioData() {
+  const saved = localStorage.getItem("paramara_studio_admin_data");
   if (saved) {
     try {
-      sessions = JSON.parse(saved);
+      studioData = JSON.parse(saved);
     } catch (e) {
-      sessions = INITIAL_SESSIONS;
+      studioData = INITIAL_STUDIO_DATA;
     }
   } else {
-    sessions = INITIAL_SESSIONS;
-    saveSessions();
+    studioData = INITIAL_STUDIO_DATA;
+    saveStudioData();
   }
+
+  // Ensure default arrays exist
+  if (!studioData.shopeeSessions) studioData.shopeeSessions = INITIAL_STUDIO_DATA.shopeeSessions;
+  if (!studioData.clientProjects) studioData.clientProjects = INITIAL_STUDIO_DATA.clientProjects;
+  if (!studioData.liveSchedules) studioData.liveSchedules = INITIAL_STUDIO_DATA.liveSchedules;
+  if (!studioData.studioInfo) studioData.studioInfo = INITIAL_STUDIO_DATA.studioInfo;
 }
 
-function saveSessions() {
-  localStorage.setItem("shopee_live_sessions", JSON.stringify(sessions));
+function saveStudioData() {
+  localStorage.setItem("paramara_studio_admin_data", JSON.stringify(studioData));
 }
 
-function applyBrandConfig() {
-  // Update Brand Title
+function applyStudioBranding() {
+  const info = studioData.studioInfo || INITIAL_STUDIO_DATA.studioInfo;
+
+  // Title & Tagline
   const brandTitleEl = document.getElementById("brandTitleText");
-  if (brandTitleEl) brandTitleEl.textContent = brandConfig.storeName;
+  if (brandTitleEl) brandTitleEl.textContent = info.name || "Paramara Studio";
 
-  // Update Brand Logo
+  const brandTaglineEl = document.getElementById("brandTaglineText");
+  if (brandTaglineEl) brandTaglineEl.textContent = info.tagline || "Internal Admin Portal";
+
+  // Logo Preview
   const logoImgEl = document.getElementById("brandLogoImg");
   const logoFallbackEl = document.getElementById("brandLogoFallback");
 
-  if (brandConfig.logoUrl) {
+  if (info.logoUrl) {
     if (logoImgEl) {
-      logoImgEl.src = brandConfig.logoUrl;
+      logoImgEl.src = info.logoUrl;
       logoImgEl.style.display = "block";
     }
     if (logoFallbackEl) logoFallbackEl.style.display = "none";
@@ -64,22 +68,22 @@ function applyBrandConfig() {
     if (logoImgEl) logoImgEl.style.display = "none";
     if (logoFallbackEl) {
       logoFallbackEl.style.display = "flex";
-      logoFallbackEl.textContent = (brandConfig.storeName[0] || "P").toUpperCase();
+      logoFallbackEl.textContent = (info.name[0] || "P").toUpperCase();
     }
   }
 
-  // Update CSS Variables for Primary Color
-  document.documentElement.style.setProperty("--primary", brandConfig.primaryColor);
-  document.documentElement.style.setProperty("--primary-hover", brandConfig.primaryColor);
-  document.documentElement.style.setProperty("--primary-glow", `${brandConfig.primaryColor}40`);
+  // CSS Colors
+  document.documentElement.style.setProperty("--primary", info.primaryColor || "#FF5722");
+  document.documentElement.style.setProperty("--primary-glow", `${info.primaryColor || '#FF5722'}40`);
 
-  // Fill Branding Settings Form Inputs
-  const inputStoreName = document.getElementById("settingStoreName");
-  if (inputStoreName) inputStoreName.value = brandConfig.storeName;
+  // Fill Settings Inputs
+  const inputName = document.getElementById("settingStoreName");
+  if (inputName) inputName.value = info.name;
 }
 
 function initTheme() {
-  document.documentElement.setAttribute("data-theme", brandConfig.themeMode || "dark");
+  const theme = studioData.studioInfo?.themeMode || "dark";
+  document.documentElement.setAttribute("data-theme", theme);
 }
 
 // ==========================================
@@ -87,59 +91,56 @@ function initTheme() {
 // ==========================================
 function renderAllViews() {
   renderKPICards();
-  renderDashboardCharts(sessions);
+  renderDashboardCharts(studioData.shopeeSessions);
   renderAISummary();
-  renderDataTable();
-  renderDemographicsView();
+  renderShopeeSessionsTable();
+  renderProjectsTable();
+  renderSchedulesTable();
 }
 
 function renderKPICards() {
-  const totalRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
-  const totalLive = sessions.length;
-  const avgRev = totalLive > 0 ? Math.round(totalRev / totalLive) : 0;
-  const totalViews = sessions.reduce((acc, s) => acc + (s.totalViews || 0), 0);
-  const totalOrders = sessions.reduce((acc, s) => acc + (s.totalOrders || 0), 0);
+  const sessions = studioData.shopeeSessions || [];
+  const projects = studioData.clientProjects || [];
 
-  document.getElementById("kpiTotalRevenue").textContent = `Rp ${totalRev.toLocaleString('id-ID')}`;
-  document.getElementById("kpiTotalSessions").textContent = `${totalLive} Sesi`;
-  document.getElementById("kpiAvgRevenue").textContent = `Rp ${avgRev.toLocaleString('id-ID')}`;
-  document.getElementById("kpiTotalViews").textContent = `${totalViews.toLocaleString('id-ID')}`;
-  document.getElementById("kpiTotalOrders").textContent = `${totalOrders} Pesanan`;
+  const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
+  const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
+  const totalCombinedIncome = totalShopeeRev + totalProjectRev;
+  const activeProjectsCount = projects.filter(p => p.status === "Aktif").length;
+
+  document.getElementById("kpiTotalCombinedIncome").textContent = `Rp ${totalCombinedIncome.toLocaleString('id-ID')}`;
+  document.getElementById("kpiShopeeRevenue").textContent = `Rp ${totalShopeeRev.toLocaleString('id-ID')}`;
+  document.getElementById("kpiActiveProjects").textContent = `${activeProjectsCount} Proyek`;
+  document.getElementById("kpiTotalLiveSessions").textContent = `${sessions.length} Sesi`;
 }
 
 function renderAISummary() {
   const container = document.getElementById("aiExecutiveSummaryText");
   if (!container) return;
 
+  const sessions = studioData.shopeeSessions || [];
   if (sessions.length === 0) {
-    container.textContent = "Belum ada data sesi live. Unggah screenshot laporan Shopee Live untuk mendapatkan rekomendasi otomatis dari Gemini AI.";
+    container.textContent = "Belum ada data laporan live streaming. Silakan unggah screenshot melalui portal admin internal ini.";
     return;
   }
 
   const latest = sessions[0];
   container.innerHTML = `
-    <strong>Insight Sesi Terbaru (${latest.title || 'Live'}):</strong><br/>
-    ${latest.aiSummary || 'Sesi ini berjalan baik dengan total omset Rp' + (latest.revenue || 0).toLocaleString('id-ID') + '. Disarankan untuk mempertahankan durasi dan meningkatkan jumlah produk rekomendasi.'}
+    <strong>Insight Admin Sesi Live Terbaru (${latest.title || 'Sesi Live'}):</strong><br/>
+    ${latest.aiSummary || 'Sesi live berjalan optimal dengan total omset Rp' + (latest.revenue || 0).toLocaleString('id-ID') + '. Pertahankan frekuensi live streaming studio.'}
   `;
 }
 
-function renderDataTable() {
+function renderShopeeSessionsTable() {
   const tbody = document.getElementById("sessionsTableBody");
   if (!tbody) return;
 
+  const sessions = studioData.shopeeSessions || [];
   if (sessions.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim);">Belum ada data sesi live. Klik "Scan Screenshot AI" untuk memasukkan data.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-dim);">Belum ada data Shopee Live.</td></tr>`;
     return;
   }
 
-  const searchTerm = (document.getElementById("tableSearchInput")?.value || "").toLowerCase();
-
-  const filtered = sessions.filter(s => 
-    (s.title || "").toLowerCase().includes(searchTerm) || 
-    (s.host || "").toLowerCase().includes(searchTerm)
-  );
-
-  tbody.innerHTML = filtered.map((s, index) => `
+  tbody.innerHTML = sessions.map(s => `
     <tr>
       <td><strong>${s.title || 'Sesi Live'}</strong><br/><small style="color: var(--text-dim);">${s.dateFormatted || s.startTime || '-'}</small></td>
       <td>${s.duration || '-'}</td>
@@ -149,75 +150,64 @@ function renderDataTable() {
       <td><span class="brand-badge">${s.clickRatePercent || 0}% CTR</span></td>
       <td>
         <button class="btn btn-sm btn-secondary" onclick="window.viewSessionDetails('${s.id}')">Detail</button>
-        <button class="btn btn-sm btn-secondary" style="color: #FF5252;" onclick="window.deleteSession('${s.id}')">Hapus</button>
+        <button class="btn btn-sm btn-secondary" style="color: #FF5252;" onclick="window.deleteShopeeSession('${s.id}')">Hapus</button>
       </td>
     </tr>
   `).join("");
 }
 
-function renderDemographicsView() {
-  const container = document.getElementById("demographicsDetailsContainer");
-  if (!container) return;
+function renderProjectsTable() {
+  const tbody = document.getElementById("projectsTableBody");
+  if (!tbody) return;
 
-  const latest = sessions[0];
-  if (!latest) {
-    container.innerHTML = `<div style="text-align: center; color: var(--text-dim); padding: 3rem;">Data demografi penonton & pembeli belum tersedia.</div>`;
+  const projects = studioData.clientProjects || [];
+  if (projects.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-dim);">Belum ada data proyek studio.</td></tr>`;
     return;
   }
 
-  const vp = latest.viewerProfile || {};
-  const bp = latest.buyerProfile || {};
+  tbody.innerHTML = projects.map(p => `
+    <tr>
+      <td><strong>${p.clientName}</strong></td>
+      <td>${p.projectTitle}<br/><small style="color: var(--text-dim);">${p.category}</small></td>
+      <td class="text-success" style="font-weight: 700;">Rp ${(p.budget || 0).toLocaleString('id-ID')}</td>
+      <td><span class="brand-badge" style="background: ${p.status === 'Aktif' ? 'rgba(0,230,118,0.15)' : 'rgba(255,255,255,0.08)'}; color: ${p.status === 'Aktif' ? '#00E676' : 'var(--text-muted)'};">${p.status}</span></td>
+      <td>${p.deadline}</td>
+      <td>
+        <button class="btn btn-sm btn-secondary" style="color: #FF5252;" onclick="window.deleteStudioProject('${p.id}')">Hapus</button>
+      </td>
+    </tr>
+  `).join("");
+}
 
-  container.innerHTML = `
-    <div class="demographics-grid">
-      <!-- Penonton Gender & Follower -->
-      <div class="glass-card chart-card">
-        <h3>👀 Profil Penonton</h3>
-        <div class="stat-bar-group">
-          <div class="stat-bar-item">
-            <div class="stat-bar-label"><span>Bukan Pengikut (Non-Followers)</span><span>${vp.identity?.nonFollowers || 0}%</span></div>
-            <div class="stat-bar-track"><div class="stat-bar-fill" style="width: ${vp.identity?.nonFollowers || 0}%;"></div></div>
-          </div>
-          <div class="stat-bar-item">
-            <div class="stat-bar-label"><span>Pengikut (Followers)</span><span>${vp.identity?.followers || 0}%</span></div>
-            <div class="stat-bar-track"><div class="stat-bar-fill" style="width: ${vp.identity?.followers || 0}%; background: var(--secondary);"></div></div>
-          </div>
-        </div>
-      </div>
+function renderSchedulesTable() {
+  const tbody = document.getElementById("schedulesTableBody");
+  if (!tbody) return;
 
-      <!-- Pembeli Demografi -->
-      <div class="glass-card chart-card">
-        <h3>🛍️ Profil Pembeli</h3>
-        <div class="stat-bar-group">
-          <div class="stat-bar-item">
-            <div class="stat-bar-label"><span>Laki-Laki</span><span>${bp.gender?.male || 0}%</span></div>
-            <div class="stat-bar-track"><div class="stat-bar-fill" style="width: ${bp.gender?.male || 0}%;"></div></div>
-          </div>
-          <div class="stat-bar-item">
-            <div class="stat-bar-label"><span>Perempuan</span><span>${bp.gender?.female || 0}%</span></div>
-            <div class="stat-bar-track"><div class="stat-bar-fill" style="width: ${bp.gender?.female || 0}%; background: #FF5252;"></div></div>
-          </div>
-        </div>
-        <div style="margin-top: 1rem;">
-          <h4 style="font-size: 0.85rem; color: var(--text-muted);">Lokasi Pembeli Terbanyak:</h4>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px;">
-            ${(bp.locations || [{city: "Kota Tangerang", percent: 50}, {city: "Kota Surabaya", percent: 50}]).map(loc => `
-              <span class="brand-badge" style="background: rgba(255,255,255,0.05); color: var(--text-main); border-color: var(--border-color);">
-                ${loc.city} (${loc.percent}%)
-              </span>
-            `).join("")}
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
+  const schedules = studioData.liveSchedules || [];
+  if (schedules.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align: center; color: var(--text-dim);">Belum ada jadwal stream host.</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = schedules.map(sch => `
+    <tr>
+      <td><strong>${sch.title}</strong></td>
+      <td>${sch.hostName}</td>
+      <td>${sch.scheduleTime}</td>
+      <td><span class="brand-badge">${sch.status}</span></td>
+      <td>
+        <button class="btn btn-sm btn-secondary" style="color: #FF5252;" onclick="window.deleteLiveSchedule('${sch.id}')">Hapus</button>
+      </td>
+    </tr>
+  `).join("");
 }
 
 // ==========================================
 // Event Listeners & Modals Logic
 // ==========================================
 function setupEventListeners() {
-  // Tab Switching
+  // Navigation Tabs
   document.querySelectorAll(".tab-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
@@ -230,13 +220,15 @@ function setupEventListeners() {
     });
   });
 
-  // Modal Openers & Closers
+  // Modal Openers
   document.getElementById("btnOpenScanModal")?.addEventListener("click", () => openModal("scanModalOverlay"));
   document.getElementById("btnOpenApiKeyModal")?.addEventListener("click", () => {
     document.getElementById("inputApiKey").value = apiKey;
     openModal("apiKeyModalOverlay");
   });
   document.getElementById("btnOpenGitGuideModal")?.addEventListener("click", () => openModal("gitGuideModalOverlay"));
+  document.getElementById("btnOpenAddProjectModal")?.addEventListener("click", () => openModal("projectModalOverlay"));
+  document.getElementById("btnOpenAddScheduleModal")?.addEventListener("click", () => openModal("scheduleModalOverlay"));
 
   document.querySelectorAll(".close-modal-btn").forEach(btn => {
     btn.addEventListener("click", (e) => {
@@ -251,13 +243,69 @@ function setupEventListeners() {
     localStorage.setItem("gemini_api_key", apiKey);
     const statusEl = document.getElementById("apiKeyStatusBadge");
     if (statusEl) {
-      statusEl.textContent = apiKey ? "API Key Aktif" : "Demo Mode";
+      statusEl.textContent = apiKey ? "Gemini API Active" : "Demo Mode";
       statusEl.className = apiKey ? "brand-badge text-success" : "brand-badge";
     }
     closeModal("apiKeyModalOverlay");
   });
 
-  // Drag & Drop Screenshot Scanner
+  // Add Studio Project Form
+  document.getElementById("btnSaveProject")?.addEventListener("click", () => {
+    const clientName = document.getElementById("projClientName").value.trim();
+    const projectTitle = document.getElementById("projTitle").value.trim();
+    const category = document.getElementById("projCategory").value;
+    const budget = parseInt(document.getElementById("projBudget").value) || 0;
+    const deadline = document.getElementById("projDeadline").value || "2026-08-31";
+
+    if (!clientName || !projectTitle) {
+      alert("Mohon isi Nama Klien dan Judul Proyek!");
+      return;
+    }
+
+    const newProject = {
+      id: "proj_" + Date.now(),
+      clientName,
+      projectTitle,
+      category,
+      budget,
+      status: "Aktif",
+      deadline,
+      notes: "Proyek baru diinput via admin portal"
+    };
+
+    studioData.clientProjects.unshift(newProject);
+    saveStudioData();
+    renderAllViews();
+    closeModal("projectModalOverlay");
+  });
+
+  // Add Live Schedule Form
+  document.getElementById("btnSaveSchedule")?.addEventListener("click", () => {
+    const title = document.getElementById("schedTitle").value.trim();
+    const hostName = document.getElementById("schedHostName").value.trim();
+    const scheduleTime = document.getElementById("schedTime").value || "Hari ini 19:00";
+
+    if (!title || !hostName) {
+      alert("Mohon isi Judul Sesi Stream dan Nama Host!");
+      return;
+    }
+
+    const newSched = {
+      id: "sched_" + Date.now(),
+      title,
+      hostName,
+      platform: "Shopee Live",
+      scheduleTime,
+      status: "Terjadwal"
+    };
+
+    studioData.liveSchedules.unshift(newSched);
+    saveStudioData();
+    renderAllViews();
+    closeModal("scheduleModalOverlay");
+  });
+
+  // Screenshot Scanner File Upload
   const dropzone = document.getElementById("screenshotDropzone");
   const fileInput = document.getElementById("screenshotFileInput");
 
@@ -271,58 +319,47 @@ function setupEventListeners() {
     dropzone.addEventListener("drop", (e) => {
       e.preventDefault();
       dropzone.classList.remove("dragover");
-      if (e.dataTransfer.files.length > 0) {
-        handleFileAnalysis(e.dataTransfer.files[0]);
-      }
+      if (e.dataTransfer.files.length > 0) handleFileAnalysis(e.dataTransfer.files[0]);
     });
-
     fileInput.addEventListener("change", (e) => {
-      if (e.target.files.length > 0) {
-        handleFileAnalysis(e.target.files[0]);
-      }
+      if (e.target.files.length > 0) handleFileAnalysis(e.target.files[0]);
     });
   }
 
-  // Save Scanned Session Button
+  // Save Scanned Shopee Live Session
   document.getElementById("btnSaveScannedSession")?.addEventListener("click", () => {
     if (!currentScannedData) return;
 
-    // Collect values from preview form
     currentScannedData.title = document.getElementById("previewTitle").value || currentScannedData.title;
     currentScannedData.revenue = parseInt(document.getElementById("previewRevenue").value) || currentScannedData.revenue;
     currentScannedData.totalOrders = parseInt(document.getElementById("previewOrders").value) || currentScannedData.totalOrders;
-    currentScannedData.totalViews = parseInt(document.getElementById("previewViews").value) || currentScannedData.totalViews;
-    currentScannedData.duration = document.getElementById("previewDuration").value || currentScannedData.duration;
 
-    sessions.unshift(currentScannedData);
-    saveSessions();
+    studioData.shopeeSessions.unshift(currentScannedData);
+    saveStudioData();
     renderAllViews();
     closeModal("scanModalOverlay");
-    alert("Data sesi Shopee Live berhasil disimpan!");
+    alert("Data sesi Shopee Live berhasil diinput ke portal admin!");
   });
 
-  // Table Search Input
-  document.getElementById("tableSearchInput")?.addEventListener("input", renderDataTable);
-
-  // Save Custom Branding Settings
+  // Save Branding Settings
   document.getElementById("btnSaveBranding")?.addEventListener("click", () => {
-    brandConfig.storeName = document.getElementById("settingStoreName").value || "Paramara Studio";
-    brandConfig.primaryColor = document.getElementById("settingPrimaryColor").value || "#FF5722";
+    studioData.studioInfo.name = document.getElementById("settingStoreName").value || "Paramara Studio";
+    studioData.studioInfo.primaryColor = document.getElementById("settingPrimaryColor").value || "#FF5722";
     
-    localStorage.setItem("brand_config", JSON.stringify(brandConfig));
-    applyBrandConfig();
-    alert("Pengaturan Branding Toko Berhasil Diperbarui!");
+    saveStudioData();
+    applyStudioBranding();
+    alert("Pengaturan Admin Portal Berhasil Disimpan!");
   });
 
-  // Custom Logo Upload
+  // Logo File Change
   document.getElementById("inputLogoFile")?.addEventListener("change", (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (evt) => {
-        brandConfig.logoUrl = evt.target.result;
-        localStorage.setItem("brand_config", JSON.stringify(brandConfig));
-        applyBrandConfig();
+        studioData.studioInfo.logoUrl = evt.target.result;
+        saveStudioData();
+        applyStudioBranding();
       };
       reader.readAsDataURL(file);
     }
@@ -330,16 +367,13 @@ function setupEventListeners() {
 
   // Theme Toggle Button
   document.getElementById("btnToggleTheme")?.addEventListener("click", () => {
-    brandConfig.themeMode = brandConfig.themeMode === "dark" ? "light" : "dark";
-    localStorage.setItem("brand_config", JSON.stringify(brandConfig));
+    studioData.studioInfo.themeMode = studioData.studioInfo.themeMode === "dark" ? "light" : "dark";
+    saveStudioData();
     initTheme();
   });
-
-  // Export CSV Button
-  document.getElementById("btnExportCSV")?.addEventListener("click", exportSessionsToCSV);
 }
 
-// File Analysis Handler
+// AI File Scanner Processor
 async function handleFileAnalysis(file) {
   const loadingEl = document.getElementById("scanLoadingState");
   const formEl = document.getElementById("scanPreviewForm");
@@ -353,7 +387,6 @@ async function handleFileAnalysis(file) {
     const parsedData = await analyzeShopeeScreenshot(file, apiKey);
     currentScannedData = parsedData;
 
-    // Populate preview fields
     document.getElementById("previewTitle").value = parsedData.title || "";
     document.getElementById("previewRevenue").value = parsedData.revenue || 0;
     document.getElementById("previewOrders").value = parsedData.totalOrders || 0;
@@ -365,15 +398,39 @@ async function handleFileAnalysis(file) {
     if (formEl) formEl.style.display = "block";
 
   } catch (error) {
-    alert("Gagal menganalisis screenshot: " + error.message);
+    alert("Gagal membaca screenshot: " + error.message);
     if (loadingEl) loadingEl.style.display = "none";
     if (dropzone) dropzone.style.display = "block";
   }
 }
 
 // Global Actions
+window.deleteShopeeSession = function(id) {
+  if (confirm("Hapus data sesi Shopee Live ini dari admin portal?")) {
+    studioData.shopeeSessions = studioData.shopeeSessions.filter(s => s.id !== id);
+    saveStudioData();
+    renderAllViews();
+  }
+};
+
+window.deleteStudioProject = function(id) {
+  if (confirm("Hapus data proyek studio ini?")) {
+    studioData.clientProjects = studioData.clientProjects.filter(p => p.id !== id);
+    saveStudioData();
+    renderAllViews();
+  }
+};
+
+window.deleteLiveSchedule = function(id) {
+  if (confirm("Hapus jadwal stream ini?")) {
+    studioData.liveSchedules = studioData.liveSchedules.filter(s => s.id !== id);
+    saveStudioData();
+    renderAllViews();
+  }
+};
+
 window.viewSessionDetails = function(sessionId) {
-  const session = sessions.find(s => s.id === sessionId);
+  const session = studioData.shopeeSessions.find(s => s.id === sessionId);
   if (!session) return;
 
   const content = document.getElementById("detailModalContent");
@@ -402,75 +459,11 @@ window.viewSessionDetails = function(sessionId) {
           <div class="kpi-value text-primary">${session.clickRatePercent || 0}%</div>
         </div>
       </div>
-
-      <div style="margin-top: 1.5rem;">
-        <h3>🛍️ Produk Terlaris</h3>
-        <div class="table-wrapper" style="margin-top: 0.5rem;">
-          <table>
-            <thead>
-              <tr>
-                <th>Nama Produk</th>
-                <th>Harga (Rp)</th>
-                <th>Omset (Rp)</th>
-                <th>Klik</th>
-                <th>Masuk Keranjang</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${(session.products || []).map(p => `
-                <tr>
-                  <td>${p.name}</td>
-                  <td>Rp ${(p.price || 0).toLocaleString('id-ID')}</td>
-                  <td class="text-success">Rp ${(p.revenue || 0).toLocaleString('id-ID')}</td>
-                  <td>${p.clicks || 0}</td>
-                  <td>${p.cartAdds || 0}</td>
-                </tr>
-              `).join("")}
-            </tbody>
-          </table>
-        </div>
-      </div>
     `;
   }
 
   openModal("detailModalOverlay");
 };
-
-window.deleteSession = function(sessionId) {
-  if (confirm("Apakah Anda yakin ingin menghapus data sesi live ini?")) {
-    sessions = sessions.filter(s => s.id !== sessionId);
-    saveSessions();
-    renderAllViews();
-  }
-};
-
-function exportSessionsToCSV() {
-  if (sessions.length === 0) {
-    alert("Tidak ada data sesi untuk diekspor.");
-    return;
-  }
-
-  const headers = ["Judul", "Waktu", "Durasi", "Omset (Rp)", "Pesanan", "Total Views", "CTR (%)", "Likes"];
-  const rows = sessions.map(s => [
-    `"${s.title || ''}"`,
-    `"${s.dateFormatted || s.startTime || ''}"`,
-    `"${s.duration || ''}"`,
-    s.revenue || 0,
-    s.totalOrders || 0,
-    s.totalViews || 0,
-    s.clickRatePercent || 0,
-    s.likes || 0
-  ]);
-
-  const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(e => e.join(","))].join("\n");
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", `Shopee_Live_Report_${Date.now()}.csv`);
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-}
 
 function openModal(id) {
   document.getElementById(id)?.classList.add("active");
