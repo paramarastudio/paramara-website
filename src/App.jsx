@@ -3,18 +3,22 @@ import {
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ShieldCheck, Check
+  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
+  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
 import { analyzeShopeeScreenshots } from './services/geminiService';
 
 export default function App() {
-  // Authentication State
+  // Authentication & View Mode State ('public' | 'admin')
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("paramara_auth_session") === "true";
   });
   
+  const [viewMode, setViewMode] = useState('public'); // Default to Public Homepage
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
   const [loginUsername, setLoginUsername] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -67,6 +71,8 @@ export default function App() {
       setIsAuthenticated(true);
       localStorage.setItem("paramara_auth_session", "true");
       setLoginError("");
+      setShowLoginModal(false);
+      setViewMode('admin'); // Switch to Admin Portal
     } else {
       setLoginError("Username atau password tidak cocok. Silakan coba lagi.");
     }
@@ -78,6 +84,7 @@ export default function App() {
     localStorage.removeItem("paramara_auth_session");
     setLoginUsername("");
     setLoginPassword("");
+    setViewMode('public');
   };
 
   // Derived Calculations
@@ -178,118 +185,237 @@ export default function App() {
     alert("Perubahan data sesi berhasil disimpan!");
   };
 
-  // ==========================================
-  // UNAUTHENTICATED LOGIN SCREEN
-  // ==========================================
-  if (!isAuthenticated) {
+  // =========================================================================
+  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (Paramara Studio Core Ecosystem)
+  // =========================================================================
+  if (viewMode === 'public') {
     return (
-      <div style={{ 
-        minHeight: '100vh', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: 'var(--bg-main)',
-        padding: '1.5rem'
-      }}>
-        <div className="glass-card" style={{ 
-          maxWidth: 420, 
-          width: '100%', 
-          padding: '2.5rem 2rem',
-          borderRadius: 20,
-          boxShadow: '0 20px 40px rgba(8, 47, 38, 0.08)'
+      <div style={{ background: '#F4F8F6', minHeight: '100vh', color: 'var(--text-main)' }}>
+        
+        {/* PUBLIC TOP NAVIGATION BAR */}
+        <header style={{ 
+          background: 'rgba(255, 255, 255, 0.95)', 
+          backdropFilter: 'blur(10px)',
+          borderBottom: '1px solid var(--border-color)', 
+          position: 'sticky', 
+          top: 0, 
+          zIndex: 100,
+          padding: '0.875rem 2rem'
         }}>
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <img src="/assets/logo.png" alt="Paramara Studio" style={{ 
-              width: 84, 
-              height: 84, 
-              borderRadius: 16, 
-              border: '2px solid var(--accent-gold)', 
-              boxShadow: '0 8px 20px rgba(184, 142, 57, 0.2)',
-              marginBottom: '1rem',
-              objectFit: 'cover'
-            }} onError={(e) => { e.target.src = '/logo.png'; }} />
-            <h1 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 4 }}>Paramara Studio</h1>
-            <span className="brand-badge" style={{ fontSize: '0.65rem' }}>INTERNAL ADMIN PORTAL ACCESS</span>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 42, height: 42, borderRadius: 10, border: '1px solid var(--accent-gold-border)', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
+              <div>
+                <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.1 }}>Paramara Studio</h1>
+                <span style={{ fontSize: '0.675rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.04em' }}>DIGITAL VENTURES & MEDIA ENGINE</span>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
+              <nav style={{ display: 'flex', gap: '1.25rem', fontSize: '0.875rem', fontWeight: 600 }}>
+                <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Portfolio Ventures</a>
+                <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Live</a>
+                <a href="#lestari" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Lestari Ecosystem</a>
+                <a href="#ijustfound" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>I Just Found (US)</a>
+              </nav>
+
+              {isAuthenticated ? (
+                <button className="btn btn-primary btn-sm" onClick={() => setViewMode('admin')}>
+                  <Monitor style={{ width: 15, height: 15 }} /> Buka Admin Portal
+                </button>
+              ) : (
+                <button className="btn btn-secondary btn-sm" onClick={() => setShowLoginModal(true)}>
+                  <Lock style={{ width: 15, height: 15 }} /> Admin Login
+                </button>
+              )}
+            </div>
+
+          </div>
+        </header>
+
+        {/* HERO SECTION */}
+        <section style={{ padding: '5rem 2rem 4rem', textAlign: 'center', maxWidth: 960, margin: '0 auto' }}>
+          <div className="brand-badge" style={{ marginBottom: '1.25rem', padding: '6px 16px', fontSize: '0.75rem' }}>
+            <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Official Venture Ecosystem & Digital House
+          </div>
+          <h1 style={{ fontSize: '2.8rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.2, marginBottom: '1.25rem', letterSpacing: '-0.03em' }}>
+            Driving High-Converting Live Commerce, Sustainable Platforms & US Media Engines.
+          </h1>
+          <p style={{ fontSize: '1.1rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2.25rem', maxWidth: 780, margin: '0 auto 2.25rem' }}>
+            <strong>Paramara Studio</strong> is a digital venture builder overseeing specialized media and technology operations: Shopee Live Commerce management, the Lestari app ecosystem, and viral US-market product discovery engines.
+          </p>
+
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+            <a href="#ventures" className="btn btn-primary" style={{ padding: '12px 24px', fontSize: '0.95rem' }}>
+              Jelajahi Venture & Portfolio <ArrowRight style={{ width: 18, height: 18 }} />
+            </a>
+            {isAuthenticated ? (
+              <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }} onClick={() => setViewMode('admin')}>
+                <Monitor style={{ width: 18, height: 18 }} /> Buka Portal Admin Studio
+              </button>
+            ) : (
+              <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }} onClick={() => setShowLoginModal(true)}>
+                <Lock style={{ width: 18, height: 18 }} /> Portal Admin Login
+              </button>
+            )}
+          </div>
+        </section>
+
+        {/* VENTURES GRID SECTION */}
+        <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '2rem 2rem 6rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <h2 style={{ fontSize: '2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Tiga Pilar Utama Paramara Studio</h2>
+            <p style={{ fontSize: '0.95rem', color: 'var(--text-muted)' }}>Operasi bisnis, riset platform digital, dan jaringan konten internasional.</p>
           </div>
 
-          <form onSubmit={handleLoginSubmit}>
-            {loginError && (
-              <div style={{ 
-                background: 'rgba(211, 47, 47, 0.08)', 
-                color: '#D32F2F', 
-                padding: '10px 14px', 
-                borderRadius: 10, 
-                fontSize: '0.825rem', 
-                marginBottom: '1.25rem',
-                border: '1px solid rgba(211, 47, 47, 0.2)',
-                fontWeight: 600
-              }}>
-                {loginError}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '2rem' }}>
+            
+            {/* PILLAR 1: SHOPEE LIVE */}
+            <div className="glass-card" id="shopee" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--primary)' }}>
+              <div>
+                <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(8, 47, 38, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--primary)' }}>
+                  <Video style={{ width: 26, height: 26 }} />
+                </div>
+                <span className="brand-badge" style={{ marginBottom: 8 }}>E-Commerce Operations</span>
+                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live Streaming Management</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Operasi pemrosesan live streaming e-commerce berkinerja tinggi. Didukung oleh penyiaran host profesional, strategi GMV penjualan, dan integrasi presisi <strong>Gemini AI Vision Analytics</strong>.
+                </p>
+                
+                <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
+                  <strong>📊 Capaian Metrik:</strong><br/>
+                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Rp 232.500+ GMV / Sesi</span><br/>
+                  <span>• 32.1% CTR Klik Tinggi</span><br/>
+                  <span>• Ekstraksi Presisi Screenshot AI</span>
+                </div>
               </div>
-            )}
 
-            <div className="form-group">
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <User style={{ width: 15, height: 15 }} /> Username
-              </label>
-              <input 
-                type="text" 
-                className="form-input" 
-                placeholder="Masukkan username admin"
-                value={loginUsername}
-                onChange={e => setLoginUsername(e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-group" style={{ marginBottom: '1.75rem' }}>
-              <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Lock style={{ width: 15, height: 15 }} /> Password
-              </label>
-              <div style={{ position: 'relative' }}>
-                <input 
-                  type={showPassword ? "text" : "password"}
-                  className="form-input" 
-                  placeholder="Masukkan password admin"
-                  value={loginPassword}
-                  onChange={e => setLoginPassword(e.target.value)}
-                  required
-                />
-                <button 
-                  type="button"
-                  style={{
-                    position: 'absolute',
-                    right: 12,
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    background: 'none',
-                    border: 'none',
-                    color: 'var(--text-dim)',
-                    cursor: 'pointer'
-                  }}
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+              {isAuthenticated ? (
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setActiveTab('tabShopeeTracker'); }}>
+                  Buka AI Live Tracker <ArrowRight style={{ width: 16, height: 16 }} />
                 </button>
-              </div>
+              ) : (
+                <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowLoginModal(true)}>
+                  <Lock style={{ width: 15, height: 15 }} /> Login Admin Tracker
+                </button>
+              )}
             </div>
 
-            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px', fontSize: '0.95rem' }}>
-              <Lock style={{ width: 18, height: 18 }} /> Masuk ke Admin Portal
-            </button>
-          </form>
+            {/* PILLAR 2: LESTARI APP */}
+            <div className="glass-card" id="lestari" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--secondary-emerald)' }}>
+              <div>
+                <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(5, 150, 105, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--secondary-emerald)' }}>
+                  <Leaf style={{ width: 26, height: 26 }} />
+                </div>
+                <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)', marginBottom: 8 }}>
+                  On-Going Platform
+                </span>
+                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestari App Ecosystem</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Platform aplikasi digital modern berfokus pada keberlanjutan (sustainability), solusi lingkungan, dan pemberdayaan ekosistem digital. Saat ini dalam tahap aktif iterasi pengembangan.
+                </p>
 
-          <p style={{ textAlign: 'center', fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: '2rem' }}>
-            © 2026 <strong>Paramara Studio</strong> — Authorized Access Only
-          </p>
-        </div>
+                <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
+                  <strong>🚀 Status Pengembang:</strong><br/>
+                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Deployment: lestari-app.vercel.app</span><br/>
+                  <span>• Tahap: Active Product Iteration</span>
+                </div>
+              </div>
+
+              <a href="https://lestari-app.vercel.app/" target="_blank" rel="noreferrer" className="btn btn-accent" style={{ width: '100%', justifyContent: 'center' }}>
+                Kunjungi Lestari App <ExternalLink style={{ width: 16, height: 16 }} />
+              </a>
+            </div>
+
+            {/* PILLAR 3: I JUST FOUND (US MARKET AMAZON AFFILIATE) */}
+            <div className="glass-card" id="ijustfound" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--accent-gold)' }}>
+              <div>
+                <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(184, 142, 57, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--accent-gold)' }}>
+                  <Compass style={{ width: 26, height: 26 }} />
+                </div>
+                <span className="brand-badge" style={{ marginBottom: 8 }}>US Market & Media Hub</span>
+                <h3 style={{ fontSize: '1.3rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>@I Just Found (US Affiliate)</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
+                  Kanal kurasi produk viral dan jaringan media afiliasi Amazon yang ditargetkan secara khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & platform media sosial.
+                </p>
+
+                <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
+                  <strong>🇺🇸 Target Segment & Channel:</strong><br/>
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Target Market: United States (US)</span><br/>
+                  <span>• Amazon Affiliate Viral Product Engine</span>
+                </div>
+              </div>
+
+              <a href="https://uk.pinterest.com/productijustfound/" target="_blank" rel="noreferrer" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', color: 'var(--accent-gold)', borderColor: 'var(--accent-gold-border)' }}>
+                Buka Channel Pinterest @productijustfound <ExternalLink style={{ width: 16, height: 16 }} />
+              </a>
+            </div>
+
+          </div>
+        </section>
+
+        {/* PUBLIC FOOTER */}
+        <footer style={{ background: '#FFFFFF', borderTop: '1px solid var(--border-color)', padding: '2.5rem 2rem', textAlign: 'center' }}>
+          <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 32, height: 32, borderRadius: 8 }} onError={(e) => { e.target.src = '/logo.png'; }} />
+              <strong style={{ color: 'var(--primary)', fontSize: '1rem' }}>Paramara Studio</strong>
+            </div>
+            <p style={{ fontSize: '0.825rem', color: 'var(--text-dim)' }}>
+              © 2026 <strong>Paramara Studio</strong>. All rights reserved. Operating Digital Commerce & Media Ecosystem.
+            </p>
+          </div>
+        </footer>
+
+        {/* ADMIN LOGIN MODAL */}
+        {showLoginModal && (
+          <div className="modal-overlay active">
+            <div className="modal-card" style={{ maxWidth: 420, padding: '2.25rem 2rem' }}>
+              <div className="modal-header" style={{ marginBottom: '1.25rem', paddingBottom: '0.75rem' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.2rem' }}>
+                  <Lock style={{ color: 'var(--primary)' }} /> Admin Portal Login
+                </h3>
+                <button className="close-btn" onClick={() => setShowLoginModal(false)}>&times;</button>
+              </div>
+
+              <form onSubmit={handleLoginSubmit}>
+                {loginError && (
+                  <div style={{ background: 'rgba(211, 47, 47, 0.08)', color: '#D32F2F', padding: '10px 14px', borderRadius: 10, fontSize: '0.825rem', marginBottom: '1.25rem', border: '1px solid rgba(211, 47, 47, 0.2)', fontWeight: 600 }}>
+                    {loginError}
+                  </div>
+                )}
+
+                <div className="form-group">
+                  <label className="form-label">Username Admin</label>
+                  <input type="text" className="form-input" placeholder="abdumalikh" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: '1.75rem' }}>
+                  <label className="form-label">Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <input type={showPassword ? "text" : "password"} className="form-input" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
+                    <button type="button" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }} onClick={() => setShowPassword(!showPassword)}>
+                      {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+                    </button>
+                  </div>
+                </div>
+
+                <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
+                  <Lock style={{ width: 16, height: 16 }} /> Masuk ke Admin Portal
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
       </div>
     );
   }
 
-  // ==========================================
-  // AUTHENTICATED ADMIN PORTAL DASHBOARD
-  // ==========================================
+  // =========================================================================
+  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD
+  // =========================================================================
   return (
     <div className="admin-layout">
       
@@ -342,8 +468,11 @@ export default function App() {
         </div>
 
         <div className="sidebar-footer">
+          <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6 }} onClick={() => setViewMode('public')}>
+            <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik
+          </button>
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', color: '#D32F2F' }} onClick={handleLogout}>
-            <LogOut /> Keluar / Logout
+            <LogOut style={{ width: 14, height: 14 }} /> Keluar / Logout
           </button>
         </div>
       </aside>
@@ -363,9 +492,14 @@ export default function App() {
             </div>
           </div>
 
-          <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
-            <Camera /> Input Shopee Live AI (2 Foto)
-          </button>
+          <div style={{ display: 'flex', gap: 10 }}>
+            <button className="btn btn-secondary" onClick={() => setViewMode('public')}>
+              <Globe /> Homepage Publik
+            </button>
+            <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
+              <Camera /> Input Shopee Live AI (2 Foto)
+            </button>
+          </div>
         </div>
 
         {/* Tab 1: Executive Dashboard */}
@@ -599,7 +733,7 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB MANAJEMEN ADMIN (CRUD & EDIT SELF FOR SUPER ADMIN MALIKH) */}
+        {/* TAB MANAJEMEN ADMIN */}
         {activeTab === 'tabAdminUsers' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
@@ -644,7 +778,6 @@ export default function App() {
                       </td>
                       <td>{usr.lastLogin}</td>
                       <td style={{ display: 'flex', gap: '6px' }}>
-                        {/* EDIT BUTTON FOR SUPER ADMIN MALIKH AND ALL USERS */}
                         <button className="btn btn-sm btn-secondary" style={{ color: 'var(--primary)' }} onClick={() => { setEditingAdminUser(usr); setModalType('editAdmin'); }}>
                           <Edit3 style={{ width: 14, height: 14 }} /> Edit Profil
                         </button>
@@ -686,20 +819,6 @@ export default function App() {
               <div className="form-group">
                 <label className="form-label">Domain Utama Studio</label>
                 <input className="form-input" value={domainNameInput} onChange={e => setDomainNameInput(e.target.value)} />
-              </div>
-
-              <div className="form-group">
-                <label className="form-label">Ganti File Logo Official (Opsional)</label>
-                <input type="file" accept="image/*" className="form-input" onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (evt) => {
-                      alert("Logo berhasil diperbarui!");
-                    };
-                    reader.readAsDataURL(file);
-                  }
-                }} />
               </div>
 
               <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={() => alert("Pengaturan Domain & Logo Studio Berhasil Disimpan!")}>
@@ -744,13 +863,6 @@ export default function App() {
                     Buka Website Vercel &rarr;
                   </a>
                 </div>
-              </div>
-
-              <h4 style={{ color: 'var(--primary)', marginBottom: '0.5rem', fontSize: '0.95rem' }}>Perintah Git Config Lokal Aktif di Folder Ini:</h4>
-              <div className="code-block">
-git config --local user.name "paramarastudio"
-git config --local user.email "paramarastudio@gmail.com"
-git remote set-url origin https://github.com/paramarastudio/paramara-website.git
               </div>
             </div>
           </div>
@@ -843,7 +955,7 @@ git remote set-url origin https://github.com/paramarastudio/paramara-website.git
         </div>
       )}
 
-      {/* Modal: EDIT ADMIN USER (SUPER ADMIN MALIKH EDIT HIMSELF) */}
+      {/* Modal: EDIT ADMIN USER */}
       {modalType === 'editAdmin' && editingAdminUser && (
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 480 }}>
