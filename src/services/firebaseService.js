@@ -8,23 +8,19 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || ""
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "AIzaSyDtYbvbojs91MbCDHIevK3EdErOLFIYL2o",
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || "paramarastudio-8e01a.firebaseapp.com",
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || "paramarastudio-8e01a",
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || "paramarastudio-8e01a.firebasestorage.app",
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || "817496763137",
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || "1:817496763137:web:53e84627a55951e75d0900",
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID || "G-8X6G4MSMCB"
 };
 
-// Initialize Firebase App if config is valid
-const isFirebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId);
-
-export const app = isFirebaseConfigured
-  ? (getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0])
-  : null;
-
-export const storage = app ? getStorage(app) : null;
-export const db = app ? getFirestore(app) : null;
+// Initialize Firebase App
+export const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
+export const storage = getStorage(app);
+export const db = getFirestore(app);
 
 /**
  * Upload screenshot file to Firebase Cloud Storage ('shopee-screenshots')
