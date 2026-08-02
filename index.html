@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Paramara Studio - Internal Admin & Operations Portal</title>
-  <meta name="description" content="Portal internal admin Paramara Studio untuk manajemen proyek, jadwal stream, dan pemrosesan data Shopee Live AI.">
+  <title>paramarastudio.com - Internal Admin & Operations Portal</title>
+  <meta name="description" content="Portal internal admin paramarastudio.com untuk manajemen proyek studio, jadwal live host, dan pemrosesan data Shopee Live AI.">
   
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,11 +20,11 @@
         <div id="brandLogoFallback" class="brand-logo-fallback">P</div>
         <div>
           <div style="display: flex; align-items: center; gap: 8px;">
-            <h1 class="brand-title" id="brandTitleText">Paramara Studio</h1>
-            <span class="brand-badge" style="background: rgba(124, 77, 255, 0.15); color: #B388FF; border-color: rgba(124, 77, 255, 0.3);">INTERNAL ADMIN PORTAL</span>
+            <h1 class="brand-title" id="brandTitleText">paramarastudio.com</h1>
+            <span class="brand-badge" style="background: rgba(124, 77, 255, 0.15); color: #B388FF; border-color: rgba(124, 77, 255, 0.3);">INTERNAL PORTAL</span>
             <span class="brand-badge" id="apiKeyStatusBadge">Demo Mode</span>
           </div>
-          <p style="font-size: 0.75rem; color: var(--text-dim);" id="brandTaglineText">Internal Admin & Operations Portal</p>
+          <p style="font-size: 0.75rem; color: var(--text-dim);" id="brandTaglineText">Internal Admin & Operations Hub</p>
         </div>
       </div>
 
@@ -42,7 +42,7 @@
       <button class="tab-btn" data-target="tabShopeeTracker">📹 Shopee Live AI Tracker</button>
       <button class="tab-btn" data-target="tabProjects">💼 Proyek & Klien Studio</button>
       <button class="tab-btn" data-target="tabSchedules">📅 Jadwal Live & Host</button>
-      <button class="tab-btn" data-target="tabBranding">🎨 Settings & Logo</button>
+      <button class="tab-btn" data-target="tabBranding">🎨 Domain & Branding</button>
       <button class="tab-btn" data-target="tabGitGuide">🐙 Deployment GitHub</button>
     </div>
 
@@ -54,7 +54,7 @@
         <div class="glass-card kpi-card" style="--kpi-accent: #00E676;">
           <div class="kpi-title">Total Pendapatan Studio</div>
           <div class="kpi-value text-success" id="kpiTotalCombinedIncome">Rp 0</div>
-          <div class="kpi-subtext">Akumulasi Live Stream + Proyek Studio</div>
+          <div class="kpi-subtext">Live Stream + Proyek Studio</div>
         </div>
 
         <div class="glass-card kpi-card" style="--kpi-accent: #FF5722;">
@@ -78,7 +78,7 @@
 
       <!-- AI Executive Summary Banner -->
       <div class="glass-card ai-summary-card">
-        <div class="ai-badge">✨ Gemini AI Executive Insight (Internal Portal)</div>
+        <div class="ai-badge">✨ Gemini AI Executive Insight (paramarastudio.com)</div>
         <div class="ai-summary-text" id="aiExecutiveSummaryText">
           Memuat ringkasan performa internal studio...
         </div>
@@ -147,7 +147,7 @@
     <div id="tabProjects" class="tab-content" style="display: none;">
       <div class="glass-card" style="padding: 1.5rem; margin-bottom: 1.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
         <div>
-          <h3>💼 Manajemen Proyek & Klien Paramara Studio</h3>
+          <h3>💼 Manajemen Proyek & Klien paramarastudio.com</h3>
           <p style="font-size: 0.85rem; color: var(--text-muted);">Kelola kontrak jasa live streaming, produksi konten, dan anggaran klien.</p>
         </div>
         <button class="btn btn-accent" id="btnOpenAddProjectModal">➕ Input Proyek Baru</button>
@@ -200,15 +200,15 @@
       </div>
     </div>
 
-    <!-- ================= TAB 5: SETTINGS & LOGO ================= -->
+    <!-- ================= TAB 5: DOMAIN & BRANDING ================= -->
     <div id="tabBranding" class="tab-content" style="display: none;">
       <div class="glass-card" style="padding: 2rem; max-width: 680px; margin: 0 auto;">
-        <h3>🎨 Pengaturan Admin Portal Studio</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sesuaikan identitas studio, logo internal portal, dan skema warna aplikasi.</p>
+        <h3>🎨 Pengaturan Domain & Branding Portal</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.5rem;">Sesuaikan domain utama studio, logo internal portal, dan skema warna aplikasi.</p>
 
         <div class="form-group">
-          <label class="form-label">Nama Studio</label>
-          <input type="text" id="settingStoreName" class="form-input" value="Paramara Studio">
+          <label class="form-label">Domain Utama Studio</label>
+          <input type="text" id="settingStoreName" class="form-input" value="paramarastudio.com">
         </div>
 
         <div class="form-group">
@@ -228,7 +228,7 @@
         </div>
 
         <button class="btn btn-primary" id="btnSaveBranding" style="width: 100%; justify-content: center; margin-top: 1rem;">
-          💾 Simpan Pengaturan Admin Portal
+          💾 Simpan Pengaturan Portal
         </button>
       </div>
     </div>
@@ -236,7 +236,7 @@
     <!-- ================= TAB 6: DEPLOYMENT GITHUB ================= -->
     <div id="tabGitGuide" class="tab-content" style="display: none;">
       <div class="glass-card" style="padding: 2rem;">
-        <h3>🐙 Konfigurasi Deployment GitHub (Paramara Studio Internal Admin)</h3>
+        <h3>🐙 Konfigurasi Deployment GitHub (paramarastudio.com)</h3>
         <p style="font-size: 0.9rem; color: var(--text-muted); margin-bottom: 1.5rem;">
           Aplikasi admin portal ini dikonfigurasikan di belakang repository akun <strong>paramarastudio</strong>.
         </p>
@@ -251,12 +251,12 @@ git config --local user.email "paramarastudio@gmail.com"
 
     <!-- ================= FOOTER ================= -->
     <footer>
-      <p>© 2026 <strong>Paramara Studio</strong> — Internal Admin Portal & Operations Hub</p>
+      <p>© 2026 <strong>paramarastudio.com</strong> — Internal Admin Portal & Operations Hub</p>
     </footer>
 
   </div>
 
-  <!-- ================= MODAL: SCAN SCREENSHOT AI ================= -->
+  <!-- MODALS -->
   <div class="modal-overlay" id="scanModalOverlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -315,7 +315,6 @@ git config --local user.email "paramarastudio@gmail.com"
     </div>
   </div>
 
-  <!-- ================= MODAL: INPUT PROYEK BARU ================= -->
   <div class="modal-overlay" id="projectModalOverlay">
     <div class="modal-card" style="max-width: 540px;">
       <div class="modal-header">
@@ -358,7 +357,6 @@ git config --local user.email "paramarastudio@gmail.com"
     </div>
   </div>
 
-  <!-- ================= MODAL: INPUT JADWAL STREAM ================= -->
   <div class="modal-overlay" id="scheduleModalOverlay">
     <div class="modal-card" style="max-width: 500px;">
       <div class="modal-header">
@@ -387,7 +385,6 @@ git config --local user.email "paramarastudio@gmail.com"
     </div>
   </div>
 
-  <!-- ================= MODAL: GEMINI API KEY ================= -->
   <div class="modal-overlay" id="apiKeyModalOverlay">
     <div class="modal-card" style="max-width: 480px;">
       <div class="modal-header">
@@ -406,7 +403,6 @@ git config --local user.email "paramarastudio@gmail.com"
     </div>
   </div>
 
-  <!-- ================= MODAL: DETAIL SESSION ================= -->
   <div class="modal-overlay" id="detailModalOverlay">
     <div class="modal-card">
       <div class="modal-header">
@@ -417,11 +413,10 @@ git config --local user.email "paramarastudio@gmail.com"
     </div>
   </div>
 
-  <!-- ================= MODAL: GIT GUIDE ================= -->
   <div class="modal-overlay" id="gitGuideModalOverlay">
     <div class="modal-card">
       <div class="modal-header">
-        <h3>🐙 Deployment Portal Admin (Paramara Studio)</h3>
+        <h3>🐙 Deployment Portal Admin (paramarastudio.com)</h3>
         <button class="close-btn close-modal-btn">&times;</button>
       </div>
       <div style="font-size: 0.9rem; line-height: 1.6;">
