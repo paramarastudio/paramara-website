@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ShoppingBag, Users, MessageSquare, Heart, Share2, Eye as EyeIcon, Clock, Percent, Activity
+  ChevronDown, ChevronUp
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -22,6 +22,8 @@ export default function App() {
 
   // Portal Navigation State
   const [activeTab, setActiveTab] = useState('tabAnalytics');
+  const [expandedSessionId, setExpandedSessionId] = useState(null);
+  
   const [studioData, setStudioData] = useState(() => {
     const saved = localStorage.getItem("paramara_studio_admin_data");
     if (saved) {
@@ -283,7 +285,7 @@ export default function App() {
             </button>
             <div className="header-title">
               <h2>Executive Dashboard & Studio Operations</h2>
-              <p>Selamat datang kembali, <strong>abdumalikh</strong>! Ikhtisar lengkap metrik studio.</p>
+              <p>Selamat datang kembali, <strong>abdumalikh</strong>! Seluruh metrik tampil tanpa perlu scroll horizontal.</p>
             </div>
           </div>
 
@@ -379,14 +381,14 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Shopee Live AI Tracker */}
+        {/* Tab 2: Shopee Live AI Tracker - EXPANDABLE CARDS (NO HORIZONTAL SCROLL) */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live Streaming (AI Scan)</h3>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Admin dapat mengunggah screenshot HP laporan live untuk diekstrak otomatis oleh Gemini AI.</p>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Seluruh metrik langsung terlihat lengkap di layar tanpa scroll ke kanan.</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => setModalType('scan')}>
                   <Camera /> Scan Screenshot Baru
@@ -394,47 +396,131 @@ export default function App() {
               </div>
             </div>
 
-            <div className="table-wrapper glass-card">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Judul Sesi & Waktu</th>
-                    <th>Durasi</th>
-                    <th>Penjualan (GMV)</th>
-                    <th>Pesanan</th>
-                    <th>Penonton Aktif</th>
-                    <th>Komentar</th>
-                    <th>Masuk Keranjang</th>
-                    <th>CTR (%)</th>
-                    <th>Aksi Admin</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sessions.map(s => (
-                    <tr key={s.id}>
-                      <td><strong>{s.title}</strong><br/><small style={{ color: 'var(--text-dim)' }}>{s.dateFormatted || s.startTime}</small></td>
-                      <td>{s.duration}</td>
-                      <td className="text-success" style={{ fontWeight: 700 }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</td>
-                      <td>{s.totalOrders} pesanan</td>
-                      <td>{s.activeViewers || 7} penonton</td>
-                      <td>{s.commentsCount || 1} komentar</td>
-                      <td>{s.cartAdditions || 5} produk</td>
-                      <td><span className="brand-badge">{s.clickRatePercent}% CTR</span></td>
-                      <td style={{ display: 'flex', gap: '6px' }}>
-                        <button className="btn btn-sm btn-secondary" onClick={() => { setSelectedSessionDetail(s); setModalType('detail'); }}>
-                          <Info style={{ width: 14, height: 14 }} /> Detail Metrik Lengkap
+            {/* EXPANDABLE EXECUTIVE SESSION CARDS */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {sessions.map(s => {
+                const isExpanded = expandedSessionId === s.id;
+                return (
+                  <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
+                    
+                    {/* CARD HEADER */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+                      <div>
+                        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{s.title}</h3>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                          <span>🕒 Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
+                          <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <button className="btn btn-sm btn-secondary" onClick={() => setExpandedSessionId(isExpanded ? null : s.id)}>
+                          {isExpanded ? <ChevronUp style={{ width: 15, height: 15 }} /> : <ChevronDown style={{ width: 15, height: 15 }} />}
+                          {isExpanded ? "Tutup Ringkasan" : "Lihat Metrik Lengkap"}
                         </button>
                         <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
                           setStudioData(prev => ({ ...prev, shopeeSessions: prev.shopeeSessions.filter(item => item.id !== s.id) }));
                         }}>
-                          <Trash2 style={{ width: 14, height: 14 }} />
+                          <Trash2 style={{ width: 14, height: 14 }} /> Hapus
                         </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+
+                    {/* DIRECT VISIBLE METRICS GRID (ALL IN 1 SCREEN) */}
+                    <div style={{ 
+                      display: 'grid', 
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+                      gap: '0.75rem',
+                      background: '#F8FAF9',
+                      padding: '1rem',
+                      borderRadius: 12,
+                      border: '1px solid var(--border-color)'
+                    }}>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENJUALAN (GMV)</span>
+                        <strong className="text-success" style={{ fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PESANAN</span>
+                        <strong style={{ fontSize: '1.05rem', color: 'var(--primary)' }}>{s.totalOrders} order</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENONTON AKTIF</span>
+                        <strong style={{ fontSize: '1.05rem' }}>{s.activeViewers || 7} orang</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KOMENTAR</span>
+                        <strong style={{ fontSize: '1.05rem' }}>{s.commentsCount || 1} chat</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KERANJANG</span>
+                        <strong style={{ fontSize: '1.05rem' }}>{s.cartAdditions || 5} item</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>CTR KLIK</span>
+                        <span className="brand-badge" style={{ fontSize: '0.75rem' }}>{s.clickRatePercent}% CTR</span>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>TOTAL VIEWS</span>
+                        <strong style={{ fontSize: '1.05rem' }}>{s.totalViews || 28} views</strong>
+                      </div>
+                      <div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>RATA-RATA MENONTON</span>
+                        <strong style={{ fontSize: '1.05rem' }}>{s.avgWatchDuration || "00:00:50"}</strong>
+                      </div>
+                    </div>
+
+                    {/* EXPANDABLE ACCORDION CONTENT */}
+                    {isExpanded && (
+                      <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1rem' }}>
+                          <div>
+                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>🛒 Performa Produk Terjual:</h4>
+                            {(s.products || [
+                              { name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL", price: 250000, revenue: 232500, clicks: 2, cartAdds: 1 },
+                              { name: "Ovisure Gold Susu Kesehatan Tulang", price: 300000, revenue: 0, clicks: 5, cartAdds: 2 }
+                            ]).map((prod, idx) => (
+                              <div key={idx} style={{ padding: '6px 10px', background: '#FFFFFF', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                                <strong>{prod.name}</strong>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 2 }}>
+                                  <span>{prod.clicks} Klik | {prod.cartAdds} Keranjang</span>
+                                  <strong className="text-success">Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div>
+                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>📊 Interaksi & Traffic:</h4>
+                            <div style={{ background: '#FFFFFF', padding: '10px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                <span>Penonton Terbanyak:</span>
+                                <strong>{s.peakConcurrentViewers || 3} orang</strong>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                                <span>Disukai (Likes):</span>
+                                <strong>{s.likes || 76} likes</strong>
+                              </div>
+                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span>Dibagikan (Shares):</span>
+                                <strong>{s.shares || 1} shares</strong>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="ai-summary-text" style={{ background: 'rgba(184, 142, 57, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--accent-gold-border)', fontSize: '0.85rem' }}>
+                          <Sparkles style={{ width: 14, height: 14, color: 'var(--accent-gold)', verticalAlign: 'middle', marginRight: 6 }} />
+                          {s.aiSummary}
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
+                );
+              })}
             </div>
+
           </div>
         )}
 
@@ -518,7 +604,6 @@ export default function App() {
               <div style={{ marginTop: '1rem' }}>
                 <h4 style={{ color: 'var(--secondary-emerald)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle /> Periksa & Konfirmasi Seluruh Metrik Ter-Scan:</h4>
                 
-                {/* Full Form Grid */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Judul Sesi Live</label>
@@ -574,132 +659,6 @@ export default function App() {
                 </button>
               </div>
             )}
-          </div>
-        </div>
-      )}
-
-      {/* Modal: FULL SESSION METRICS DETAIL VIEW */}
-      {modalType === 'detail' && selectedSessionDetail && (
-        <div className="modal-overlay active">
-          <div className="modal-card" style={{ maxWidth: 780 }}>
-            <div className="modal-header">
-              <h3>📊 Detail Seluruh Metrik Sesi Shopee Live</h3>
-              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
-            </div>
-            
-            <div style={{ marginBottom: '1.25rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1rem' }}>
-              <h2 style={{ fontSize: '1.25rem', color: 'var(--primary)' }}>{selectedSessionDetail.title}</h2>
-              <p style={{ color: 'var(--text-dim)', fontSize: '0.825rem', marginTop: 4 }}>
-                🕒 Waktu Mulai: <strong>{selectedSessionDetail.dateFormatted || selectedSessionDetail.startTime}</strong> | ⏱️ Durasi Live: <strong>{selectedSessionDetail.duration}</strong>
-              </p>
-            </div>
-
-            {/* SECTION 1: DATA UTAMA */}
-            <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', fontSize: '0.95rem' }}>1. Data Utama Live (Core Metrics)</h4>
-            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem', marginBottom: '1.5rem' }}>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Penjualan (GMV)</div>
-                <div className="kpi-value text-success" style={{ fontSize: '1.3rem' }}>Rp {(selectedSessionDetail.revenue || 0).toLocaleString('id-ID')}</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Total Pesanan</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.totalOrders}</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Penonton Aktif</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.activeViewers || 7}</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Komentar</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.commentsCount || 1}</div>
-              </div>
-
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Masuk Keranjang</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.cartAdditions || 5}</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Persentase Klik (CTR)</div>
-                <div className="kpi-value text-primary" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.clickRatePercent}%</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Pesanan / Klik</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.ordersPerClickPercent || 11.1}%</div>
-              </div>
-            </div>
-
-            {/* SECTION 2: INTERAKSI & ENGAGEMENT */}
-            <h4 style={{ color: 'var(--primary)', marginBottom: '0.75rem', fontSize: '0.95rem' }}>2. Interaksi & Engagement Penonton</h4>
-            <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.875rem', marginBottom: '1.5rem' }}>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Total Ditonton (Views)</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.totalViews || 28}</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Rata-Rata Menonton</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.avgWatchDuration || "00:00:50"}</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">% Komentar</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.commentRatePercent || 3.6}%</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Penonton Terbanyak</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.peakConcurrentViewers || 3}</div>
-              </div>
-
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Disukai (Likes)</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.likes || 76}</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ padding: '1rem' }}>
-                <div className="kpi-title">Dibagikan (Shares)</div>
-                <div className="kpi-value" style={{ fontSize: '1.3rem' }}>{selectedSessionDetail.shares || 1}</div>
-              </div>
-            </div>
-
-            {/* SECTION 3: PRODUK & TRAFFIC SOURCES */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
-              <div>
-                <h4 style={{ color: 'var(--primary)', marginBottom: '0.5rem', fontSize: '0.95rem' }}>3. Traffic Sources</h4>
-                <div className="glass-card" style={{ padding: '1rem' }}>
-                  {(selectedSessionDetail.trafficSources || [
-                    { name: "Video", percent: 18.0 },
-                    { name: "Tab Live & Video", percent: 14.0 },
-                    { name: "Beranda", percent: 11.0 }
-                  ]).map((t, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.85rem' }}>
-                      <span>{t.name}</span>
-                      <strong>{t.percent}%</strong>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <h4 style={{ color: 'var(--primary)', marginBottom: '0.5rem', fontSize: '0.95rem' }}>4. Performa Produk Live</h4>
-                <div className="glass-card" style={{ padding: '1rem', maxHeight: 180, overflowY: 'auto' }}>
-                  {(selectedSessionDetail.products || [
-                    { name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL", price: 250000, revenue: 232500, clicks: 2, cartAdds: 1 },
-                    { name: "Ovisure Gold Susu Kesehatan Tulang", price: 300000, revenue: 0, clicks: 5, cartAdds: 2 }
-                  ]).map((prod, idx) => (
-                    <div key={idx} style={{ padding: '6px 0', borderBottom: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
-                      <strong style={{ display: 'block', color: 'var(--primary)' }}>{prod.name}</strong>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 2 }}>
-                        <span>Klik: {prod.clicks} | Keranjang: {prod.cartAdds}</span>
-                        <strong className="text-success">Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* AI Summary */}
-            <div className="glass-card ai-summary-card">
-              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight</div>
-              <p style={{ fontSize: '0.9rem', lineHeight: 1.6 }}>{selectedSessionDetail.aiSummary}</p>
-            </div>
           </div>
         </div>
       )}
