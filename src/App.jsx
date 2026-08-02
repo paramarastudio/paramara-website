@@ -29,7 +29,7 @@ export default function App() {
   const [expandedSessionId, setExpandedSessionId] = useState(null);
   
   const [studioData, setStudioData] = useState(() => {
-    const saved = localStorage.getItem("paramara_studio_admin_data");
+    const saved = localStorage.getItem("paramara_studio_admin_data_v2");
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
@@ -61,7 +61,7 @@ export default function App() {
 
   // Save Studio Data to LocalStorage
   useEffect(() => {
-    localStorage.setItem("paramara_studio_admin_data", JSON.stringify(studioData));
+    localStorage.setItem("paramara_studio_admin_data_v2", JSON.stringify(studioData));
   }, [studioData]);
 
   // Handle Login Authentication
@@ -85,6 +85,14 @@ export default function App() {
     setLoginUsername("");
     setLoginPassword("");
     setViewMode('public');
+  };
+
+  // Clear All Sessions Helper
+  const handleClearAllSessions = () => {
+    if (confirm("Apakah Anda yakin ingin menghapus seluruh data sesi Shopee Live?")) {
+      setStudioData(prev => ({ ...prev, shopeeSessions: [] }));
+      alert("Seluruh data sesi berhasil dibersihkan!");
+    }
   };
 
   // Derived Calculations
@@ -329,7 +337,7 @@ export default function App() {
               </a>
             </div>
 
-            {/* PILLAR 3: I JUST FOUND THIS! (US MARKET AMAZON AFFILIATE) */}
+            {/* PILLAR 3: I JUST FOUND THIS! */}
             <div className="glass-card" id="ijustfound" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--accent-gold)' }}>
               <div>
                 <div style={{ width: 50, height: 50, borderRadius: 12, background: 'rgba(184, 142, 57, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1.25rem', color: 'var(--accent-gold)' }}>
@@ -349,7 +357,6 @@ export default function App() {
                 </div>
               </div>
 
-              {/* RAPI, FITTED BUTTON WITHOUT TEXT OVERFLOW */}
               <a 
                 href="https://uk.pinterest.com/productijustfound/" 
                 target="_blank" 
@@ -432,7 +439,7 @@ export default function App() {
   }
 
   // =========================================================================
-  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD (PRIVATE DATA ONLY)
+  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD (CLEAN & ACCURATE)
   // =========================================================================
   return (
     <div className="admin-layout">
@@ -556,10 +563,10 @@ export default function App() {
                 {sessions.length > 0 ? (
                   <>
                     <strong>Insight Admin Sesi Live Terbaru ({sessions[0].title || 'Sesi Live'}):</strong><br/>
-                    {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '01:27:11'} menghasilkan Rp${(sessions[0].revenue || 232500).toLocaleString('id-ID')} (${sessions[0].products?.[1]?.name || 'MEGAMOVE'}) dengan Komisi Kotor Rp${(sessions[0].grossCommission || 23250).toLocaleString('id-ID')}. CTR tinggi di ${sessions[0].clickRatePercent || 32.1}%.`}
+                    {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Kotor Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}
                   </>
                 ) : (
-                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live AI' untuk mengunggah screenshot HP laporan live."
+                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live AI (2 Foto)' untuk mengunggah screenshot HP laporan live."
                 )}
               </div>
             </div>
@@ -571,17 +578,23 @@ export default function App() {
                   <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Internal Studio Analytics</span>
                 </div>
                 <div className="chart-container" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {sessions.map(s => (
-                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#F8FAF9', borderRadius: 10, border: '1px solid var(--border-color)' }}>
-                      <div>
-                        <strong style={{ fontSize: '0.9rem' }}>{s.title}</strong>
-                        <div style={{ fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                          ⏱️ Durasi: <strong>{s.duration}</strong> | 💵 Komisi Kotor: <strong className="text-warning">Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
+                  {sessions.length > 0 ? (
+                    sessions.map(s => (
+                      <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#F8FAF9', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                        <div>
+                          <strong style={{ fontSize: '0.9rem' }}>{s.title}</strong>
+                          <div style={{ fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                            ⏱️ Durasi: <strong>{s.duration}</strong> | 💵 Komisi Kotor: <strong className="text-warning">Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
+                          </div>
                         </div>
+                        <span className="text-success" style={{ fontWeight: 800, fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</span>
                       </div>
-                      <span className="text-success" style={{ fontWeight: 800, fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</span>
+                    ))
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-dim)' }}>
+                      Belum ada sesi live terekam.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
 
@@ -591,16 +604,18 @@ export default function App() {
                   <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Traffic Breakdown</span>
                 </div>
                 <div className="chart-container" style={{ padding: '1rem' }}>
-                  {(sessions[0]?.trafficSources || [
-                    { name: "Video", percent: 18.0 },
-                    { name: "Tab Live & Video", percent: 14.0 },
-                    { name: "Beranda", percent: 11.0 }
-                  ]).map((t, idx) => (
-                    <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 0', fontSize: '0.875rem' }}>
-                      <span>{t.name}</span>
-                      <strong>{t.percent}%</strong>
+                  {sessions.length > 0 && sessions[0]?.trafficSources ? (
+                    sessions[0].trafficSources.map((t, idx) => (
+                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 0', fontSize: '0.875rem' }}>
+                        <span>{t.name}</span>
+                        <strong>{t.percent}%</strong>
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-dim)' }}>
+                      Belum ada data traffic.
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -610,143 +625,163 @@ export default function App() {
         {/* Tab 2: Shopee Live AI Tracker */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
-            <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                Ekstraksi data otomatis laporan live streaming Shopee dari screenshot HP bagian atas (GMV & Interaksi) dan bagian bawah (Produk Terjual). Klik tombol <strong>"Input Shopee Live AI"</strong> di atas untuk menambah sesi baru.
-              </p>
+            <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+              <div>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Ekstraksi data otomatis laporan live streaming Shopee dari screenshot HP bagian atas (GMV & Interaksi) dan bagian bawah (Produk Terjual).
+                </p>
+              </div>
+              
+              {sessions.length > 0 && (
+                <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={handleClearAllSessions}>
+                  <Trash2 style={{ width: 14, height: 14 }} /> Bersihkan Seluruh Sesi
+                </button>
+              )}
             </div>
 
             {/* EXPANDABLE EXECUTIVE SESSION CARDS */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-              {sessions.map(s => {
-                const isExpanded = expandedSessionId === s.id;
-                return (
-                  <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
-                    
-                    {/* CARD HEADER */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-                      <div>
-                        <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{s.title}</h3>
-                        <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                          <span>🕒 Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
-                          <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
+            {sessions.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {sessions.map(s => {
+                  const isExpanded = expandedSessionId === s.id;
+                  return (
+                    <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
+                      
+                      {/* CARD HEADER */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{s.title}</h3>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                            <span>🕒 Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
+                            <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                          <button className="btn btn-sm btn-secondary" onClick={() => setExpandedSessionId(isExpanded ? null : s.id)}>
+                            {isExpanded ? <ChevronUp style={{ width: 15, height: 15 }} /> : <ChevronDown style={{ width: 15, height: 15 }} />}
+                            {isExpanded ? "Tutup Detail" : "Lihat Metrik & Produk"}
+                          </button>
+                          
+                          {/* EDIT BUTTON */}
+                          <button className="btn btn-sm btn-secondary" style={{ color: 'var(--primary)' }} onClick={() => { setEditingSession(s); setModalType('editSession'); }}>
+                            <Edit3 style={{ width: 14, height: 14 }} /> Edit Data
+                          </button>
+
+                          <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
+                            setStudioData(prev => ({ ...prev, shopeeSessions: prev.shopeeSessions.filter(item => item.id !== s.id) }));
+                          }}>
+                            <Trash2 style={{ width: 14, height: 14 }} /> Hapus
+                          </button>
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <button className="btn btn-sm btn-secondary" onClick={() => setExpandedSessionId(isExpanded ? null : s.id)}>
-                          {isExpanded ? <ChevronUp style={{ width: 15, height: 15 }} /> : <ChevronDown style={{ width: 15, height: 15 }} />}
-                          {isExpanded ? "Tutup Detail" : "Lihat Metrik & Produk"}
-                        </button>
-                        
-                        {/* EDIT BUTTON */}
-                        <button className="btn btn-sm btn-secondary" style={{ color: 'var(--primary)' }} onClick={() => { setEditingSession(s); setModalType('editSession'); }}>
-                          <Edit3 style={{ width: 14, height: 14 }} /> Edit Data
-                        </button>
+                      {/* DIRECT VISIBLE METRICS GRID */}
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
+                        gap: '0.75rem',
+                        background: '#F8FAF9',
+                        padding: '1rem',
+                        borderRadius: 12,
+                        border: '1px solid var(--border-color)'
+                      }}>
+                        <div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENJUALAN (GMV)</span>
+                          <strong className="text-success" style={{ fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</strong>
+                        </div>
+                        <div style={{ background: 'rgba(184, 142, 57, 0.08)', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--accent-gold-border)' }}>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', fontWeight: 700, display: 'block' }}>💵 KOMISI KOTOR</span>
+                          <strong className="text-warning" style={{ fontSize: '1.05rem' }}>Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PESANAN</span>
+                          <strong style={{ fontSize: '1.05rem', color: 'var(--primary)' }}>{s.totalOrders || 0} order</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENONTON AKTIF</span>
+                          <strong style={{ fontSize: '1.05rem' }}>{s.activeViewers || 0} orang</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KOMENTAR</span>
+                          <strong style={{ fontSize: '1.05rem' }}>{s.commentsCount || 0} chat</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KERANJANG</span>
+                          <strong style={{ fontSize: '1.05rem' }}>{s.cartAdditions || 0} item</strong>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>CTR KLIK</span>
+                          <span className="brand-badge" style={{ fontSize: '0.75rem' }}>{s.clickRatePercent || 0}% CTR</span>
+                        </div>
+                        <div>
+                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>TOTAL VIEWS</span>
+                          <strong style={{ fontSize: '1.05rem' }}>{s.totalViews || 0} views</strong>
+                        </div>
+                      </div>
 
-                        <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
-                          setStudioData(prev => ({ ...prev, shopeeSessions: prev.shopeeSessions.filter(item => item.id !== s.id) }));
-                        }}>
-                          <Trash2 style={{ width: 14, height: 14 }} /> Hapus
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* DIRECT VISIBLE METRICS GRID */}
-                    <div style={{ 
-                      display: 'grid', 
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
-                      gap: '0.75rem',
-                      background: '#F8FAF9',
-                      padding: '1rem',
-                      borderRadius: 12,
-                      border: '1px solid var(--border-color)'
-                    }}>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENJUALAN (GMV)</span>
-                        <strong className="text-success" style={{ fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</strong>
-                      </div>
-                      <div style={{ background: 'rgba(184, 142, 57, 0.08)', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--accent-gold-border)' }}>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', fontWeight: 700, display: 'block' }}>💵 KOMISI KOTOR</span>
-                        <strong className="text-warning" style={{ fontSize: '1.05rem' }}>Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PESANAN</span>
-                        <strong style={{ fontSize: '1.05rem', color: 'var(--primary)' }}>{s.totalOrders} order</strong>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENONTON AKTIF</span>
-                        <strong style={{ fontSize: '1.05rem' }}>{s.activeViewers || 7} orang</strong>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KOMENTAR</span>
-                        <strong style={{ fontSize: '1.05rem' }}>{s.commentsCount || 1} chat</strong>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KERANJANG</span>
-                        <strong style={{ fontSize: '1.05rem' }}>{s.cartAdditions || 5} item</strong>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>CTR KLIK</span>
-                        <span className="brand-badge" style={{ fontSize: '0.75rem' }}>{s.clickRatePercent}% CTR</span>
-                      </div>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>TOTAL VIEWS</span>
-                        <strong style={{ fontSize: '1.05rem' }}>{s.totalViews || 28} views</strong>
-                      </div>
-                    </div>
-
-                    {/* EXPANDABLE ACCORDION CONTENT */}
-                    {isExpanded && (
-                      <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1rem' }}>
-                          <div>
-                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>🛒 Rincian Produk Terjual:</h4>
-                            {(s.products || [
-                              { name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI", price: 250000, revenue: 232500, clicks: 2, cartAdds: 1 },
-                              { name: "Ovisure Gold Susu Kesehatan Tulang", price: 300000, revenue: 0, clicks: 5, cartAdds: 2 }
-                            ]).map((prod, idx) => (
-                              <div key={idx} style={{ padding: '8px 12px', background: '#FFFFFF', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
-                                <strong style={{ color: 'var(--primary)' }}>{prod.name}</strong>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 4 }}>
-                                  <span>{prod.clicks} Klik | {prod.cartAdds} Keranjang</span>
-                                  <strong className="text-success">Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
+                      {/* EXPANDABLE ACCORDION CONTENT */}
+                      {isExpanded && (
+                        <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1rem' }}>
+                            <div>
+                              <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>🛒 Rincian Produk Terjual:</h4>
+                              {(s.products || []).map((prod, idx) => (
+                                <div key={idx} style={{ padding: '8px 12px', background: '#FFFFFF', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
+                                  <strong style={{ color: 'var(--primary)' }}>{prod.name}</strong>
+                                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 4 }}>
+                                    <span>{prod.clicks} Klik | {prod.cartAdds} Keranjang</span>
+                                    <strong className="text-success">Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
-                          </div>
+                              ))}
+                            </div>
 
-                          <div>
-                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>📊 Interaksi & Traffic:</h4>
-                            <div style={{ background: '#FFFFFF', padding: '12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                <span>Penonton Terbanyak:</span>
-                                <strong>{s.peakConcurrentViewers || 3} orang</strong>
-                              </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                <span>Disukai (Likes):</span>
-                                <strong>{s.likes || 76} likes</strong>
-                              </div>
-                              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                <span>Dibagikan (Shares):</span>
-                                <strong>{s.shares || 1} shares</strong>
+                            <div>
+                              <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>📊 Interaksi & Traffic:</h4>
+                              <div style={{ background: '#FFFFFF', padding: '12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                  <span>Penonton Terbanyak:</span>
+                                  <strong>{s.peakConcurrentViewers || 0} orang</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                                  <span>Disukai (Likes):</span>
+                                  <strong>{s.likes || 0} likes</strong>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                  <span>Dibagikan (Shares):</span>
+                                  <strong>{s.shares || 0} shares</strong>
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
 
-                        <div className="ai-summary-text" style={{ background: 'rgba(184, 142, 57, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--accent-gold-border)', fontSize: '0.85rem' }}>
-                          <Sparkles style={{ width: 14, height: 14, color: 'var(--accent-gold)', verticalAlign: 'middle', marginRight: 6 }} />
-                          {s.aiSummary}
+                          <div className="ai-summary-text" style={{ background: 'rgba(184, 142, 57, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--accent-gold-border)', fontSize: '0.85rem' }}>
+                            <Sparkles style={{ width: 14, height: 14, color: 'var(--accent-gold)', verticalAlign: 'middle', marginRight: 6 }} />
+                            {s.aiSummary}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                  </div>
-                );
-              })}
-            </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
+                <div style={{ width: 60, height: 60, borderRadius: 16, background: 'rgba(8, 47, 38, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', color: 'var(--primary)' }}>
+                  <Camera style={{ width: 32, height: 32 }} />
+                </div>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Belum Ada Data Sesi Shopee Live</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem', maxWidth: 460, margin: '0 auto 1.5rem' }}>
+                  Seluruh data sample sebelumnya telah dibersihkan. Klik tombol di bawah untuk mengunggah screenshot HP laporan live Anda yang sebenarnya.
+                </p>
+                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
+                  <Camera /> Input Shopee Live AI (2 Foto Screenshot)
+                </button>
+              </div>
+            )}
 
           </div>
         )}
