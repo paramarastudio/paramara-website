@@ -40,8 +40,9 @@ function initStudioData() {
     studioData = INITIAL_STUDIO_DATA;
   }
 
+  // Force logo URL to assets/logo.png
   if (!studioData.studioInfo) studioData.studioInfo = INITIAL_STUDIO_DATA.studioInfo;
-  studioData.studioInfo.logoUrl = "assets/logo.jpg";
+  studioData.studioInfo.logoUrl = "assets/logo.png";
   saveStudioData();
 }
 
@@ -61,9 +62,10 @@ function applyStudioBranding() {
   const brandTitleEl = document.getElementById("brandTitleText");
   if (brandTitleEl) brandTitleEl.textContent = "paramarastudio";
 
+  // Force image src to assets/logo.png with cache buster
   const logoImgEl = document.getElementById("brandLogoImg");
   if (logoImgEl) {
-    logoImgEl.src = "assets/logo.jpg?v=" + Date.now();
+    logoImgEl.src = "assets/logo.png?v=" + Date.now();
     logoImgEl.style.display = "block";
   }
 
