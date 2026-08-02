@@ -3,7 +3,7 @@ import {
   LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ChevronDown, ChevronUp, ImagePlus
+  ChevronDown, ChevronUp, ImagePlus, Edit3, DollarSign
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -37,7 +37,8 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'detail'
+  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession'
+  const [editingSession, setEditingSession] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
 
@@ -75,6 +76,7 @@ export default function App() {
   const projects = studioData.clientProjects || [];
 
   const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
+  const totalGrossCommission = sessions.reduce((acc, s) => acc + (s.grossCommission || 0), 0);
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
   const totalCombinedIncome = totalShopeeRev + totalProjectRev;
   const activeProjectsCount = projects.filter(p => p.status === "Aktif").length;
@@ -90,6 +92,10 @@ export default function App() {
     setScanning(true);
     try {
       const result = await analyzeShopeeScreenshots(filesToProcess, apiKey);
+      // Auto-calculate 10% default gross commission if not set
+      if (!result.grossCommission) {
+        result.grossCommission = Math.round((result.revenue || 0) * 0.1);
+      }
       setScannedPreview(result);
     } catch (err) {
       alert("Gagal membaca screenshot: " + err.message);
@@ -108,7 +114,18 @@ export default function App() {
     setFileSlot1(null);
     setFileSlot2(null);
     setModalType(null);
-    alert("Semua data metrik & produk Shopee Live berhasil disimpan!");
+    alert("Semua data metrik & komisi kotor berhasil disimpan!");
+  };
+
+  const handleSaveEditedSession = () => {
+    if (!editingSession) return;
+    setStudioData(prev => ({
+      ...prev,
+      shopeeSessions: prev.shopeeSessions.map(s => s.id === editingSession.id ? editingSession : s)
+    }));
+    setEditingSession(null);
+    setModalType(null);
+    alert("Perubahan data sesi berhasil disimpan!");
   };
 
   // ==========================================
@@ -293,7 +310,7 @@ export default function App() {
             </button>
             <div className="header-title">
               <h2>Executive Dashboard & Studio Operations</h2>
-              <p>Dukungan Dual-Screenshot Upload untuk membaca laporan bagian Atas & Bawah.</p>
+              <p>Manajemen Shopee Live AI, komisi kotor studio, dan proyek klien.</p>
             </div>
           </div>
 
@@ -313,9 +330,9 @@ export default function App() {
               </div>
 
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
-                <div className="kpi-title">Omset Shopee Live</div>
-                <div className="kpi-value text-warning">Rp {totalShopeeRev.toLocaleString('id-ID')}</div>
-                <div className="kpi-subtext">Dari hasil scan screenshot AI</div>
+                <div className="kpi-title">Total Komisi Kotor Studio</div>
+                <div className="kpi-value text-warning">Rp {totalGrossCommission.toLocaleString('id-ID')}</div>
+                <div className="kpi-subtext">Hasil komisi dari Shopee Live</div>
               </div>
 
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#082F26' }}>
@@ -338,7 +355,7 @@ export default function App() {
                 {sessions.length > 0 ? (
                   <>
                     <strong>Insight Admin Sesi Live Terbaru ({sessions[0].title || 'Sesi Live'}):</strong><br/>
-                    {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '01:27:11'} menghasilkan Rp${(sessions[0].revenue || 232500).toLocaleString('id-ID')} (${sessions[0].products?.[1]?.name || 'MEGAMOVE'}). CTR tinggi di ${sessions[0].clickRatePercent || 32.1}%. ${sessions[0].totalViews || 28} total penonton dengan rata-rata durasi ${sessions[0].avgWatchDuration || '00:00:50'}.`}
+                    {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '01:27:11'} menghasilkan Rp${(sessions[0].revenue || 232500).toLocaleString('id-ID')} (${sessions[0].products?.[1]?.name || 'MEGAMOVE'}) dengan Komisi Kotor Rp${(sessions[0].grossCommission || 23250).toLocaleString('id-ID')}. CTR tinggi di ${sessions[0].clickRatePercent || 32.1}%.`}
                   </>
                 ) : (
                   "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live AI' untuk mengunggah screenshot HP laporan live."
@@ -358,7 +375,7 @@ export default function App() {
                       <div>
                         <strong style={{ fontSize: '0.9rem' }}>{s.title}</strong>
                         <div style={{ fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                          ⏱️ Durasi: <strong>{s.duration}</strong> | 🛒 Orders: <strong>{s.totalOrders}</strong> | 👁️ Views: <strong>{s.totalViews}</strong> | 🎯 CTR: <strong>{s.clickRatePercent}%</strong>
+                          ⏱️ Durasi: <strong>{s.duration}</strong> | 💵 Komisi Kotor: <strong className="text-warning">Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
                         </div>
                       </div>
                       <span className="text-success" style={{ fontWeight: 800, fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</span>
@@ -389,14 +406,14 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Shopee Live AI Tracker - DUAL SCREENSHOT CARDS */}
+        {/* Tab 2: Shopee Live AI Tracker - WITH EDIT & GROSS COMMISSION */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Anda dapat mengunggah 2 foto screenshot sekaligus (Screenshot Atas + Screenshot Bawah Produk Terjual).</p>
+                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Setiap sesi dilengkapi fitur Edit Data & Pencatatan Komisi Kotor Studio.</p>
                 </div>
                 <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
                   <Camera /> Scan 2 Screenshot Baru
@@ -421,11 +438,17 @@ export default function App() {
                         </div>
                       </div>
 
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                         <button className="btn btn-sm btn-secondary" onClick={() => setExpandedSessionId(isExpanded ? null : s.id)}>
                           {isExpanded ? <ChevronUp style={{ width: 15, height: 15 }} /> : <ChevronDown style={{ width: 15, height: 15 }} />}
-                          {isExpanded ? "Tutup Detail" : "Lihat Metrik & Produk Terjual"}
+                          {isExpanded ? "Tutup Detail" : "Lihat Metrik & Produk"}
                         </button>
+                        
+                        {/* EDIT BUTTON */}
+                        <button className="btn btn-sm btn-secondary" style={{ color: 'var(--primary)' }} onClick={() => { setEditingSession(s); setModalType('editSession'); }}>
+                          <Edit3 style={{ width: 14, height: 14 }} /> Edit Data
+                        </button>
+
                         <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
                           setStudioData(prev => ({ ...prev, shopeeSessions: prev.shopeeSessions.filter(item => item.id !== s.id) }));
                         }}>
@@ -434,7 +457,7 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* DIRECT VISIBLE METRICS GRID */}
+                    {/* DIRECT VISIBLE METRICS GRID INCLUDING GROSS COMMISSION */}
                     <div style={{ 
                       display: 'grid', 
                       gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
@@ -447,6 +470,10 @@ export default function App() {
                       <div>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENJUALAN (GMV)</span>
                         <strong className="text-success" style={{ fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ background: 'rgba(184, 142, 57, 0.08)', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--accent-gold-border)' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', fontWeight: 700, display: 'block' }}>💵 KOMISI KOTOR</span>
+                        <strong className="text-warning" style={{ fontSize: '1.05rem' }}>Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
                       </div>
                       <div>
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PESANAN</span>
@@ -472,30 +499,23 @@ export default function App() {
                         <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>TOTAL VIEWS</span>
                         <strong style={{ fontSize: '1.05rem' }}>{s.totalViews || 28} views</strong>
                       </div>
-                      <div>
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>RATA-RATA MENONTON</span>
-                        <strong style={{ fontSize: '1.05rem' }}>{s.avgWatchDuration || "00:00:50"}</strong>
-                      </div>
                     </div>
 
-                    {/* EXPANDABLE ACCORDION CONTENT WITH PRODUCTS FROM SCREENSHOT 2 */}
+                    {/* EXPANDABLE ACCORDION CONTENT */}
                     {isExpanded && (
                       <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)' }}>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1rem' }}>
                           <div>
-                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                              🛒 Rincian Produk Terjual (Screenshot Bawah):
-                            </h4>
+                            <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>🛒 Rincian Produk Terjual:</h4>
                             {(s.products || [
                               { name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI", price: 250000, revenue: 232500, clicks: 2, cartAdds: 1 },
-                              { name: "Ovisure Gold Susu Kesehatan Tulang", price: 300000, revenue: 0, clicks: 5, cartAdds: 2 },
-                              { name: "NOW Supplements, Vitamin D-3 1000 IU", price: 199900, revenue: 0, clicks: 1, cartAdds: 1 }
+                              { name: "Ovisure Gold Susu Kesehatan Tulang", price: 300000, revenue: 0, clicks: 5, cartAdds: 2 }
                             ]).map((prod, idx) => (
                               <div key={idx} style={{ padding: '8px 12px', background: '#FFFFFF', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
                                 <strong style={{ color: 'var(--primary)' }}>{prod.name}</strong>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 4 }}>
                                   <span>{prod.clicks} Klik | {prod.cartAdds} Keranjang</span>
-                                  <strong className="text-success" style={{ fontWeight: 700 }}>Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
+                                  <strong className="text-success">Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
                                 </div>
                               </div>
                             ))}
@@ -585,7 +605,7 @@ export default function App() {
         </footer>
       </main>
 
-      {/* Modal: DUAL SCREENSHOT SCANNER */}
+      {/* Modal: DUAL SCREENSHOT SCANNER WITH GROSS COMMISSION */}
       {modalType === 'scan' && (
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 740 }}>
@@ -602,7 +622,7 @@ export default function App() {
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
                   
-                  {/* Slot 1: Screenshot Atas */}
+                  {/* Slot 1 */}
                   <label className="dropzone" style={{ display: 'block', padding: '1.5rem 1rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
                       <ImagePlus style={{ width: 36, height: 36, color: fileSlot1 ? 'var(--secondary-emerald)' : 'var(--primary)' }} />
@@ -614,7 +634,7 @@ export default function App() {
                     <input type="file" accept="image/*" onChange={e => setFileSlot1(e.target.files?.[0] || null)} style={{ display: 'none' }} />
                   </label>
 
-                  {/* Slot 2: Screenshot Bawah */}
+                  {/* Slot 2 */}
                   <label className="dropzone" style={{ display: 'block', padding: '1.5rem 1rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
                       <ImagePlus style={{ width: 36, height: 36, color: fileSlot2 ? 'var(--secondary-emerald)' : 'var(--primary)' }} />
@@ -648,7 +668,7 @@ export default function App() {
 
             {scannedPreview && !scanning && (
               <div style={{ marginTop: '1rem' }}>
-                <h4 style={{ color: 'var(--secondary-emerald)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle /> Hasil Gabungan Dua Screenshot Ter-Scan:</h4>
+                <h4 style={{ color: 'var(--secondary-emerald)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle /> Periksa & Konfirmasi Data Sesi:</h4>
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -664,32 +684,81 @@ export default function App() {
                     <label className="form-label">Penjualan GMV (Rp)</label>
                     <input className="form-input" type="number" value={scannedPreview.revenue} onChange={e => setScannedPreview({ ...scannedPreview, revenue: parseInt(e.target.value) || 0 })} />
                   </div>
+
+                  {/* GROSS COMMISSION INPUT */}
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: 'var(--accent-gold)' }}>💵 Komisi Kotor Studio (Rp)</label>
+                    <input className="form-input" type="number" value={scannedPreview.grossCommission || Math.round((scannedPreview.revenue || 0) * 0.1)} onChange={e => setScannedPreview({ ...scannedPreview, grossCommission: parseInt(e.target.value) || 0 })} />
+                  </div>
+
                   <div className="form-group">
                     <label className="form-label">Total Pesanan</label>
                     <input className="form-input" type="number" value={scannedPreview.totalOrders} onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: parseInt(e.target.value) || 0 })} />
                   </div>
-                  <div className="form-group">
-                    <label className="form-label">CTR Klik %</label>
-                    <input className="form-input" type="number" step="0.1" value={scannedPreview.clickRatePercent} onChange={e => setScannedPreview({ ...scannedPreview, clickRatePercent: parseFloat(e.target.value) || 0 })} />
-                  </div>
-                </div>
-
-                {/* Extracted Products List Preview */}
-                <div style={{ marginTop: '1rem', background: '#F8FAF9', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
-                  <strong style={{ fontSize: '0.85rem', color: 'var(--primary)', display: 'block', marginBottom: 6 }}>📦 Produk Terjual Terbaca dari Screenshot Bawah:</strong>
-                  {(scannedPreview.products || []).map((p, idx) => (
-                    <div key={idx} style={{ fontSize: '0.8rem', display: 'flex', justifyContent: 'space-between', margin: '4px 0' }}>
-                      <span>{p.name}</span>
-                      <strong className="text-success">Rp {(p.revenue || 0).toLocaleString('id-ID')} ({p.clicks} klik)</strong>
-                    </div>
-                  ))}
                 </div>
 
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveScannedSession}>
-                  <Save /> Simpan Seluruh Metrik & Produk ke Admin Portal
+                  <Save /> Simpan Seluruh Metrik & Komisi Kotor
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: EDIT SESSION DATA */}
+      {modalType === 'editSession' && editingSession && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 680 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Edit3 style={{ color: 'var(--primary)' }} /> Edit Data Sesi Shopee Live</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Judul Sesi Live</label>
+                <input className="form-input" value={editingSession.title} onChange={e => setEditingSession({ ...editingSession, title: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Durasi Live</label>
+                <input className="form-input" value={editingSession.duration} onChange={e => setEditingSession({ ...editingSession, duration: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Penjualan GMV (Rp)</label>
+                <input className="form-input" type="number" value={editingSession.revenue} onChange={e => setEditingSession({ ...editingSession, revenue: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ color: 'var(--accent-gold)' }}>💵 Komisi Kotor Studio (Rp)</label>
+                <input className="form-input" type="number" value={editingSession.grossCommission || 0} onChange={e => setEditingSession({ ...editingSession, grossCommission: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Total Pesanan</label>
+                <input className="form-input" type="number" value={editingSession.totalOrders} onChange={e => setEditingSession({ ...editingSession, totalOrders: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Persentase Klik (CTR %)</label>
+                <input className="form-input" type="number" step="0.1" value={editingSession.clickRatePercent} onChange={e => setEditingSession({ ...editingSession, clickRatePercent: parseFloat(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Penonton Aktif</label>
+                <input className="form-input" type="number" value={editingSession.activeViewers || 7} onChange={e => setEditingSession({ ...editingSession, activeViewers: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Masuk Keranjang</label>
+                <input className="form-input" type="number" value={editingSession.cartAdditions || 5} onChange={e => setEditingSession({ ...editingSession, cartAdditions: parseInt(e.target.value) || 0 })} />
+              </div>
+            </div>
+
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveEditedSession}>
+              <Save /> Simpan Perubahan Data Sesi
+            </button>
           </div>
         </div>
       )}

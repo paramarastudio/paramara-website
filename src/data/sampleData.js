@@ -22,6 +22,7 @@ export const INITIAL_STUDIO_DATA = {
       dateFormatted: "01-08-2026 21:37",
       
       revenue: 232500,
+      grossCommission: 23250, // 10% Komisi Kotor Studio
       activeViewers: 7,
       commentsCount: 1,
       cartAdditions: 5,
@@ -66,7 +67,7 @@ export const INITIAL_STUDIO_DATA = {
         }
       ],
 
-      aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%. 28 total penonton dengan rata-rata durasi 00:00:50."
+      aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI) dengan estimasi Komisi Kotor Rp23.250. CTR tinggi di 32.1%."
     }
   ],
 
