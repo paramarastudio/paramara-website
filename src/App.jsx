@@ -4,12 +4,12 @@ import {
   Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
   ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Database
+  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Database, Cloud
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
 import { analyzeShopeeScreenshots } from './services/geminiService';
-import { uploadScreenshotToSupabase, saveSessionToSupabase, fetchSessionsFromSupabase, supabase } from './services/supabaseService';
+import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage } from './services/firebaseService';
 
 export default function App() {
   // Authentication & View Mode State ('public' | 'admin')
@@ -60,17 +60,17 @@ export default function App() {
   const [fileSlot1, setFileSlot1] = useState(null);
   const [fileSlot2, setFileSlot2] = useState(null);
 
-  // Fetch Supabase Sessions on Mount if Connected
+  // Fetch Firebase Sessions on Mount if Configured
   useEffect(() => {
-    async function loadSupabaseData() {
-      if (supabase) {
-        const cloudSessions = await fetchSessionsFromSupabase();
+    async function loadFirebaseData() {
+      if (firebaseStorage) {
+        const cloudSessions = await fetchSessionsFromFirebase();
         if (cloudSessions && cloudSessions.length > 0) {
           setStudioData(prev => ({ ...prev, shopeeSessions: cloudSessions }));
         }
       }
     }
-    loadSupabaseData();
+    loadFirebaseData();
   }, []);
 
   // Save Studio Data to LocalStorage as fallback
@@ -161,7 +161,7 @@ export default function App() {
     alert("Data profil admin berhasil diperbarui!");
   };
 
-  // Dual File analysis handler + Supabase Storage Upload
+  // Dual File analysis handler + Firebase Cloud Storage Upload
   const handleDualAnalysis = async () => {
     const filesToProcess = [fileSlot1, fileSlot2].filter(Boolean);
     if (filesToProcess.length === 0) {
@@ -177,13 +177,13 @@ export default function App() {
         result.grossCommission = Math.round((result.revenue || 0) * 0.1);
       }
 
-      // 2. Upload Screenshots to Supabase Storage if configured
-      if (supabase && fileSlot1) {
-        const url1 = await uploadScreenshotToSupabase(fileSlot1);
+      // 2. Upload Screenshots to Firebase Storage if configured
+      if (firebaseStorage && fileSlot1) {
+        const url1 = await uploadScreenshotToFirebase(fileSlot1);
         if (url1) result.screenshotUrlTop = url1;
       }
-      if (supabase && fileSlot2) {
-        const url2 = await uploadScreenshotToSupabase(fileSlot2);
+      if (firebaseStorage && fileSlot2) {
+        const url2 = await uploadScreenshotToFirebase(fileSlot2);
         if (url2) result.screenshotUrlBottom = url2;
       }
 
@@ -198,9 +198,9 @@ export default function App() {
   const handleSaveScannedSession = async () => {
     if (!scannedPreview) return;
 
-    // Save to Supabase DB if connected
-    if (supabase) {
-      await saveSessionToSupabase(scannedPreview);
+    // Save to Firebase Firestore DB if connected
+    if (firebaseStorage) {
+      await saveSessionToFirebase(scannedPreview);
     }
 
     setStudioData(prev => ({
@@ -212,7 +212,7 @@ export default function App() {
     setFileSlot1(null);
     setFileSlot2(null);
     setModalType(null);
-    alert("Semua data metrik & komisi kotor berhasil disimpan ke Cloud!");
+    alert("Semua data metrik & komisi kotor berhasil disimpan ke Firebase Cloud!");
   };
 
   const handleSaveEditedSession = () => {
@@ -497,8 +497,8 @@ export default function App() {
               <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)' }}>
                 Hi Malikh
               </span>
-              <span className="brand-badge" style={{ background: supabase ? 'rgba(5, 150, 105, 0.1)' : 'rgba(184, 142, 57, 0.1)', color: supabase ? '#059669' : 'var(--accent-gold)' }}>
-                {supabase ? "Cloud Storage Active" : "Local Storage Mode"}
+              <span className="brand-badge" style={{ background: firebaseStorage ? 'rgba(5, 150, 105, 0.1)' : 'rgba(184, 142, 57, 0.1)', color: firebaseStorage ? '#059669' : 'var(--accent-gold)' }}>
+                {firebaseStorage ? "🔥 Firebase Cloud Active" : "Local Storage Mode"}
               </span>
             </div>
           </div>
@@ -693,7 +693,7 @@ export default function App() {
                             <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
                             {s.screenshotUrlTop && (
                               <a href={s.screenshotUrlTop} target="_blank" rel="noreferrer" style={{ color: 'var(--secondary-emerald)', textDecoration: 'none', fontWeight: 600 }}>
-                                📁 Cloud File 1 ↗
+                                🔥 Firebase Cloud Screenshot 1 ↗
                               </a>
                             )}
                           </div>
@@ -919,15 +919,15 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB DEPLOYMENT GITHUB & SUPABASE CLOUD STATUS */}
+        {/* TAB DEPLOYMENT GITHUB & FIREBASE CLOUD STATUS */}
         {activeTab === 'tabGitGuide' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '2rem' }}>
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 8 }}>
-                <GitBranch style={{ color: 'var(--primary)' }} /> Status Cloud Architecture (GitHub, Vercel & Supabase)
+                <GitBranch style={{ color: 'var(--primary)' }} /> Status Cloud Architecture (GitHub, Vercel & Firebase)
               </h3>
               <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                Portal admin <strong>Paramara Studio</strong> terhubung dengan Cloud Infrastructure untuk penyimpanan abadi jangka panjang.
+                Portal admin <strong>Paramara Studio</strong> terhubung dengan Google Cloud Firebase untuk penyimpanan abadi jangka panjang.
               </p>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
@@ -958,17 +958,17 @@ export default function App() {
                   </a>
                 </div>
 
-                {/* Supabase Storage */}
+                {/* Firebase Storage */}
                 <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
                   <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Database style={{ width: 16, height: 16 }} /> Supabase Storage Cloud:
+                    <Cloud style={{ width: 16, height: 16 }} /> Firebase Google Cloud:
                   </h4>
                   <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                    <strong>Status Integrasi:</strong> <span className="brand-badge" style={{ background: supabase ? 'rgba(5,150,105,0.1)' : 'rgba(184,142,57,0.1)', color: supabase ? '#059669' : 'var(--accent-gold)' }}>{supabase ? "Connected (Cloud Storage)" : "Siap Pasang VITE_SUPABASE_URL"}</span><br/>
-                    <strong>Fungsi:</strong> Simpan Screenshot HP & Data Database Permanen Jangka Panjang
+                    <strong>Status Integrasi:</strong> <span className="brand-badge" style={{ background: firebaseStorage ? 'rgba(5,150,105,0.1)' : 'rgba(184,142,57,0.1)', color: firebaseStorage ? '#059669' : 'var(--accent-gold)' }}>{firebaseStorage ? "🔥 Firebase Active" : "Siap Pasang VITE_FIREBASE_API_KEY"}</span><br/>
+                    <strong>Fungsi:</strong> Simpan Screenshot HP (5GB Storage) & Firestore Database
                   </p>
-                  <a href="https://supabase.com" target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary" style={{ marginTop: 6 }}>
-                    Buka Dashboard Supabase &rarr;
+                  <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary" style={{ marginTop: 6 }}>
+                    Buka Console Firebase &rarr;
                   </a>
                 </div>
 
