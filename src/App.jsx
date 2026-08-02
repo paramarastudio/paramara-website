@@ -12,12 +12,42 @@ import { analyzeShopeeScreenshots } from './services/geminiService';
 import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage } from './services/firebaseService';
 
 export default function App() {
-  // Authentication & View Mode State ('public' | 'admin')
+  // URL-based View Mode State ('public' at '/' vs 'admin' at '/admin')
+  const [viewMode, setViewModeState] = useState(() => {
+    if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+      return 'admin';
+    }
+    return 'public';
+  });
+
+  const setViewMode = (mode) => {
+    setViewModeState(mode);
+    if (typeof window !== 'undefined') {
+      const targetPath = mode === 'admin' ? '/admin' : '/';
+      if (window.location.pathname !== targetPath) {
+        window.history.pushState({}, '', targetPath);
+      }
+    }
+  };
+
+  // Sync state on browser back/forward buttons (popstate)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (window.location.pathname.startsWith('/admin')) {
+        setViewModeState('admin');
+      } else {
+        setViewModeState('public');
+      }
+    };
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+
+  // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("paramara_auth_session") === "true";
   });
   
-  const [viewMode, setViewMode] = useState('public'); // Default to Public Homepage
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   const [loginUsername, setLoginUsername] = useState("");
@@ -227,7 +257,7 @@ export default function App() {
   };
 
   // =========================================================================
-  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE
+  // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (URL: /)
   // =========================================================================
   if (viewMode === 'public') {
     return (
@@ -266,7 +296,7 @@ export default function App() {
                   <Monitor style={{ width: 15, height: 15 }} /> Buka Admin Portal
                 </button>
               ) : (
-                <button className="btn btn-secondary btn-sm" onClick={() => setShowLoginModal(true)}>
+                <button className="btn btn-secondary btn-sm" onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
                   <Lock style={{ width: 15, height: 15 }} /> Portal Admin Login
                 </button>
               )}
@@ -296,8 +326,8 @@ export default function App() {
                 <Monitor style={{ width: 18, height: 18 }} /> Buka Portal Admin Studio
               </button>
             ) : (
-              <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }} onClick={() => setShowLoginModal(true)}>
-                <Lock style={{ width: 18, height: 18 }} /> Portal Admin Login
+              <button className="btn btn-secondary" style={{ padding: '12px 24px', fontSize: '0.95rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
+                <Lock style={{ width: 18, height: 18 }} /> Portal Admin Login (/admin)
               </button>
             )}
           </div>
@@ -337,8 +367,8 @@ export default function App() {
                   Buka Portal Admin Tracker <ArrowRight style={{ width: 16, height: 16 }} />
                 </button>
               ) : (
-                <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowLoginModal(true)}>
-                  <Lock style={{ width: 15, height: 15 }} /> Login Internal Admin Portal
+                <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
+                  <Lock style={{ width: 15, height: 15 }} /> Login Internal Admin Portal (/admin)
                 </button>
               )}
             </div>
@@ -426,54 +456,63 @@ export default function App() {
           </div>
         </footer>
 
-        {/* ADMIN LOGIN MODAL */}
-        {showLoginModal && (
-          <div className="modal-overlay active">
-            <div className="modal-card" style={{ maxWidth: 420, padding: '2.25rem 2rem' }}>
-              <div className="modal-header" style={{ marginBottom: '1.25rem', paddingBottom: '0.75rem' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: '1.2rem' }}>
-                  <Lock style={{ color: 'var(--primary)' }} /> Admin Portal Login
-                </h3>
-                <button className="close-btn" onClick={() => setShowLoginModal(false)}>&times;</button>
-              </div>
-
-              <form onSubmit={handleLoginSubmit}>
-                {loginError && (
-                  <div style={{ background: 'rgba(211, 47, 47, 0.08)', color: '#D32F2F', padding: '10px 14px', borderRadius: 10, fontSize: '0.825rem', marginBottom: '1.25rem', border: '1px solid rgba(211, 47, 47, 0.2)', fontWeight: 600 }}>
-                    {loginError}
-                  </div>
-                )}
-
-                <div className="form-group">
-                  <label className="form-label">Username Admin</label>
-                  <input type="text" className="form-input" placeholder="abdumalikh" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
-                </div>
-
-                <div className="form-group" style={{ marginBottom: '1.75rem' }}>
-                  <label className="form-label">Password</label>
-                  <div style={{ position: 'relative' }}>
-                    <input type={showPassword ? "text" : "password"} className="form-input" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
-                    <button type="button" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }} onClick={() => setShowPassword(!showPassword)}>
-                      {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
-                    </button>
-                  </div>
-                </div>
-
-                <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px' }}>
-                  <Lock style={{ width: 16, height: 16 }} /> Masuk ke Admin Portal
-                </button>
-              </form>
-            </div>
-          </div>
-        )}
-
       </div>
     );
   }
 
   // =========================================================================
-  // VIEW MODE 2: AUTHENTICATED ADMIN PORTAL DASHBOARD
+  // VIEW MODE 2: PRIVATE ADMIN PORTAL (URL: /admin)
   // =========================================================================
+
+  // If visiting /admin but not authenticated, render Admin Login Page!
+  if (!isAuthenticated) {
+    return (
+      <div style={{ background: 'var(--bg-main)', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+        <div className="glass-card" style={{ maxWidth: 420, width: '100%', padding: '2.5rem 2rem' }}>
+          
+          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+            <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 56, height: 56, borderRadius: 14, border: '2px solid var(--accent-gold)', marginBottom: '0.75rem', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
+            <h2 style={{ fontSize: '1.4rem', color: 'var(--primary)', fontWeight: 800 }}>Paramara Studio</h2>
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.04em' }}>AUTHORIZED ADMIN PORTAL (/admin)</span>
+          </div>
+
+          <form onSubmit={handleLoginSubmit}>
+            {loginError && (
+              <div style={{ background: 'rgba(211, 47, 47, 0.08)', color: '#D32F2F', padding: '10px 14px', borderRadius: 10, fontSize: '0.825rem', marginBottom: '1.25rem', border: '1px solid rgba(211, 47, 47, 0.2)', fontWeight: 600 }}>
+                {loginError}
+              </div>
+            )}
+
+            <div className="form-group">
+              <label className="form-label">Username Admin</label>
+              <input type="text" className="form-input" placeholder="abdumalikh" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
+            </div>
+
+            <div className="form-group" style={{ marginBottom: '1.75rem' }}>
+              <label className="form-label">Password</label>
+              <div style={{ position: 'relative' }}>
+                <input type={showPassword ? "text" : "password"} className="form-input" placeholder="Password" value={loginPassword} onChange={e => setLoginPassword(e.target.value)} required />
+                <button type="button" style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'var(--text-dim)', cursor: 'pointer' }} onClick={() => setShowPassword(!showPassword)}>
+                  {showPassword ? <EyeOff style={{ width: 16, height: 16 }} /> : <Eye style={{ width: 16, height: 16 }} />}
+                </button>
+              </div>
+            </div>
+
+            <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '12px', marginBottom: '1rem' }}>
+              <Lock style={{ width: 16, height: 16 }} /> Masuk ke Admin Portal
+            </button>
+
+            <button type="button" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '10px' }} onClick={() => setViewMode('public')}>
+              <Globe style={{ width: 15, height: 15 }} /> Kembali ke Homepage Publik (/)
+            </button>
+          </form>
+
+        </div>
+      </div>
+    );
+  }
+
+  // Authenticated Admin Dashboard
   return (
     <div className="admin-layout">
       
@@ -530,7 +569,7 @@ export default function App() {
 
         <div className="sidebar-footer">
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6 }} onClick={() => setViewMode('public')}>
-            <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik
+            <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik (/)
           </button>
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', color: '#D32F2F' }} onClick={handleLogout}>
             <LogOut style={{ width: 14, height: 14 }} /> Keluar / Logout
@@ -555,9 +594,9 @@ export default function App() {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn btn-secondary" onClick={() => setViewMode('public')}>
-              <Globe /> Homepage Publik
+              <Globe /> Homepage Publik (/)
             </button>
-            {/* SINGLE GLOBAL ACTION BUTTON - NO DUPLICATE BUTTONS */}
+            {/* SINGLE GLOBAL ACTION BUTTON */}
             <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setScannedPreview(null); setModalType('scan'); }}>
               <Camera /> Input Shopee Live AI (2 Foto)
             </button>
