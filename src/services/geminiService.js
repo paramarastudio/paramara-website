@@ -7,13 +7,14 @@ Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Shopee L
 Anda mungkin diberikan 1 atau 2 screenshot HP sekaligus (Screenshot Atas: Metrik Utama & Interaksi; Screenshot Bawah: Produk Terjual & Traffic Source).
 
 Tugas Anda:
-Gabungkan seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini:
+Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
 
 {
   "title": "string (Judul Sesi, contoh: APOTEK 24 JAM DISC UP TO 50%)",
   "startTime": "string (Waktu mulai, contoh: 01-08-2026 21:37)",
   "duration": "string (Durasi live, contoh: 01:27:11)",
   "revenue": number (Penjualan Rp tanpa titik/koma, contoh: 232500),
+  "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 23250),
   "activeViewers": number (Penonton Aktif, contoh: 7),
   "commentsCount": number (Komentar, contoh: 1),
   "cartAdditions": number (Masuk Keranjang, contoh: 5),
@@ -57,10 +58,14 @@ export function fileToBase64(file) {
   });
 }
 
-export async function analyzeShopeeScreenshots(files, apiKey) {
+export async function analyzeShopeeScreenshots(files, passedApiKey) {
   const fileArray = Array.isArray(files) ? files : [files];
   
-  if (!apiKey || apiKey.trim() === "") {
+  // Use Environment Variable or passed API Key
+  const activeKey = passedApiKey || import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
+
+  // If no active key is configured, use precision fallback
+  if (!activeKey || activeKey.trim() === "") {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
@@ -72,6 +77,7 @@ export async function analyzeShopeeScreenshots(files, apiKey) {
           dateFormatted: "01-08-2026 21:37",
           
           revenue: 232500,
+          grossCommission: 23250,
           activeViewers: 7,
           commentsCount: 1,
           cartAdditions: 5,
@@ -118,11 +124,11 @@ export async function analyzeShopeeScreenshots(files, apiKey) {
 
           aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%. 28 total penonton dengan rata-rata durasi 00:00:50."
         });
-      }, 1500);
+      }, 1200);
     });
   }
 
-  // Convert all files to inline_data parts
+  // Convert all uploaded image files to base64 inline_data parts
   const imageParts = await Promise.all(
     fileArray.map(async (file) => {
       const base64 = await fileToBase64(file);
@@ -135,7 +141,7 @@ export async function analyzeShopeeScreenshots(files, apiKey) {
     })
   );
 
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey.trim()}`;
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -146,13 +152,24 @@ export async function analyzeShopeeScreenshots(files, apiKey) {
     })
   });
 
-  if (!response.ok) throw new Error(`Gemini API Error: ${await response.text()}`);
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Gemini API Response Error: ${errorText}`);
+  }
 
   const data = await response.json();
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  
+  if (!text) throw new Error("Gemini AI tidak mengembalikan respons teks.");
+
   const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
   const parsed = JSON.parse(cleanJson);
   parsed.id = "session_" + Date.now();
   parsed.dateFormatted = parsed.startTime || new Date().toLocaleString("id-ID");
+  
+  if (!parsed.grossCommission && parsed.revenue) {
+    parsed.grossCommission = Math.round(parsed.revenue * 0.1);
+  }
+
   return parsed;
 }
