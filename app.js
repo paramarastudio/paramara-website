@@ -31,6 +31,7 @@ function initStudioData() {
     studioData = INITIAL_STUDIO_DATA;
   }
 
+  // Guarantee logo is always set to official Paramara Studio logo
   if (!studioData.studioInfo) studioData.studioInfo = INITIAL_STUDIO_DATA.studioInfo;
   studioData.studioInfo.logoUrl = "assets/logo.jpg";
   saveStudioData();
@@ -52,9 +53,10 @@ function applyStudioBranding() {
   const brandTitleEl = document.getElementById("brandTitleText");
   if (brandTitleEl) brandTitleEl.textContent = info.name || "paramarastudio.com";
 
+  // Force image src to assets/logo.jpg with cache buster
   const logoImgEl = document.getElementById("brandLogoImg");
   if (logoImgEl) {
-    logoImgEl.src = "assets/logo.jpg";
+    logoImgEl.src = "assets/logo.jpg?v=" + Date.now();
     logoImgEl.style.display = "block";
   }
 
