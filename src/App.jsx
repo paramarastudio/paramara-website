@@ -33,7 +33,7 @@ export default function App() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'apiKey' | 'project' | 'schedule' | 'git'
+  const [modalType, setModalType] = useState(null);
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
 
@@ -119,14 +119,15 @@ export default function App() {
           boxShadow: '0 20px 40px rgba(8, 47, 38, 0.08)'
         }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <img src="assets/logo.png" alt="Paramara Studio" style={{ 
+            <img src="/assets/logo.png" alt="Paramara Studio" style={{ 
               width: 84, 
               height: 84, 
               borderRadius: 16, 
               border: '2px solid var(--accent-gold)', 
               boxShadow: '0 8px 20px rgba(184, 142, 57, 0.2)',
-              marginBottom: '1rem'
-            }} />
+              marginBottom: '1rem',
+              objectFit: 'cover'
+            }} onError={(e) => { e.target.src = '/logo.png'; }} />
             <h1 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 4 }}>paramarastudio.com</h1>
             <span className="brand-badge" style={{ fontSize: '0.65rem' }}>INTERNAL ADMIN PORTAL ACCESS</span>
           </div>
@@ -223,7 +224,7 @@ export default function App() {
         <div>
           <div className="sidebar-header">
             <div className="brand-wrapper">
-              <img className="brand-logo-img" src="assets/logo.png" alt="Paramara Studio Logo" />
+              <img className="brand-logo-img" src="/assets/logo.png" alt="Paramara Studio Logo" onError={(e) => { e.target.src = '/logo.png'; }} />
               <div>
                 <h1 className="brand-title">paramarastudio</h1>
                 <p style={{ fontSize: '0.725rem', color: 'var(--text-dim)' }}>.com admin portal</p>
