@@ -99,7 +99,43 @@ body {
   left: 0;
   bottom: 0;
   z-index: 100;
-  transition: transform var(--transition);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Desktop Sidebar Collapsed State */
+.sidebar.collapsed {
+  transform: translateX(-100%);
+}
+
+.sidebar.collapsed ~ .main-content {
+  margin-left: 0;
+  width: 100%;
+}
+
+/* Sidebar Toggle Button */
+.sidebar-collapse-btn {
+  position: absolute;
+  top: 1.5rem;
+  right: -14px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--shadow-subtle);
+  transition: var(--transition);
+  z-index: 101;
+}
+
+.sidebar-collapse-btn:hover {
+  background: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
 }
 
 .sidebar-header {
@@ -203,6 +239,7 @@ body {
   flex: 1;
   padding: 2rem 2.5rem 5rem;
   width: calc(100% - var(--sidebar-width));
+  transition: margin-left 0.3s cubic-bezier(0.16, 1, 0.3, 1), width 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 /* Top Header Bar */

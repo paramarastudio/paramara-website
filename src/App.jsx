@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  LayoutDashboard, Video, Briefcase, Calendar, Globe, GitBranch, 
-  Terminal, Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
-  UploadCloud, File, CheckCircle, Save, Menu, Lock, User, LogOut, Eye, EyeOff, Info, Trash2,
-  ChevronDown, ChevronUp, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  ShoppingBag, Leaf, Compass, Shield, Award, Layers, Monitor, Database, Cloud, Loader2, Check
+  LayoutDashboard, Video, Briefcase, Calendar, Globe, 
+  Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
+  CheckCircle, Save, Menu, Lock, LogOut, Eye, EyeOff, Trash2,
+  ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
+  Leaf, Compass, Monitor, Cloud, Loader2, PanelLeftClose
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -70,6 +70,7 @@ export default function App() {
   // Secure Gemini API Key
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Modals state
   const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession' | 'addAdmin' | 'editAdmin'
@@ -365,7 +366,7 @@ export default function App() {
               </button>
             ) : (
               <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '0.9rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                <Lock style={{ width: 16, height: 16 }} /> Portal Admin Login (/admin)
+                <Lock style={{ width: 16, height: 16 }} /> Portal Admin Login
               </button>
             )}
           </div>
@@ -406,7 +407,7 @@ export default function App() {
                 </button>
               ) : (
                 <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                  <Lock style={{ width: 15, height: 15 }} /> Login Internal Admin Portal (/admin)
+                  <Lock style={{ width: 15, height: 15 }} /> Login Admin Portal
                 </button>
               )}
             </div>
@@ -511,7 +512,7 @@ export default function App() {
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
             <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 52, height: 52, borderRadius: 14, border: '2px solid var(--accent-gold)', marginBottom: '0.75rem', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
             <h2 style={{ fontSize: '1.3rem', color: 'var(--primary)', fontWeight: 800 }}>Paramara Studio</h2>
-            <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.04em' }}>AUTHORIZED ADMIN PORTAL (/admin)</span>
+            <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.04em' }}>AUTHORIZED ADMIN PORTAL</span>
           </div>
 
           <form onSubmit={handleLoginSubmit}>
@@ -541,7 +542,7 @@ export default function App() {
             </button>
 
             <button type="button" className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center', padding: '10px' }} onClick={() => setViewMode('public')}>
-              <Globe style={{ width: 15, height: 15 }} /> Kembali ke Homepage Publik (/)
+              <Globe style={{ width: 15, height: 15 }} /> Kembali ke Homepage
             </button>
           </form>
 
@@ -560,8 +561,13 @@ export default function App() {
         onClick={() => setSidebarOpen(false)} 
       />
 
-      {/* Vertical Sidebar */}
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+      {/* Vertical Sidebar with Collapse Toggle */}
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''} ${sidebarCollapsed ? 'collapsed' : ''}`}>
+        {/* Collapse/Expand Toggle Button */}
+        <button className="sidebar-collapse-btn" onClick={() => setSidebarCollapsed(!sidebarCollapsed)} title={sidebarCollapsed ? "Tampilkan Sidebar" : "Sembunyikan Sidebar"}>
+          {sidebarCollapsed ? <ChevronRight style={{ width: 14, height: 14 }} /> : <ChevronLeft style={{ width: 14, height: 14 }} />}
+        </button>
+
         <div>
           <div className="sidebar-header">
             <div className="brand-wrapper">
@@ -570,13 +576,9 @@ export default function App() {
                 <h1 className="brand-title" style={{ fontSize: '1.25rem' }}>Paramara Studio</h1>
               </div>
             </div>
-            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: 6 }}>
-              <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)' }}>
-                Hi Malikh
-              </span>
-              <span className="brand-badge" style={{ background: firebaseStorage ? 'rgba(5, 150, 105, 0.1)' : 'rgba(184, 142, 57, 0.1)', color: firebaseStorage ? '#059669' : 'var(--accent-gold)' }}>
-                {firebaseStorage ? "🔥 Firebase Cloud Active" : "Local Storage Mode"}
-              </span>
+            <div style={{ marginTop: 6 }}>
+              <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>Welcome back, Malikh</div>
+              <div style={{ fontSize: '0.675rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.03em', marginTop: 2 }}>SUPER ADMIN • PARAMARA STUDIO</div>
             </div>
           </div>
 
@@ -585,7 +587,7 @@ export default function App() {
               <LayoutDashboard /> Executive Dashboard
             </button>
             <button className={`tab-btn ${activeTab === 'tabShopeeTracker' ? 'active' : ''}`} onClick={() => { setActiveTab('tabShopeeTracker'); setSidebarOpen(false); }}>
-              <Video /> Shopee Live AI Tracker
+              <Video /> Shopee Live Tracker
             </button>
             <button className={`tab-btn ${activeTab === 'tabProjects' ? 'active' : ''}`} onClick={() => { setActiveTab('tabProjects'); setSidebarOpen(false); }}>
               <Briefcase /> Proyek & Klien Studio
@@ -596,18 +598,12 @@ export default function App() {
             <button className={`tab-btn ${activeTab === 'tabAdminUsers' ? 'active' : ''}`} onClick={() => { setActiveTab('tabAdminUsers'); setSidebarOpen(false); }}>
               <UserCheck /> Manajemen Admin
             </button>
-            <button className={`tab-btn ${activeTab === 'tabBranding' ? 'active' : ''}`} onClick={() => { setActiveTab('tabBranding'); setSidebarOpen(false); }}>
-              <Globe /> Domain & Logo Studio
-            </button>
-            <button className={`tab-btn ${activeTab === 'tabGitGuide' ? 'active' : ''}`} onClick={() => { setActiveTab('tabGitGuide'); setSidebarOpen(false); }}>
-              <GitBranch /> Deployment GitHub
-            </button>
           </nav>
         </div>
 
         <div className="sidebar-footer">
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6 }} onClick={() => setViewMode('public')}>
-            <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik (/)
+            <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik
           </button>
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', color: '#D32F2F' }} onClick={handleLogout}>
             <LogOut style={{ width: 14, height: 14 }} /> Keluar / Logout
@@ -616,11 +612,16 @@ export default function App() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="main-content">
+      <main className={`main-content ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`} style={sidebarCollapsed ? { marginLeft: 0, width: '100%' } : {}}>
         
         {/* Top Header */}
         <div className="top-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {sidebarCollapsed && (
+              <button className="mobile-nav-toggle" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setSidebarCollapsed(false)}>
+                <PanelLeftClose />
+              </button>
+            )}
             <button className="mobile-nav-toggle" onClick={() => setSidebarOpen(true)}>
               <Menu />
             </button>
@@ -632,11 +633,11 @@ export default function App() {
 
           <div style={{ display: 'flex', gap: 10 }}>
             <button className="btn btn-secondary" onClick={() => setViewMode('public')}>
-              <Globe /> Homepage Publik (/)
+              <Globe /> Homepage
             </button>
             {/* SINGLE GLOBAL ACTION BUTTON */}
             <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-              <Camera /> Input Shopee Live AI (2 Foto)
+              <Camera /> Input Shopee Live (2 Foto)
             </button>
           </div>
         </div>
@@ -666,13 +667,13 @@ export default function App() {
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#059669' }}>
                 <div className="kpi-title">Total Sesi Live Terekam</div>
                 <div className="kpi-value">{sessions.length} Sesi</div>
-                <div className="kpi-subtext">Diproses oleh Gemini AI</div>
+                <div className="kpi-subtext">Diproses oleh AI Vision</div>
               </div>
             </div>
 
             {/* DYNAMIC GEMINI AI EXECUTIVE INSIGHT CARD */}
             <div className="glass-card ai-summary-card">
-              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> Gemini AI Executive Insight (Paramara Studio)</div>
+              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> AI Executive Insight</div>
               <div className="ai-summary-text">
                 {sessions.length > 0 ? (
                   <>
@@ -680,7 +681,7 @@ export default function App() {
                     {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Kotor Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}
                   </>
                 ) : (
-                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live AI (2 Foto)' di atas untuk mengunggah screenshot HP laporan live."
+                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live (2 Foto)' di atas untuk mengunggah screenshot HP laporan live."
                 )}
               </div>
             </div>
@@ -736,12 +737,12 @@ export default function App() {
           </div>
         )}
 
-        {/* Tab 2: Shopee Live AI Tracker */}
+        {/* Tab 2: Shopee Live Tracker */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
               <div>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot AI)</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot)</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   Ekstraksi data otomatis laporan live streaming Shopee dari screenshot HP bagian atas (GMV & Interaksi) dan bagian bawah (Produk Terjual).
                 </p>
@@ -894,7 +895,7 @@ export default function App() {
                 </div>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Belum Ada Data Sesi Shopee Live</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto' }}>
-                  Seluruh data sample sebelumnya telah dibersihkan. Gunakan tombol <strong>"Input Shopee Live AI (2 Foto)"</strong> di pojok kanan atas untuk mengekstrak laporan HP Anda.
+                  Seluruh data sample sebelumnya telah dibersihkan. Gunakan tombol <strong>"Input Shopee Live (2 Foto)"</strong> di pojok kanan atas untuk mengekstrak laporan HP Anda.
                 </p>
               </div>
             )}
@@ -970,90 +971,8 @@ export default function App() {
         )}
 
         {/* TAB DOMAIN & LOGO STUDIO */}
-        {activeTab === 'tabBranding' && (
-          <div className="tab-content">
-            <div className="glass-card" style={{ padding: '2rem', maxWidth: 680 }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 6 }}>
-                <Globe style={{ color: 'var(--primary)' }} /> Pengaturan Domain & Logo Paramara Studio
-              </h3>
-              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                Sesuaikan nama domain utama studio dan identitas logo official portal admin.
-              </p>
 
-              <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-                <img src="/assets/logo.png" alt="Logo Paramara Studio" style={{ width: 110, height: 110, borderRadius: 20, border: '2px solid var(--accent-gold)', boxShadow: '0 8px 24px rgba(184, 142, 57, 0.2)', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginTop: 8 }}>Official Logo Emblem: Paramara Studio</p>
-              </div>
 
-              <div className="form-group">
-                <label className="form-label">Domain Utama Studio</label>
-                <input className="form-input" value={domainNameInput} onChange={e => setDomainNameInput(e.target.value)} />
-              </div>
-
-              <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={() => alert("Pengaturan Domain & Logo Studio Berhasil Disimpan!")}>
-                <Save /> Simpan Pengaturan Domain & Logo
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* TAB DEPLOYMENT GITHUB & FIREBASE CLOUD STATUS */}
-        {activeTab === 'tabGitGuide' && (
-          <div className="tab-content">
-            <div className="glass-card" style={{ padding: '2rem' }}>
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 8 }}>
-                <GitBranch style={{ color: 'var(--primary)' }} /> Status Cloud Architecture (GitHub, Vercel & Firebase)
-              </h3>
-              <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
-                Portal admin <strong>Paramara Studio</strong> terhubung dengan Google Cloud Firebase untuk penyimpanan abadi jangka panjang.
-              </p>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem', marginBottom: '1.5rem' }}>
-                
-                {/* GitHub */}
-                <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8 }}>octocat GitHub Repository:</h4>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                    <strong>Repo:</strong> paramarastudio/paramara-website<br/>
-                    <strong>Branch:</strong> main<br/>
-                    <strong>Config:</strong> paramarastudio@gmail.com
-                  </p>
-                  <a href="https://github.com/paramarastudio/paramara-website" target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary" style={{ marginTop: 6 }}>
-                    Buka Repository GitHub &rarr;
-                  </a>
-                </div>
-
-                {/* Vercel */}
-                <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8 }}>▲ Vercel Cloud Hosting:</h4>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                    <strong>Status:</strong> <span className="brand-badge" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>Connected & Active</span><br/>
-                    <strong>Live Domain:</strong> paramara-website.vercel.app<br/>
-                    <strong>Auto Deployment:</strong> Commit Push
-                  </p>
-                  <a href="https://paramara-website.vercel.app" target="_blank" rel="noreferrer" className="btn btn-sm btn-primary" style={{ marginTop: 6 }}>
-                    Buka Website Vercel &rarr;
-                  </a>
-                </div>
-
-                {/* Firebase Storage */}
-                <div style={{ background: '#F8FAF9', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
-                  <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Cloud style={{ width: 16, height: 16 }} /> Firebase Google Cloud:
-                  </h4>
-                  <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: 6 }}>
-                    <strong>Status Integrasi:</strong> <span className="brand-badge" style={{ background: firebaseStorage ? 'rgba(5,150,105,0.1)' : 'rgba(184,142,57,0.1)', color: firebaseStorage ? '#059669' : 'var(--accent-gold)' }}>{firebaseStorage ? "🔥 Firebase Active" : "Siap Pasang VITE_FIREBASE_API_KEY"}</span><br/>
-                    <strong>Fungsi:</strong> Simpan Screenshot HP (5GB Storage) & Firestore Database
-                  </p>
-                  <a href="https://console.firebase.google.com/" target="_blank" rel="noreferrer" className="btn btn-sm btn-secondary" style={{ marginTop: 6 }}>
-                    Buka Console Firebase &rarr;
-                  </a>
-                </div>
-
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Tab 4: Projects */}
         {activeTab === 'tabProjects' && (
@@ -1184,7 +1103,7 @@ export default function App() {
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 740 }}>
             <div className="modal-header">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera style={{ color: 'var(--primary)' }} /> Dual Screenshot AI Scanner</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera style={{ color: 'var(--primary)' }} /> Dual Screenshot Scanner</h3>
               <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
             </div>
 
@@ -1248,7 +1167,7 @@ export default function App() {
                   onClick={handleDualAnalysis}
                   disabled={!fileSlot1 && !fileSlot2}
                 >
-                  <Sparkles /> Scan AI Vision Instan ([{[fileSlot1, fileSlot2].filter(Boolean).length}] Foto)
+                  <Sparkles /> Scan & Ekstrak Data Instan ([{[fileSlot1, fileSlot2].filter(Boolean).length}] Foto)
                 </button>
               </div>
             )}
@@ -1261,7 +1180,7 @@ export default function App() {
                     <Sparkles style={{ width: 36, height: 36, color: 'var(--accent-gold)', animation: 'spin 2s linear infinite' }} />
                   </div>
                 </div>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: 6 }}>Gemini AI Vision Membaca Foto Screenshot...</h3>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: 6 }}>AI Vision Membaca Foto Screenshot...</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                   Mengekstrak GMV, pesanan, CTR & produk terjual secara instan tanpa menunggu upload cloud.
                 </p>
