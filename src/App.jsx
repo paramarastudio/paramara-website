@@ -1856,6 +1856,8 @@ export default function App() {
             </button>
           </div>
         </div>
+      )}
+
       {/* Modal: SHOPEE VIDEO DUAL SCREENSHOT SCANNER */}
       {modalType === 'scan_video' && (
         <div className="modal-overlay active">
