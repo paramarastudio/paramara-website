@@ -740,20 +740,16 @@ export default function App() {
         {/* Tab 2: Shopee Live Tracker */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content">
-            <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
-              <div>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: 4 }}><Video style={{ color: 'var(--primary)' }} /> Modul Pemrosesan Data Shopee Live (Dual Screenshot)</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                  Ekstraksi data otomatis laporan live streaming Shopee dari screenshot HP bagian atas (GMV & Interaksi) dan bagian bawah (Produk Terjual).
+            {sessions.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                  {sessions.length} sesi live terekam
                 </p>
-              </div>
-              
-              {sessions.length > 0 && (
                 <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={handleClearAllSessions}>
                   <Trash2 style={{ width: 14, height: 14 }} /> Bersihkan Seluruh Sesi
                 </button>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* EXPANDABLE EXECUTIVE SESSION CARDS OR CLEAN ZERO STATE */}
             {sessions.length > 0 ? (
