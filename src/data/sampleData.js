@@ -36,9 +36,16 @@ export const INITIAL_STUDIO_DATA = {
   // 1. Shopee Live Streams Analytics (Clean State - Ready for user's screenshot uploads)
   shopeeSessions: [],
 
+  // 1b. Shopee Video Analytics (Clean State - Ready for user's screenshot uploads)
+  shopeeVideoSessions: [],
+
   // 2. Studio Client Projects & Services
   clientProjects: [],
 
   // 3. Team Host & Stream Schedules
-  liveSchedules: []
+  liveSchedules: [],
+
+  // 4. Financial Lists
+  capexList: [],
+  opexList: []
 };

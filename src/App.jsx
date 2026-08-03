@@ -4,11 +4,11 @@ import {
   Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   CheckCircle, Save, Menu, Lock, LogOut, Eye, EyeOff, Trash2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  Leaf, Compass, Monitor, Cloud, Loader2, PanelLeftClose
+  Leaf, Compass, Monitor, Cloud, Loader2, PanelLeftClose, Film, DollarSign
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
-import { analyzeShopeeScreenshots } from './services/geminiService';
+import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots } from './services/geminiService';
 import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage } from './services/firebaseService';
 
 export default function App() {
@@ -73,18 +73,37 @@ export default function App() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'project' | 'schedule' | 'editSession' | 'addAdmin' | 'editAdmin'
+  const [modalType, setModalType] = useState(null); // 'scan' | 'scan_video' | 'finance' | 'project' | 'schedule' | 'editSession' | 'editVideoSession' | 'addAdmin' | 'editAdmin'
   const [editingSession, setEditingSession] = useState(null);
+  const [editingVideoSession, setEditingVideoSession] = useState(null);
   const [editingAdminUser, setEditingAdminUser] = useState(null);
   
   // Multi-Step Upload & Scan State
   const [scanning, setScanning] = useState(false);
   const [scannedPreview, setScannedPreview] = useState(null);
+  const [scannedVideoPreview, setScannedVideoPreview] = useState(null);
 
   // Admin User Form State
   const [newAdminUsername, setNewAdminUsername] = useState("");
   const [newAdminFullName, setNewAdminFullName] = useState("");
   const [newAdminRole, setNewAdminRole] = useState("Admin Operasional");
+
+  // Financial Form States
+  const [financialType, setFinancialType] = useState("capex"); // 'capex' | 'opex'
+  const [itemName, setItemName] = useState("");
+  const [itemCategory, setItemCategory] = useState("");
+  const [itemAmount, setItemAmount] = useState("");
+  const [itemDate, setItemDate] = useState("");
+  const [opexFrequency, setOpexFrequency] = useState("Once"); // 'Once' | 'Monthly' | 'Yearly'
+
+  // Video scanner slot state
+  const [videoFileSlot1, setVideoFileSlot1] = useState(null);
+  const [videoFileSlot2, setVideoFileSlot2] = useState(null);
+  const [videoPreviewUrl1, setVideoPreviewUrl1] = useState(null);
+  const [videoPreviewUrl2, setVideoPreviewUrl2] = useState(null);
+
+  // Video expanded card state
+  const [expandedVideoId, setExpandedVideoId] = useState(null);
 
   // Branding Settings State
   const [domainNameInput, setDomainNameInput] = useState("paramarastudio.com");
@@ -116,6 +135,28 @@ export default function App() {
       setPreviewUrl2(URL.createObjectURL(file));
     } else {
       setPreviewUrl2(null);
+    }
+  };
+
+  // Handle Video Image File 1 Select
+  const handleVideoFile1Select = (e) => {
+    const file = e.target.files?.[0] || null;
+    setVideoFileSlot1(file);
+    if (file) {
+      setVideoPreviewUrl1(URL.createObjectURL(file));
+    } else {
+      setVideoPreviewUrl1(null);
+    }
+  };
+
+  // Handle Video Image File 2 Select
+  const handleVideoFile2Select = (e) => {
+    const file = e.target.files?.[0] || null;
+    setVideoFileSlot2(file);
+    if (file) {
+      setVideoPreviewUrl2(URL.createObjectURL(file));
+    } else {
+      setVideoPreviewUrl2(null);
     }
   };
 
@@ -170,13 +211,37 @@ export default function App() {
 
   // Derived Calculations
   const sessions = studioData.shopeeSessions || [];
+  const videoSessions = studioData.shopeeVideoSessions || [];
+  const capexList = studioData.capexList || [];
+  const opexList = studioData.opexList || [];
   const projects = studioData.clientProjects || [];
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
 
+  // Revenue
   const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
   const totalGrossCommission = sessions.reduce((acc, s) => acc + (s.grossCommission || 0), 0);
+  
+  const totalVideoRev = videoSessions.reduce((acc, v) => acc + (v.revenue || 0), 0);
+  const totalGrossVideoCommission = videoSessions.reduce((acc, v) => acc + (v.grossCommission || Math.round((v.revenue || 0) * 0.1)), 0);
+
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
-  const totalCombinedIncome = totalShopeeRev + totalProjectRev;
+
+  // Total GMV / Transaction Volume (Shopee Live + Shopee Video)
+  const totalCombinedGMV = totalShopeeRev + totalVideoRev;
+
+  // Actual Studio Gross Revenue (Live Comm + Video Comm + Project Income)
+  const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalProjectRev;
+
+  // Expenses
+  const totalCapex = capexList.reduce((acc, c) => acc + (c.amount || 0), 0);
+  const totalOpex = opexList.reduce((acc, o) => acc + (o.amount || 0), 0);
+  const totalExpenses = totalCapex + totalOpex;
+
+  // Profitability
+  const netProfit = totalStudioGrossRevenue - totalExpenses;
+  const netProfitMarginPercent = totalStudioGrossRevenue > 0 ? (netProfit / totalStudioGrossRevenue) * 100 : 0;
+
+  const totalCombinedIncome = totalShopeeRev + totalProjectRev; // fallback compatibility
   const activeProjectsCount = projects.filter(p => p.status === "Aktif").length;
 
   // Add Admin User
@@ -293,6 +358,142 @@ export default function App() {
     setEditingSession(null);
     setModalType(null);
     alert("Perubahan data sesi berhasil disimpan!");
+  };
+
+  // Shopee Video Analysis
+  const handleVideoDualAnalysis = async () => {
+    const filesToProcess = [videoFileSlot1, videoFileSlot2].filter(Boolean);
+    if (filesToProcess.length === 0) {
+      alert("Mohon pilih minimal 1 foto screenshot!");
+      return;
+    }
+
+    setScanning(true);
+
+    try {
+      const result = await analyzeShopeeVideoScreenshots(filesToProcess, apiKey);
+      if (!result.grossCommission) {
+        result.grossCommission = Math.round((result.revenue || 0) * 0.1);
+      }
+      setScannedVideoPreview(result);
+    } catch (err) {
+      alert("Gagal membaca screenshot video: " + err.message);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  // Save Video Session
+  const handleSaveScannedVideoSession = async () => {
+    if (!scannedVideoPreview) return;
+
+    const videoToSave = { ...scannedVideoPreview };
+
+    setStudioData(prev => ({
+      ...prev,
+      shopeeVideoSessions: [videoToSave, ...(prev.shopeeVideoSessions || [])]
+    }));
+
+    setScannedVideoPreview(null);
+    setVideoFileSlot1(null);
+    setVideoFileSlot2(null);
+    setVideoPreviewUrl1(null);
+    setVideoPreviewUrl2(null);
+    setModalType(null);
+
+    alert("✅ Metrik & Pendapatan Video Berhasil Disimpan!");
+
+    // Background upload if Firebase active
+    if (firebaseStorage) {
+      try {
+        if (videoFileSlot1) {
+          const url1 = await uploadScreenshotToFirebase(videoFileSlot1);
+          if (url1) videoToSave.screenshotUrlTop = url1;
+        }
+        if (videoFileSlot2) {
+          const url2 = await uploadScreenshotToFirebase(videoFileSlot2);
+          if (url2) videoToSave.screenshotUrlBottom = url2;
+        }
+        // Save to Firebase (video sessions can use similar format or be deferred)
+        await saveSessionToFirebase({ ...videoToSave, isVideo: true });
+      } catch (e) {
+        console.warn("Background Firebase upload finished with warning:", e.message);
+      }
+    }
+  };
+
+  const handleSaveEditedVideoSession = () => {
+    if (!editingVideoSession) return;
+    setStudioData(prev => ({
+      ...prev,
+      shopeeVideoSessions: (prev.shopeeVideoSessions || []).map(v => v.id === editingVideoSession.id ? editingVideoSession : v)
+    }));
+    setEditingVideoSession(null);
+    setModalType(null);
+    alert("Perubahan data video berhasil disimpan!");
+  };
+
+  const handleClearAllVideoSessions = () => {
+    if (confirm("Apakah Anda yakin ingin menghapus seluruh data Shopee Video?")) {
+      setStudioData(prev => ({ ...prev, shopeeVideoSessions: [] }));
+      alert("Seluruh data Shopee Video berhasil dibersihkan!");
+    }
+  };
+
+  // Financial Items Add & Delete
+  const handleAddFinancialItem = (e) => {
+    e.preventDefault();
+    if (!itemName || !itemAmount) {
+      alert("Nama Item dan Jumlah harus diisi!");
+      return;
+    }
+
+    const newItem = {
+      id: "fin_" + Date.now(),
+      name: itemName.trim(),
+      category: itemCategory.trim() || "Umum",
+      amount: parseInt(itemAmount) || 0,
+      date: itemDate || new Date().toISOString().split('T')[0],
+      frequency: opexFrequency
+    };
+
+    if (financialType === 'capex') {
+      setStudioData(prev => ({
+        ...prev,
+        capexList: [...(prev.capexList || []), newItem]
+      }));
+    } else {
+      setStudioData(prev => ({
+        ...prev,
+        opexList: [...(prev.opexList || []), newItem]
+      }));
+    }
+
+    setItemName("");
+    setItemCategory("");
+    setItemAmount("");
+    setItemDate("");
+    setOpexFrequency("Once");
+    setModalType(null);
+    alert("Transaksi keuangan berhasil ditambahkan!");
+  };
+
+  const handleDeleteCapex = (id) => {
+    if (confirm("Hapus item CAPEX ini?")) {
+      setStudioData(prev => ({
+        ...prev,
+        capexList: (prev.capexList || []).filter(item => item.id !== id)
+      }));
+    }
+  };
+
+  const handleDeleteOpex = (id) => {
+    if (confirm("Hapus item OPEX ini?")) {
+      setStudioData(prev => ({
+        ...prev,
+        opexList: (prev.opexList || []).filter(item => item.id !== id)
+      }));
+    }
   };
 
   // =========================================================================
@@ -589,6 +790,12 @@ export default function App() {
             <button className={`tab-btn ${activeTab === 'tabShopeeTracker' ? 'active' : ''}`} onClick={() => { setActiveTab('tabShopeeTracker'); setSidebarOpen(false); }}>
               <Video /> Shopee Live Tracker
             </button>
+            <button className={`tab-btn ${activeTab === 'tabShopeeVideo' ? 'active' : ''}`} onClick={() => { setActiveTab('tabShopeeVideo'); setSidebarOpen(false); }}>
+              <Film /> Shopee Video Tracker
+            </button>
+            <button className={`tab-btn ${activeTab === 'tabFinance' ? 'active' : ''}`} onClick={() => { setActiveTab('tabFinance'); setSidebarOpen(false); }}>
+              <DollarSign /> Keuangan (CAPEX/OPEX)
+            </button>
             <button className={`tab-btn ${activeTab === 'tabProjects' ? 'active' : ''}`} onClick={() => { setActiveTab('tabProjects'); setSidebarOpen(false); }}>
               <Briefcase /> Proyek & Klien Studio
             </button>
@@ -631,108 +838,246 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
             <button className="btn btn-secondary" onClick={() => setViewMode('public')}>
               <Globe /> Homepage
             </button>
-            {/* SINGLE GLOBAL ACTION BUTTON */}
-            <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-              <Camera /> Input Shopee Live (2 Foto)
-            </button>
+            
+            {/* CONTEXTUAL ACTION BUTTONS */}
+            {activeTab === 'tabShopeeTracker' && (
+              <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
+                <Camera /> Input Shopee Live (2 Foto)
+              </button>
+            )}
+
+            {activeTab === 'tabShopeeVideo' && (
+              <button className="btn btn-primary" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }}>
+                <Film /> Input Shopee Video (2 Foto)
+              </button>
+            )}
+
+            {activeTab === 'tabFinance' && (
+              <button className="btn btn-primary" onClick={() => { setItemName(""); setItemCategory(""); setItemAmount(""); setItemDate(""); setOpexFrequency("Once"); setFinancialType("capex"); setModalType('finance'); }}>
+                <PlusCircle /> Tambah Transaksi Keuangan
+              </button>
+            )}
+
+            {activeTab === 'tabProjects' && (
+              <button className="btn btn-primary" onClick={() => setModalType('project')}>
+                <PlusCircle /> Input Proyek Baru
+              </button>
+            )}
+
+            {activeTab === 'tabSchedules' && (
+              <button className="btn btn-primary" onClick={() => setModalType('schedule')}>
+                <PlusCircle /> Input Jadwal Baru
+              </button>
+            )}
+
+            {activeTab === 'tabAdminUsers' && (
+              <button className="btn btn-primary" onClick={() => setModalType('addAdmin')}>
+                <UserPlus /> Tambah Admin Baru
+              </button>
+            )}
+
+            {activeTab === 'tabAnalytics' && (
+              <button className="btn btn-primary" onClick={() => { setActiveTab('tabShopeeTracker'); setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
+                <Camera /> Input Shopee Live (2 Foto)
+              </button>
+            )}
           </div>
         </div>
 
         {/* Tab 1: Executive Dashboard */}
         {activeTab === 'tabAnalytics' && (
           <div className="tab-content">
-            <div className="kpi-grid">
-              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#059669' }}>
-                <div className="kpi-title">Total Pendapatan Studio</div>
-                <div className="kpi-value text-success">Rp {totalCombinedIncome.toLocaleString('id-ID')}</div>
-                <div className="kpi-subtext">Live Stream + Proyek Studio</div>
+            
+            {/* 4 Premium Executive KPI Cards */}
+            <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                <div className="kpi-title">Laba Bersih (Net Profit)</div>
+                <div className="kpi-value" style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F', fontWeight: 800 }}>
+                  Rp {netProfit.toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">Margin Bersih: {netProfitMarginPercent.toFixed(1)}%</div>
+              </div>
+
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--primary)' }}>
+                <div className="kpi-title">Pendapatan Kotor Studio</div>
+                <div className="kpi-value text-success">
+                  Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">Komisi Live/Video + Proyek</div>
               </div>
 
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
-                <div className="kpi-title">Total Komisi Kotor Studio</div>
-                <div className="kpi-value text-warning">Rp {totalGrossCommission.toLocaleString('id-ID')}</div>
-                <div className="kpi-subtext">Hasil komisi dari Shopee Live</div>
+                <div className="kpi-title">Total Pengeluaran</div>
+                <div className="kpi-value text-warning">
+                  Rp {totalExpenses.toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">CAPEX: Rp {totalCapex.toLocaleString('id-ID')} | OPEX: Rp {totalOpex.toLocaleString('id-ID')}</div>
               </div>
 
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#082F26' }}>
-                <div className="kpi-title">Proyek Klien Aktif</div>
-                <div className="kpi-value">{activeProjectsCount} Proyek</div>
-                <div className="kpi-subtext">Dalam pengerjaan tim studio</div>
-              </div>
-
-              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#059669' }}>
-                <div className="kpi-title">Total Sesi Live Terekam</div>
-                <div className="kpi-value">{sessions.length} Sesi</div>
-                <div className="kpi-subtext">Diproses oleh AI Vision</div>
+                <div className="kpi-title">Total E-Commerce GMV</div>
+                <div className="kpi-value">
+                  Rp {totalCombinedGMV.toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">Volume Penjualan Live + Video</div>
               </div>
             </div>
 
-            {/* DYNAMIC GEMINI AI EXECUTIVE INSIGHT CARD */}
-            <div className="glass-card ai-summary-card">
+            {/* DYNAMIC EXECUTIVE INSIGHT CARD */}
+            <div className="glass-card ai-summary-card" style={{ marginBottom: '1.5rem' }}>
               <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> AI Executive Insight</div>
               <div className="ai-summary-text">
-                {sessions.length > 0 ? (
-                  <>
-                    <strong>Insight Admin Sesi Live Terbaru ({sessions[0].title || 'Sesi Live'}):</strong><br/>
-                    {sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Kotor Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}
-                  </>
+                {sessions.length > 0 || videoSessions.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <div>
+                      <strong>Sesi Live Terbaru:</strong><br/>
+                      {sessions.length > 0 ? (
+                        <span>{sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Kotor Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data live stream terbaru.</span>
+                      )}
+                    </div>
+                    <div>
+                      <strong>Analisis Video Terbaru:</strong><br/>
+                      {videoSessions.length > 0 ? (
+                        <span>{videoSessions[0].aiSummary || `Performa Video menghasilkan Rp${(videoSessions[0].revenue || 0).toLocaleString('id-ID')} GMV dari ${(videoSessions[0].productsSold || 0)} produk terjual.`}</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data performa video terbaru.</span>
+                      )}
+                    </div>
+                  </div>
                 ) : (
-                  "Belum ada data sesi Shopee Live. Silakan klik tombol 'Input Shopee Live (2 Foto)' di atas untuk mengunggah screenshot HP laporan live."
+                  "Belum ada data sesi Shopee Live atau Shopee Video. Silakan klik tombol Input di atas untuk mengunggah screenshot HP laporan Anda."
                 )}
               </div>
             </div>
 
+            {/* CORPORATE PROFIT & LOSS BREAKDOWN TABLE */}
+            <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <DollarSign style={{ width: 18, height: 18 }} /> Laporan Laba Rugi & Arus Kas Studio (Profit & Loss Statement)
+              </h3>
+              
+              <div className="table-wrapper">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                  <thead>
+                    <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ textAlign: 'left', padding: '10px' }}>Komponen Keuangan</th>
+                      <th style={{ textAlign: 'right', padding: '10px' }}>Nilai Riil (Rp)</th>
+                      <th style={{ textAlign: 'left', padding: '10px' }}>Keterangan / Breakdown</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>1. Pendapatan Komisi Shopee Live</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossCommission.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Live Rp {totalShopeeRev.toLocaleString('id-ID')}</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>2. Pendapatan Komisi Shopee Video</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossVideoCommission.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Video Rp {totalVideoRev.toLocaleString('id-ID')}</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>3. Pendapatan Kontrak Proyek & Klien</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalProjectRev.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Total nilai anggaran kontrak jasa produksi/live klien aktif</td>
+                    </tr>
+                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#F4F8F6' }}>
+                      <td style={{ padding: '10px', fontWeight: 800 }}>PENDAPATAN KOTOR (STUDIO REVENUE)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 800 }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>Total Pendapatan Terkombinasi</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>4. Pengeluaran Modal (CAPEX)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalCapex.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Investasi aset fisik, alat broadcast, kamera & dekorasi studio</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>5. Pengeluaran Operasional (OPEX)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalOpex.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Gaji host/talent, biaya internet, listrik, sewa tempat, operasional harian</td>
+                    </tr>
+                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#FAF6F6' }}>
+                      <td style={{ padding: '10px', fontWeight: 800 }}>TOTAL PENGELUARAN (TOTAL EXPENSES)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 800 }}>Rp {totalExpenses.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>CAPEX + OPEX</td>
+                    </tr>
+                    <tr style={{ background: '#EAF5F0' }}>
+                      <td style={{ padding: '12px 10px', fontWeight: 900, fontSize: '0.95rem' }}>LABA BERSIH (NET PROFIT)</td>
+                      <td style={{ padding: '12px 10px', textAlign: 'right', color: netProfit >= 0 ? '#059669' : '#D32F2F', fontWeight: 900, fontSize: '1rem' }}>
+                        Rp {netProfit.toLocaleString('id-ID')}
+                      </td>
+                      <td style={{ padding: '12px 10px', fontWeight: 800, color: '#059669' }}>
+                        Margin Operasional: {netProfitMarginPercent.toFixed(1)}% {netProfit >= 0 ? "📈 SURPLUS" : "📉 DEFISIT"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Split Grid for Details */}
             <div className="dashboard-grid">
+              
+              {/* Shopee Live Trends List */}
               <div className="glass-card chart-card">
                 <div className="chart-header">
-                  <h3><TrendingUp style={{ color: 'var(--primary)' }} /> Tren Revenue Shopee Live Streaming</h3>
-                  <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Internal Studio Analytics</span>
+                  <h3><Video style={{ color: 'var(--primary)', width: 16, height: 16 }} /> Sesi Shopee Live Terbaru</h3>
+                  <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Internal Live Analytics</span>
                 </div>
-                <div className="chart-container" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div className="chart-container" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: 280, overflowY: 'auto' }}>
                   {sessions.length > 0 ? (
-                    sessions.map(s => (
-                      <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', background: '#F8FAF9', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                    sessions.slice(0, 5).map(s => (
+                      <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#F8FAF9', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
                         <div>
-                          <strong style={{ fontSize: '0.9rem' }}>{s.title}</strong>
-                          <div style={{ fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                            ⏱️ Durasi: <strong>{s.duration}</strong> | 💵 Komisi Kotor: <strong className="text-warning">Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
+                          <strong style={{ fontSize: '0.85rem' }}>{s.title}</strong>
+                          <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                            ⏱️ {s.duration} | 💵 Komisi: <strong className="text-warning">Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
                           </div>
                         </div>
-                        <span className="text-success" style={{ fontWeight: 800, fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</span>
+                        <span className="text-success" style={{ fontWeight: 800 }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</span>
                       </div>
                     ))
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-dim)' }}>
+                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
                       Belum ada sesi live terekam.
                     </div>
                   )}
                 </div>
               </div>
 
+              {/* Shopee Video Trends List */}
               <div className="glass-card chart-card">
                 <div className="chart-header">
-                  <h3><PieChart style={{ color: 'var(--primary)' }} /> Sumber Penonton Live</h3>
-                  <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Traffic Breakdown</span>
+                  <h3><Film style={{ color: 'var(--primary)', width: 16, height: 16 }} /> Performa Shopee Video Terbaru</h3>
+                  <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)' }}>Video Analytics</span>
                 </div>
-                <div className="chart-container" style={{ padding: '1rem' }}>
-                  {sessions.length > 0 && sessions[0]?.trafficSources ? (
-                    sessions[0].trafficSources.map((t, idx) => (
-                      <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', margin: '10px 0', fontSize: '0.875rem' }}>
-                        <span>{t.name}</span>
-                        <strong>{t.percent}%</strong>
+                <div className="chart-container" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: 280, overflowY: 'auto' }}>
+                  {videoSessions.length > 0 ? (
+                    videoSessions.slice(0, 5).map(v => (
+                      <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#F8FAF9', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                        <div>
+                          <strong style={{ fontSize: '0.85rem' }}>{v.title}</strong>
+                          <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                            📈 {v.productsSold} Produk Terjual | 💵 Komisi: <strong className="text-warning">Rp {(v.grossCommission || Math.round((v.revenue || 0) * 0.1)).toLocaleString('id-ID')}</strong>
+                          </div>
+                        </div>
+                        <span className="text-success" style={{ fontWeight: 800 }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</span>
                       </div>
                     ))
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-dim)' }}>
-                      Belum ada data traffic.
+                    <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-dim)', fontSize: '0.8rem' }}>
+                      Belum ada data performa video terekam.
                     </div>
                   )}
                 </div>
               </div>
+
             </div>
           </div>
         )}
@@ -966,7 +1311,233 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB DOMAIN & LOGO STUDIO */}
+        {/* Tab 2b: Shopee Video Tracker */}
+        {activeTab === 'tabShopeeVideo' && (
+          <div className="tab-content">
+            {videoSessions.length > 0 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+                  {videoSessions.length} performa video terekam
+                </p>
+                <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={handleClearAllVideoSessions}>
+                  <Trash2 style={{ width: 14, height: 14 }} /> Bersihkan Seluruh Video
+                </button>
+              </div>
+            )}
+
+            {/* EXPANDABLE VIDEO SESSION CARDS OR CLEAN ZERO STATE */}
+            {videoSessions.length > 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                {videoSessions.map(v => {
+                  const isExpanded = expandedVideoId === v.id;
+                  return (
+                    <div key={v.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
+                      
+                      {/* CARD HEADER */}
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.5rem' }}>
+                        <div>
+                          <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{v.title}</h3>
+                          <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                            <span>📅 Analisis: <strong>{v.dateFormatted}</strong></span>
+                            <span>👁️ Penonton: <strong>{(v.totalViews || 0).toLocaleString('id-ID')}</strong></span>
+                            <span>🛍️ Terjual: <strong>{v.productsSold || 0} unit</strong></span>
+                            <span>💵 GMV: <strong style={{ color: '#059669' }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</strong></span>
+                          </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button className="btn btn-sm btn-secondary" onClick={() => setExpandedVideoId(isExpanded ? null : v.id)}>
+                            {isExpanded ? "Tutup Detail" : "Buka Detail"}
+                          </button>
+                          <button className="btn btn-sm btn-secondary" onClick={() => { setEditingVideoSession(v); setModalType('editVideoSession'); }}>
+                            Edit
+                          </button>
+                          <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
+                            if (confirm("Hapus data video ini?")) {
+                              setStudioData(prev => ({ ...prev, shopeeVideoSessions: prev.shopeeVideoSessions.filter(item => item.id !== v.id) }));
+                            }
+                          }}>
+                            Hapus
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* EXPANDED DETAILS */}
+                      {isExpanded && (
+                        <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '1rem', paddingTop: '1rem' }}>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.25rem' }}>
+                            
+                            {/* TAB PENONTON */}
+                            <div style={{ background: '#F8FAF9', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                              <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>👥 Data Utama: Penonton</h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
+                                <div>Penonton: <strong>{(v.totalViews || 0).toLocaleString('id-ID')}</strong></div>
+                                <div>Suka (Likes): <strong>{(v.likes || 0).toLocaleString('id-ID')}</strong></div>
+                                <div>Komentar: <strong>{(v.commentsCount || 0).toLocaleString('id-ID')}</strong></div>
+                                <div>Dibagikan (Shares): <strong>{(v.shares || 0).toLocaleString('id-ID')}</strong></div>
+                                <div>Kunjungan Profil: <strong>{(v.profileVisits || 0).toLocaleString('id-ID')}</strong></div>
+                                <div>Pengikut Baru: <strong>{(v.newFollowers || 0).toLocaleString('id-ID')}</strong></div>
+                              </div>
+                            </div>
+
+                            {/* TAB PENJUALAN */}
+                            <div style={{ background: '#F8FAF9', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                              <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>🛒 Data Utama: Penjualan</h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
+                                <div>Video dengan Produk: <strong>{v.videosWithProducts || 0}</strong></div>
+                                <div>Video Berpendapatan: <strong>{v.monetizedVideos || 0}</strong></div>
+                                <div>Produk Terjual: <strong>{v.productsSold || 0}</strong></div>
+                                <div>Pembeli: <strong>{v.buyers || 0}</strong></div>
+                                <div>Klik pada Produk: <strong>{v.productClicks || 0}</strong></div>
+                                <div>Pesanan: <strong>{v.totalOrders || 0}</strong></div>
+                                <div>Penjualan GMV: <strong style={{ color: '#059669' }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</strong></div>
+                                <div>Tingkat Konversi: <strong>{v.conversionRatePercent || 0}%</strong></div>
+                              </div>
+                            </div>
+
+                          </div>
+
+                          {/* AI SUMMARY INSIGHT */}
+                          {v.aiSummary && (
+                            <div style={{ background: 'var(--primary-glow)', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem', color: 'var(--primary)' }}>
+                              <strong>📝 Summary Insight:</strong> {v.aiSummary}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="glass-card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F4F8F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--text-dim)' }}>
+                  <Film style={{ width: 28, height: 28 }} />
+                </div>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Belum Ada Data Shopee Video</h3>
+                <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto' }}>
+                  Seluruh data sample sebelumnya telah dibersihkan. Gunakan tombol <strong>"Input Shopee Video (2 Foto)"</strong> di pojok kanan atas untuk mengekstrak laporan HP Anda.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 2c: Keuangan (CAPEX / OPEX) */}
+        {activeTab === 'tabFinance' && (
+          <div className="tab-content">
+            
+            {/* Keuangan KPI Headers */}
+            <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
+                <div className="kpi-title">Total Capital Expenditure (CAPEX)</div>
+                <div className="kpi-value">Rp {totalCapex.toLocaleString('id-ID')}</div>
+                <div className="kpi-subtext">Pengeluaran aset fisik & investasi studio</div>
+              </div>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#D32F2F' }}>
+                <div className="kpi-title">Total Operational Expenditure (OPEX)</div>
+                <div className="kpi-value text-danger">Rp {totalOpex.toLocaleString('id-ID')}</div>
+                <div className="kpi-subtext">Biaya gaji, internet, sewa & operasional</div>
+              </div>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--primary)' }}>
+                <div className="kpi-title">Total Pengeluaran Bulan Ini</div>
+                <div className="kpi-value text-warning">Rp {totalExpenses.toLocaleString('id-ID')}</div>
+                <div className="kpi-subtext">Kombinasi CAPEX & OPEX</div>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              
+              {/* CAPEX Table */}
+              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    📦 Pengeluaran Aset (CAPEX)
+                  </h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600 }}>Investasi Jangka Panjang</span>
+                </div>
+
+                <div className="table-wrapper">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Tanggal</th>
+                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
+                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {capexList.length > 0 ? (
+                        capexList.map(c => (
+                          <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '8px' }}><strong>{c.name}</strong></td>
+                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: '#F0F4F2', color: 'var(--primary)' }}>{c.category}</span></td>
+                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{c.date}</td>
+                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700 }}>Rp {c.amount.toLocaleString('id-ID')}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>
+                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteCapex(c.id)}>Hapus</button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran modal (CAPEX).</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* OPEX Table */}
+              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '1rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    ⚙️ Operasional Bulanan (OPEX)
+                  </h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600 }}>Biaya Rutin / Berulang</span>
+                </div>
+
+                <div className="table-wrapper">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Siklus</th>
+                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
+                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {opexList.length > 0 ? (
+                        opexList.map(o => (
+                          <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '8px' }}><strong>{o.name}</strong></td>
+                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: '#FAF6F0', color: 'var(--accent-gold)' }}>{o.category}</span></td>
+                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{o.frequency}</td>
+                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#D32F2F' }}>Rp {o.amount.toLocaleString('id-ID')}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>
+                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOpex(o.id)}>Hapus</button>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran operasional (OPEX).</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        )}
 
 
 
@@ -1283,6 +1854,317 @@ export default function App() {
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveEditedSession}>
               <Save /> Simpan Perubahan Data Sesi
             </button>
+          </div>
+        </div>
+      {/* Modal: SHOPEE VIDEO DUAL SCREENSHOT SCANNER */}
+      {modalType === 'scan_video' && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 740 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera style={{ color: 'var(--primary)' }} /> Dual Screenshot Video Scanner</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            {!scannedVideoPreview && !scanning && (
+              <div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                  Unggah 2 foto screenshot HP sekaligus: <strong>Screenshot Penonton</strong> (Data Utama Penonton/Likes) + <strong>Screenshot Penjualan</strong> (Detail Produk Terjual & GMV).
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                  
+                  {/* Slot 1 Dropzone */}
+                  <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: videoFileSlot1 ? 'rgba(5, 150, 105, 0.05)' : '#F8FAF9', borderColor: videoFileSlot1 ? 'var(--secondary-emerald)' : 'var(--border-color)' }}>
+                    {videoPreviewUrl1 ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <img src={videoPreviewUrl1} alt="Screenshot 1" style={{ height: 90, borderRadius: 8, border: '1px solid var(--secondary-emerald)', objectFit: 'cover', marginBottom: 8 }} />
+                        <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 1 Terpilih
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{videoFileSlot1.name}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                          <ImagePlus style={{ width: 32, height: 32, color: 'var(--primary)' }} />
+                        </div>
+                        <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>1. Screenshot Penonton</strong>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Metrik Viewers, Likes, Shares</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleVideoFile1Select} style={{ display: 'none' }} />
+                  </label>
+
+                  {/* Slot 2 Dropzone */}
+                  <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: videoFileSlot2 ? 'rgba(5, 150, 105, 0.05)' : '#F8FAF9', borderColor: videoFileSlot2 ? 'var(--secondary-emerald)' : 'var(--border-color)' }}>
+                    {videoPreviewUrl2 ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <img src={videoPreviewUrl2} alt="Screenshot 2" style={{ height: 90, borderRadius: 8, border: '1px solid var(--secondary-emerald)', objectFit: 'cover', marginBottom: 8 }} />
+                        <div style={{ fontSize: '0.8rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Foto 2 Terpilih
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{videoFileSlot2.name}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                          <ImagePlus style={{ width: 32, height: 32, color: 'var(--primary)' }} />
+                        </div>
+                        <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>2. Screenshot Penjualan</strong>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>GMV, Produk Terjual, Orders</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleVideoFile2Select} style={{ display: 'none' }} />
+                  </label>
+
+                </div>
+
+                <button 
+                  className="btn btn-primary" 
+                  style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
+                  onClick={handleVideoDualAnalysis}
+                  disabled={!videoFileSlot1 && !videoFileSlot2}
+                >
+                  <Sparkles /> Scan & Ekstrak Data Video ([{[videoFileSlot1, videoFileSlot2].filter(Boolean).length}] Foto)
+                </button>
+              </div>
+            )}
+
+            {/* INSTANT SCANNING INDICATOR */}
+            {scanning && (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(184, 142, 57, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--accent-gold-border)' }}>
+                    <Sparkles style={{ width: 36, height: 36, color: 'var(--accent-gold)', animation: 'spin 2s linear infinite' }} />
+                  </div>
+                </div>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: 6 }}>AI Vision Membaca Foto Screenshot Video...</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Mengekstrak GMV, produk terjual, klik & interaksi video secara instan.
+                </p>
+              </div>
+            )}
+
+            {/* SCAN RESULT CONFIRMATION FORM */}
+            {scannedVideoPreview && !scanning && (
+              <div style={{ marginTop: '0.5rem' }}>
+                <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.2)', padding: '12px 16px', borderRadius: 10, marginBottom: '1.25rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <CheckCircle style={{ width: 20, height: 20 }} />
+                  <div>
+                    <strong style={{ fontSize: '0.9rem', display: 'block' }}>Ekstraksi AI Video Berhasil!</strong>
+                    <span style={{ fontSize: '0.775rem' }}>Data telah dibaca. Klik tombol simpan untuk menyimpan metrik ke database.</span>
+                  </div>
+                </div>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
+                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                    <label className="form-label">Judul Video / Periode</label>
+                    <input className="form-input" value={scannedVideoPreview.title} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, title: e.target.value })} />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Tanggal</label>
+                    <input className="form-input" value={scannedVideoPreview.dateFormatted} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, dateFormatted: e.target.value })} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Penjualan GMV (Rp)</label>
+                    <input className="form-input" type="number" value={scannedVideoPreview.revenue} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, revenue: parseInt(e.target.value) || 0 })} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">💵 Estimasi Komisi (Rp)</label>
+                    <input className="form-input" type="number" value={scannedVideoPreview.grossCommission || Math.round((scannedVideoPreview.revenue || 0) * 0.1)} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, grossCommission: parseInt(e.target.value) || 0 })} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Produk Terjual</label>
+                    <input className="form-input" type="number" value={scannedVideoPreview.productsSold} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, productsSold: parseInt(e.target.value) || 0 })} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Penonton (Views)</label>
+                    <input className="form-input" type="number" value={scannedVideoPreview.totalViews} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, totalViews: parseInt(e.target.value) || 0 })} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Suka (Likes)</label>
+                    <input className="form-input" type="number" value={scannedVideoPreview.likes} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, likes: parseInt(e.target.value) || 0 })} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Pesanan (Orders)</label>
+                    <input className="form-input" type="number" value={scannedVideoPreview.totalOrders} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, totalOrders: parseInt(e.target.value) || 0 })} />
+                  </div>
+                </div>
+
+                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveScannedVideoSession}>
+                  <Save /> Simpan Seluruh Metrik Video
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: EDIT VIDEO SESSION */}
+      {modalType === 'editVideoSession' && editingVideoSession && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 680 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Edit3 style={{ color: 'var(--primary)' }} /> Edit Data Performa Video</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
+              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                <label className="form-label">Judul Video / Periode</label>
+                <input className="form-input" value={editingVideoSession.title} onChange={e => setEditingVideoSession({ ...editingVideoSession, title: e.target.value })} />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tanggal</label>
+                <input className="form-input" value={editingVideoSession.dateFormatted} onChange={e => setEditingVideoSession({ ...editingVideoSession, dateFormatted: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Penjualan GMV (Rp)</label>
+                <input className="form-input" type="number" value={editingVideoSession.revenue} onChange={e => setEditingVideoSession({ ...editingVideoSession, revenue: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ color: 'var(--accent-gold)' }}>💵 Estimasi Komisi (Rp)</label>
+                <input className="form-input" type="number" value={editingVideoSession.grossCommission || 0} onChange={e => setEditingVideoSession({ ...editingVideoSession, grossCommission: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Produk Terjual</label>
+                <input className="form-input" type="number" value={editingVideoSession.productsSold} onChange={e => setEditingVideoSession({ ...editingVideoSession, productsSold: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Penonton</label>
+                <input className="form-input" type="number" value={editingVideoSession.totalViews} onChange={e => setEditingVideoSession({ ...editingVideoSession, totalViews: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Likes</label>
+                <input className="form-input" type="number" value={editingVideoSession.likes} onChange={e => setEditingVideoSession({ ...editingVideoSession, likes: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Pesanan</label>
+                <input className="form-input" type="number" value={editingVideoSession.totalOrders} onChange={e => setEditingVideoSession({ ...editingVideoSession, totalOrders: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Tingkat Konversi (%)</label>
+                <input className="form-input" type="number" step="0.1" value={editingVideoSession.conversionRatePercent} onChange={e => setEditingVideoSession({ ...editingVideoSession, conversionRatePercent: parseFloat(e.target.value) || 0 })} />
+              </div>
+            </div>
+
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveEditedVideoSession}>
+              <Save /> Simpan Perubahan Data Video
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: INPUT TRANSAKSI KEUANGAN (CAPEX / OPEX) */}
+      {modalType === 'finance' && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 520 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><DollarSign style={{ color: 'var(--primary)' }} /> Input Transaksi Keuangan</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={handleAddFinancialItem}>
+              
+              {/* Type Switcher Toggle (CAPEX vs OPEX) */}
+              <div style={{ display: 'flex', gap: '10px', marginBottom: '1.25rem' }}>
+                <button 
+                  type="button" 
+                  className={`btn ${financialType === 'capex' ? 'btn-primary' : 'btn-secondary'}`} 
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => setFinancialType('capex')}
+                >
+                  📦 CAPEX (Belanja Aset)
+                </button>
+                <button 
+                  type="button" 
+                  className={`btn ${financialType === 'opex' ? 'btn-primary' : 'btn-secondary'}`} 
+                  style={{ flex: 1, justifyContent: 'center' }}
+                  onClick={() => setFinancialType('opex')}
+                >
+                  ⚙️ OPEX (Operasional)
+                </button>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Nama Transaksi / Item</label>
+                <input 
+                  className="form-input" 
+                  placeholder={financialType === 'capex' ? "Contoh: Kamera Sony A6400, Meja Live Streaming" : "Contoh: Gaji Host Amanda, Biaya Internet Biznet"} 
+                  value={itemName} 
+                  onChange={e => setItemName(e.target.value)} 
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Kategori</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="Contoh: Alat, Gaji, Sewa, Listrik" 
+                    value={itemCategory} 
+                    onChange={e => setItemCategory(e.target.value)} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Jumlah Nominal (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Jumlah Rp" 
+                    value={itemAmount} 
+                    onChange={e => setItemAmount(e.target.value)} 
+                    required 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Tanggal Transaksi</label>
+                  <input 
+                    className="form-input" 
+                    type="date" 
+                    value={itemDate} 
+                    onChange={e => setItemDate(e.target.value)} 
+                  />
+                </div>
+                
+                {financialType === 'opex' && (
+                  <div className="form-group">
+                    <label className="form-label">Frekuensi Biaya</label>
+                    <select 
+                      className="form-select" 
+                      value={opexFrequency} 
+                      onChange={e => setOpexFrequency(e.target.value)}
+                    >
+                      <option value="Once">Sekali Pengeluaran</option>
+                      <option value="Monthly">Bulanan (Monthly)</option>
+                      <option value="Yearly">Tahunan (Yearly)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px' }}>
+                <CheckCircle /> Simpan Transaksi Keuangan
+              </button>
+
+            </form>
           </div>
         </div>
       )}
