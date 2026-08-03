@@ -526,7 +526,7 @@ export default function App() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
               <nav className="public-nav-links" style={{ display: 'flex', gap: '1.25rem', fontSize: '0.875rem', fontWeight: 600 }}>
                 <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Layanan & Venture</a>
-                <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Live</a>
+                <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Live & Video</a>
                 <a href="#lestari" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Lestari Edu-Tech</a>
                 <a href="#ijustfound" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>I Just Found This!</a>
               </nav>
@@ -554,7 +554,7 @@ export default function App() {
             Driving High-Converting Live Commerce, Cultural Edu-Tech & International Media Engines.
           </h1>
           <p className="public-hero-desc" style={{ fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2rem', maxWidth: 780, margin: '0 auto 2rem' }}>
-            <strong>Paramara Studio</strong> is a digital venture builder overseeing specialized media and technology operations: Shopee Live Commerce stream management, the Lestari traditional dance edu-tech platform, and viral US-market product discovery engines.
+            <strong>Paramara Studio</strong> is a digital venture builder overseeing specialized media and technology operations: Shopee Live & Video Commerce management, the Lestari traditional dance edu-tech platform, and viral US-market product discovery engines.
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', flexWrap: 'wrap' }}>
@@ -582,23 +582,23 @@ export default function App() {
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
             
-            {/* PILLAR 1: SHOPEE LIVE */}
+            {/* PILLAR 1: SHOPEE LIVE & VIDEO */}
             <div className="glass-card" id="shopee" style={{ padding: '1.75rem 1.5rem', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', borderTop: '4px solid var(--primary)' }}>
               <div>
                 <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(8, 47, 38, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--primary)' }}>
                   <Video style={{ width: 24, height: 24 }} />
                 </div>
                 <span className="brand-badge" style={{ marginBottom: 8 }}>E-Commerce Operations</span>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live Streaming Management</h3>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live & Video Management</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Layanan manajemen & produksi live streaming e-commerce profesional end-to-end. Menyediakan host berbakat, setup penyiaran konversi tinggi, strategi interaksi penonton, dan analitik optimasi performa penjualan.
+                  Layanan manajemen live streaming e-commerce serta optimasi konten Shopee Video secara profesional. Menyediakan host berbakat, setup penyiaran konversi tinggi, produksi video promosi kreatif, dan analitik optimasi performa penjualan.
                 </p>
                 
                 <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
                   <strong>⭐ Layanan & Fitur Utama:</strong><br/>
-                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Penyiaran Host Streamer Profesional</span><br/>
-                  <span>• Strategi Konversi Penjualan & Promo Sesi</span><br/>
-                  <span>• Optimasi Analitik Performa Sesi Stream</span>
+                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Penyiaran Host Live Streamer Profesional</span><br/>
+                  <span>• Produksi & Optimasi Konten Shopee Video</span><br/>
+                  <span>• Analitik Penjualan & Optimasi Konversi</span>
                 </div>
               </div>
 
