@@ -6,7 +6,7 @@
 
 import { initializeApp, getApps } from 'firebase/app';
 import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
-import { getFirestore, collection, addDoc, getDocs, query, orderBy } from 'firebase/firestore';
+import { getFirestore, collection, addDoc, getDocs, query, orderBy, doc, setDoc, getDoc, onSnapshot } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY || "",
@@ -90,3 +90,80 @@ export async function fetchSessionsFromFirebase() {
     return null;
   }
 }
+
+// ======================================================================
+// Cross-Device Studio Data Sync (Firestore Document: studio_data/paramara_main)
+// ======================================================================
+
+const STUDIO_DOC_REF = db ? doc(db, 'studio_data', 'paramara_main') : null;
+
+/**
+ * Save the entire studioData object to Firestore for cross-device sync.
+ * Called with debounce from App.jsx to avoid excessive writes.
+ */
+export async function saveStudioDataToFirestore(studioData) {
+  if (!STUDIO_DOC_REF) return false;
+
+  try {
+    await setDoc(STUDIO_DOC_REF, {
+      ...studioData,
+      lastUpdated: new Date().toISOString()
+    });
+    return true;
+  } catch (err) {
+    console.warn("Firestore Save Studio Data Exception:", err.message);
+    return false;
+  }
+}
+
+/**
+ * Load the studioData object from Firestore on initial app mount.
+ * Returns null if no data exists or Firebase is not configured.
+ */
+export async function loadStudioDataFromFirestore() {
+  if (!STUDIO_DOC_REF) return null;
+
+  try {
+    const docSnap = await getDoc(STUDIO_DOC_REF);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      // Remove Firestore metadata field before returning
+      const { lastUpdated, ...studioData } = data;
+      return studioData;
+    }
+    return null;
+  } catch (err) {
+    console.warn("Firestore Load Studio Data Exception:", err.message);
+    return null;
+  }
+}
+
+/**
+ * Subscribe to real-time changes on the studioData document.
+ * When data changes from another device, the callback is invoked with the new data.
+ * Returns an unsubscribe function to clean up the listener.
+ */
+export function subscribeToStudioData(callback) {
+  if (!STUDIO_DOC_REF) return null;
+
+  try {
+    const unsubscribe = onSnapshot(STUDIO_DOC_REF, (docSnap) => {
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        const { lastUpdated, ...studioData } = data;
+        callback(studioData);
+      }
+    }, (err) => {
+      console.warn("Firestore onSnapshot Exception:", err.message);
+    });
+
+    return unsubscribe;
+  } catch (err) {
+    console.warn("Firestore Subscribe Exception:", err.message);
+    return null;
+  }
+}
+
+/** Export config status so App.jsx can show sync indicator */
+export { isFirebaseConfigured };
+

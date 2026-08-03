@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   LayoutDashboard, Video, Briefcase, Calendar, Globe, 
   Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   CheckCircle, Save, Menu, Lock, LogOut, Eye, EyeOff, Trash2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  Leaf, Compass, Monitor, Cloud, Loader2, PanelLeftClose, Film, DollarSign
+  Leaf, Compass, Monitor, Cloud, CloudOff, Loader2, PanelLeftClose, Film, DollarSign, CheckCircle2, WifiOff
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
 import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots } from './services/geminiService';
-import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage } from './services/firebaseService';
+import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage, saveStudioDataToFirestore, loadStudioDataFromFirestore, subscribeToStudioData, isFirebaseConfigured } from './services/firebaseService';
 
 export default function App() {
   // URL-based View Mode State ('public' at '/' vs 'admin' at '/admin')
@@ -71,6 +71,12 @@ export default function App() {
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  // Cloud Sync State
+  const [cloudSyncStatus, setCloudSyncStatus] = useState('idle'); // 'idle' | 'syncing' | 'synced' | 'offline'
+  const isRemoteUpdate = useRef(false);
+  const saveDebounceTimer = useRef(null);
+  const isInitialLoad = useRef(true);
   
   // Modals state
   const [modalType, setModalType] = useState(null); // 'scan' | 'scan_video' | 'finance' | 'project' | 'schedule' | 'editSession' | 'editVideoSession' | 'addAdmin' | 'editAdmin'
@@ -160,22 +166,109 @@ export default function App() {
     }
   };
 
-  // Fetch Firebase Sessions on Mount if Configured
+  // ====== FIREBASE FIRESTORE CROSS-DEVICE SYNC ======
+
+  // 1. On mount: Load from Firestore (if configured), then subscribe to real-time updates
   useEffect(() => {
-    async function loadFirebaseData() {
-      if (firebaseStorage) {
-        const cloudSessions = await fetchSessionsFromFirebase();
-        if (cloudSessions && cloudSessions.length > 0) {
-          setStudioData(prev => ({ ...prev, shopeeSessions: cloudSessions }));
-        }
-      }
+    if (!isFirebaseConfigured) {
+      setCloudSyncStatus('offline');
+      isInitialLoad.current = false;
+      return;
     }
-    loadFirebaseData();
+
+    let unsubscribe = null;
+
+    async function initFirestoreSync() {
+      // First, try to load data from Firestore
+      setCloudSyncStatus('syncing');
+      const cloudData = await loadStudioDataFromFirestore();
+
+      if (cloudData) {
+        // Cloud data exists — use it (merge with defaults for any missing keys)
+        isRemoteUpdate.current = true;
+        setStudioData(prev => ({
+          ...prev,
+          ...cloudData,
+          // Ensure arrays exist even if missing in cloud
+          shopeeSessions: cloudData.shopeeSessions || prev.shopeeSessions || [],
+          shopeeVideoSessions: cloudData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
+          clientProjects: cloudData.clientProjects || prev.clientProjects || [],
+          liveSchedules: cloudData.liveSchedules || prev.liveSchedules || [],
+          capexList: cloudData.capexList || prev.capexList || [],
+          opexList: cloudData.opexList || prev.opexList || [],
+          adminUsers: cloudData.adminUsers || prev.adminUsers || [],
+        }));
+        setCloudSyncStatus('synced');
+      } else {
+        // No cloud data yet — push current localStorage data to Firestore
+        const localData = JSON.parse(localStorage.getItem("paramara_studio_admin_data_v2") || "null");
+        if (localData) {
+          await saveStudioDataToFirestore(localData);
+        }
+        setCloudSyncStatus('synced');
+      }
+
+      isInitialLoad.current = false;
+
+      // Subscribe to real-time updates from other devices
+      unsubscribe = subscribeToStudioData((remoteData) => {
+        if (remoteData) {
+          isRemoteUpdate.current = true;
+          setStudioData(prev => ({
+            ...prev,
+            ...remoteData,
+            shopeeSessions: remoteData.shopeeSessions || prev.shopeeSessions || [],
+            shopeeVideoSessions: remoteData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
+            clientProjects: remoteData.clientProjects || prev.clientProjects || [],
+            liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
+            capexList: remoteData.capexList || prev.capexList || [],
+            opexList: remoteData.opexList || prev.opexList || [],
+            adminUsers: remoteData.adminUsers || prev.adminUsers || [],
+          }));
+          setCloudSyncStatus('synced');
+        }
+      });
+    }
+
+    initFirestoreSync();
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  // Save Studio Data to LocalStorage as fallback
+  // 2. Save Studio Data to localStorage AND Firestore (debounced) on every change
   useEffect(() => {
+    // Always save to localStorage instantly
     localStorage.setItem("paramara_studio_admin_data_v2", JSON.stringify(studioData));
+
+    // Skip Firestore save if this update came from a remote snapshot (prevents infinite loop)
+    if (isRemoteUpdate.current) {
+      isRemoteUpdate.current = false;
+      return;
+    }
+
+    // Skip Firestore save during initial load
+    if (isInitialLoad.current) return;
+
+    // Debounced save to Firestore (2 seconds)
+    if (!isFirebaseConfigured) return;
+
+    if (saveDebounceTimer.current) {
+      clearTimeout(saveDebounceTimer.current);
+    }
+
+    setCloudSyncStatus('syncing');
+    saveDebounceTimer.current = setTimeout(async () => {
+      const success = await saveStudioDataToFirestore(studioData);
+      setCloudSyncStatus(success ? 'synced' : 'offline');
+    }, 2000);
+
+    return () => {
+      if (saveDebounceTimer.current) {
+        clearTimeout(saveDebounceTimer.current);
+      }
+    };
   }, [studioData]);
 
   // Handle Login Authentication
@@ -839,6 +932,14 @@ export default function App() {
           </div>
 
           <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            {/* Cloud Sync Status Indicator */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.7rem', fontWeight: 600, padding: '5px 10px', borderRadius: 8, background: cloudSyncStatus === 'synced' ? 'rgba(5, 150, 105, 0.1)' : cloudSyncStatus === 'syncing' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(156, 163, 175, 0.15)', color: cloudSyncStatus === 'synced' ? '#059669' : cloudSyncStatus === 'syncing' ? '#b45309' : '#6b7280', border: `1px solid ${cloudSyncStatus === 'synced' ? 'rgba(5,150,105,0.25)' : cloudSyncStatus === 'syncing' ? 'rgba(234,179,8,0.25)' : 'rgba(156,163,175,0.25)'}` }}>
+              {cloudSyncStatus === 'synced' && <><Cloud style={{ width: 13, height: 13 }} /> Synced</>}
+              {cloudSyncStatus === 'syncing' && <><Loader2 style={{ width: 13, height: 13, animation: 'spin 1s linear infinite' }} /> Syncing...</>}
+              {cloudSyncStatus === 'offline' && <><CloudOff style={{ width: 13, height: 13 }} /> Local Only</>}
+              {cloudSyncStatus === 'idle' && <><Cloud style={{ width: 13, height: 13 }} /> ...</>}
+            </div>
+
             <button className="btn btn-secondary" onClick={() => setViewMode('public')}>
               <Globe /> Homepage
             </button>
