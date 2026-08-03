@@ -956,71 +956,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* CORPORATE PROFIT & LOSS BREAKDOWN TABLE */}
-            <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <DollarSign style={{ width: 18, height: 18 }} /> Laporan Laba Rugi & Arus Kas Studio (Profit & Loss Statement)
-              </h3>
-              
-              <div className="table-wrapper">
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                  <thead>
-                    <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
-                      <th style={{ textAlign: 'left', padding: '10px' }}>Komponen Keuangan</th>
-                      <th style={{ textAlign: 'right', padding: '10px' }}>Nilai Riil (Rp)</th>
-                      <th style={{ textAlign: 'left', padding: '10px' }}>Keterangan / Breakdown</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>1. Pendapatan Komisi Shopee Live</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossCommission.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Live Rp {totalShopeeRev.toLocaleString('id-ID')}</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>2. Pendapatan Komisi Shopee Video</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossVideoCommission.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Video Rp {totalVideoRev.toLocaleString('id-ID')}</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>3. Pendapatan Kontrak Proyek & Klien</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalProjectRev.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Total nilai anggaran kontrak jasa produksi/live klien aktif</td>
-                    </tr>
-                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#F4F8F6' }}>
-                      <td style={{ padding: '10px', fontWeight: 800 }}>PENDAPATAN KOTOR (STUDIO REVENUE)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 800 }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>Total Pendapatan Terkombinasi</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>4. Pengeluaran Modal (CAPEX)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalCapex.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Investasi aset fisik, alat broadcast, kamera & dekorasi studio</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>5. Pengeluaran Operasional (OPEX)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalOpex.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Gaji host/talent, biaya internet, listrik, sewa tempat, operasional harian</td>
-                    </tr>
-                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#FAF6F6' }}>
-                      <td style={{ padding: '10px', fontWeight: 800 }}>TOTAL PENGELUARAN (TOTAL EXPENSES)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 800 }}>Rp {totalExpenses.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>CAPEX + OPEX</td>
-                    </tr>
-                    <tr style={{ background: '#EAF5F0' }}>
-                      <td style={{ padding: '12px 10px', fontWeight: 900, fontSize: '0.95rem' }}>LABA BERSIH (NET PROFIT)</td>
-                      <td style={{ padding: '12px 10px', textAlign: 'right', color: netProfit >= 0 ? '#059669' : '#D32F2F', fontWeight: 900, fontSize: '1rem' }}>
-                        Rp {netProfit.toLocaleString('id-ID')}
-                      </td>
-                      <td style={{ padding: '12px 10px', fontWeight: 800, color: '#059669' }}>
-                        Margin Operasional: {netProfitMarginPercent.toFixed(1)}% {netProfit >= 0 ? "📈 SURPLUS" : "📉 DEFISIT"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
             {/* Split Grid for Details */}
             <div className="dashboard-grid">
               
@@ -1444,6 +1379,71 @@ export default function App() {
                 <div className="kpi-title">Total Pengeluaran Bulan Ini</div>
                 <div className="kpi-value text-warning">Rp {totalExpenses.toLocaleString('id-ID')}</div>
                 <div className="kpi-subtext">Kombinasi CAPEX & OPEX</div>
+              </div>
+            </div>
+
+            {/* CORPORATE PROFIT & LOSS BREAKDOWN TABLE */}
+            <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <DollarSign style={{ width: 18, height: 18 }} /> Laporan Laba Rugi & Arus Kas Studio (Profit & Loss Statement)
+              </h3>
+              
+              <div className="table-wrapper">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
+                  <thead>
+                    <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ textAlign: 'left', padding: '10px' }}>Komponen Keuangan</th>
+                      <th style={{ textAlign: 'right', padding: '10px' }}>Nilai Riil (Rp)</th>
+                      <th style={{ textAlign: 'left', padding: '10px' }}>Keterangan / Breakdown</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>1. Pendapatan Komisi Shopee Live</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossCommission.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Live Rp {totalShopeeRev.toLocaleString('id-ID')}</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>2. Pendapatan Komisi Shopee Video</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossVideoCommission.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Video Rp {totalVideoRev.toLocaleString('id-ID')}</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>3. Pendapatan Kontrak Proyek & Klien</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalProjectRev.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Total nilai anggaran kontrak jasa produksi/live klien aktif</td>
+                    </tr>
+                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#F4F8F6' }}>
+                      <td style={{ padding: '10px', fontWeight: 800 }}>PENDAPATAN KOTOR (STUDIO REVENUE)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 800 }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>Total Pendapatan Terkombinasi</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>4. Pengeluaran Modal (CAPEX)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalCapex.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Investasi aset fisik, alat broadcast, kamera & dekorasi studio</td>
+                    </tr>
+                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                      <td style={{ padding: '10px', fontWeight: 600 }}>5. Pengeluaran Operasional (OPEX)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalOpex.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Gaji host/talent, biaya internet, listrik, sewa tempat, operasional harian</td>
+                    </tr>
+                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#FAF6F6' }}>
+                      <td style={{ padding: '10px', fontWeight: 800 }}>TOTAL PENGELUARAN (TOTAL EXPENSES)</td>
+                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 800 }}>Rp {totalExpenses.toLocaleString('id-ID')}</td>
+                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>CAPEX + OPEX</td>
+                    </tr>
+                    <tr style={{ background: '#EAF5F0' }}>
+                      <td style={{ padding: '12px 10px', fontWeight: 900, fontSize: '0.95rem' }}>LABA BERSIH (NET PROFIT)</td>
+                      <td style={{ padding: '12px 10px', textAlign: 'right', color: netProfit >= 0 ? '#059669' : '#D32F2F', fontWeight: 900, fontSize: '1rem' }}>
+                        Rp {netProfit.toLocaleString('id-ID')}
+                      </td>
+                      <td style={{ padding: '12px 10px', fontWeight: 800, color: '#059669' }}>
+                        Margin Operasional: {netProfitMarginPercent.toFixed(1)}% {netProfit >= 0 ? "📈 SURPLUS" : "📉 DEFISIT"}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
 
