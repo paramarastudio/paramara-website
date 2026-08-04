@@ -700,6 +700,19 @@ footer {
   font-size: 0.825rem;
 }
 
+.public-nav-links a {
+  color: var(--text-main);
+  transition: color 0.2s ease;
+}
+
+[data-theme="dark"] .public-nav-links a {
+  color: #E2ECB8 !important;
+}
+
+[data-theme="dark"] .public-nav-links a:hover {
+  color: var(--primary) !important;
+}
+
 /* Global Box-Sizing & Overflow Safety */
 html, body {
   overflow-x: hidden;

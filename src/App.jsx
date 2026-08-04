@@ -1014,27 +1014,27 @@ export default function App() {
         </header>
 
         {/* HERO SECTION */}
-        <section className="public-hero-section" style={{ padding: '4rem 1.5rem 3rem', textAlign: 'center', maxWidth: 960, margin: '0 auto' }}>
+        <section className="public-hero-section" style={{ padding: '4rem 1.5rem 3rem', textAlign: 'center', maxWidth: 900, margin: '0 auto' }}>
           <div className="brand-badge" style={{ marginBottom: '1rem', padding: '6px 14px', fontSize: '0.75rem', display: 'inline-flex' }}>
-            <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Official Venture Ecosystem
+            <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Paramara Studio Ecosystem
           </div>
-          <h1 className="public-hero-title" style={{ fontSize: '2.4rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.25, marginBottom: '1rem', letterSpacing: '-0.03em' }}>
-            Driving High-Converting Live Commerce, Cultural Edu-Tech & International Media Engines.
+          <h1 className="public-hero-title" style={{ fontSize: '2.3rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.3, marginBottom: '1rem', letterSpacing: '-0.02em' }}>
+            Studio Operasi Digital & Ekosistem Media Berbasis Data.
           </h1>
-          <p className="public-hero-desc" style={{ fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '2rem', maxWidth: 780, margin: '0 auto 2rem' }}>
-            <strong>Paramara Studio</strong> is a digital venture builder overseeing specialized media and technology operations: Shopee Live & Video Commerce management, the Lestari traditional dance edu-tech platform, and viral US-market product discovery engines.
+          <p className="public-hero-desc" style={{ fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: '2rem', maxWidth: 740, margin: '0 auto 2rem' }}>
+            <strong>Paramara Studio</strong> mengelola operasi media dan teknologi terintegrasi: manajemen & teknik operasi Shopee Live/Video Commerce, platform edu-tech kebudayaan <em>Lestari</em>, serta kanal media kurasi produk pasar Amerika Serikat.
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', flexWrap: 'wrap' }}>
-            <a href="#ventures" className="btn btn-primary" style={{ padding: '10px 20px', fontSize: '0.9rem' }}>
-              Jelajahi Venture & Portfolio <ArrowRight style={{ width: 16, height: 16 }} />
+            <a href="#ventures" className="btn btn-primary" style={{ padding: '10px 22px', fontSize: '0.9rem' }}>
+              Lihat Layanan & Ekosistem <ArrowRight style={{ width: 16, height: 16 }} />
             </a>
             {isAuthenticated ? (
-              <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '0.9rem' }} onClick={() => setViewMode('admin')}>
-                <Monitor style={{ width: 16, height: 16 }} /> Buka Portal Admin Studio
+              <button className="btn btn-secondary" style={{ padding: '10px 22px', fontSize: '0.9rem' }} onClick={() => setViewMode('admin')}>
+                <Monitor style={{ width: 16, height: 16 }} /> Portal Admin Studio
               </button>
             ) : (
-              <button className="btn btn-secondary" style={{ padding: '10px 20px', fontSize: '0.9rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
+              <button className="btn btn-secondary" style={{ padding: '10px 22px', fontSize: '0.9rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
                 <Lock style={{ width: 16, height: 16 }} /> Portal Admin Login
               </button>
             )}
@@ -1044,8 +1044,8 @@ export default function App() {
         {/* VENTURES GRID SECTION */}
         <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '1.5rem 1.25rem 5rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Tiga Pilar Utama Paramara Studio</h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Operasi bisnis, edutech kebudayaan, dan jaringan media afiliasi internasional.</p>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Fokus Operasi Paramara Studio</h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Operasi e-commerce, edu-tech kebudayaan, dan media kurasi produk internasional.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
@@ -1059,20 +1059,20 @@ export default function App() {
                 <span className="brand-badge" style={{ marginBottom: 8 }}>E-Commerce Operations</span>
                 <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live & Video Management</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Layanan manajemen live streaming e-commerce serta optimasi konten Shopee Video secara profesional. Menyediakan host berbakat, setup penyiaran konversi tinggi, produksi video promosi kreatif, dan analitik optimasi performa penjualan.
+                  Layanan manajemen profesional untuk optimasi penyiaran live streaming e-commerce, produksi & penyuntingan konten Shopee Video, serta analisis data performa penjualan berbasis konversi GMV.
                 </p>
                 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>⭐ Layanan & Fitur Utama:</strong><br/>
-                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Penyiaran Host Live Streamer Profesional</span><br/>
+                  <strong>⭐ Layanan & Spesialisasi Utama:</strong><br/>
+                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Setup Teknis & Peralatan Studio Live</span><br/>
                   <span>• Produksi & Optimasi Konten Shopee Video</span><br/>
-                  <span>• Analitik Penjualan & Optimasi Konversi</span>
+                  <span>• Analitik Penjualan & Strategi Konversi GMV</span>
                 </div>
               </div>
 
               {isAuthenticated ? (
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setActiveTab('tabShopeeTracker'); }}>
-                  Buka Portal Admin Tracker <ArrowRight style={{ width: 16, height: 16 }} />
+                  Buka Dashboard Operasional <ArrowRight style={{ width: 16, height: 16 }} />
                 </button>
               ) : (
                 <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
@@ -1088,23 +1088,23 @@ export default function App() {
                   <Leaf style={{ width: 24, height: 24 }} />
                 </div>
                 <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)', marginBottom: 8 }}>
-                  Edu-Tech Tari Tradisional Pertama di Indonesia
+                  Edu-Tech Kebudayaan Nusantara
                 </span>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestarikan Tari Tradisional, Lebih Terarah & Interaktif</h3>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestari Tari Tradisional</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  <strong>Lestari</strong> adalah platform pendamping belajar tari tradisional nusantara yang menghubungkan kurikulum terstruktur dengan koreksi presisi langsung dari guru ahli.
+                  <strong>Lestari</strong> adalah platform pendamping belajar tari tradisional nusantara yang menghubungkan kurikulum pembelajaran terstruktur dengan koreksi dari pengajar tari profesional.
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
                   <strong>💃 Fitur & Ekosistem Lestari:</strong><br/>
                   <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Kurikulum Belajar Tari Nusantara Terstruktur</span><br/>
-                  <span>• Umpan Balik & Koreksi Presisi Guru Ahli</span><br/>
-                  <span>• Platform Aplikasi Live: lestari-app.vercel.app</span>
+                  <span>• Umpan Balik & Koreksi Presisi Guru Seni</span><br/>
+                  <span>• Platform Web Live: <strong>lestari-app.vercel.app</strong></span>
                 </div>
               </div>
 
               <a href="https://lestari-app.vercel.app/" target="_blank" rel="noreferrer" className="btn btn-accent" style={{ width: '100%', justifyContent: 'center' }}>
-                Kunjungi Platform Lestari App <ExternalLink style={{ width: 16, height: 16 }} />
+                Kunjungi Platform Lestari <ExternalLink style={{ width: 16, height: 16 }} />
               </a>
             </div>
 
@@ -1114,17 +1114,17 @@ export default function App() {
                 <div style={{ width: 46, height: 46, borderRadius: 12, background: 'rgba(184, 142, 57, 0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem', color: 'var(--accent-gold)' }}>
                   <Compass style={{ width: 24, height: 24 }} />
                 </div>
-                <span className="brand-badge" style={{ marginBottom: 8 }}>US Consumer Market & Media Hub</span>
+                <span className="brand-badge" style={{ marginBottom: 8 }}>US Market & Media Hub</span>
                 <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>I Just Found This! (US Market)</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Kanal kurasi produk viral dan media afiliasi Amazon yang ditargetkan secara khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & media sosial.
+                  Kanal kurasi produk viral Amazon dan media afiliasi yang ditargetkan khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & platform media digital.
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>🇺🇸 Channel Profile & Niche:</strong><br/>
-                  <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Account: @productijustfound</span><br/>
-                  <span>• Bio: Amazon Finds | Everything You Need!</span><br/>
-                  <span>• Target Audience: United States (US) Market</span>
+                  <strong>🇺🇸 Profil Kanal & Niche:</strong><br/>
+                  <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Account: @productijustfound (Amazon Finds)</span><br/>
+                  <span>• Performansi: 2.6k+ Impressions & 200+ Engagements</span><br/>
+                  <span>• Target Audience: United States (Demografi 18-34, 70% Female)</span>
                 </div>
               </div>
 
