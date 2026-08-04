@@ -1026,18 +1026,9 @@ export default function App() {
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', flexWrap: 'wrap' }}>
-            <a href="#ventures" className="btn btn-primary" style={{ padding: '10px 22px', fontSize: '0.9rem' }}>
+            <a href="#ventures" className="btn btn-primary" style={{ padding: '10px 24px', fontSize: '0.9rem' }}>
               Explore Operations & Ventures <ArrowRight style={{ width: 16, height: 16 }} />
             </a>
-            {isAuthenticated ? (
-              <button className="btn btn-secondary" style={{ padding: '10px 22px', fontSize: '0.9rem' }} onClick={() => setViewMode('admin')}>
-                <Monitor style={{ width: 16, height: 16 }} /> Admin Portal Dashboard
-              </button>
-            ) : (
-              <button className="btn btn-secondary" style={{ padding: '10px 22px', fontSize: '0.9rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                <Lock style={{ width: 16, height: 16 }} /> Admin Portal Login
-              </button>
-            )}
           </div>
         </section>
 
@@ -1062,23 +1053,13 @@ export default function App() {
                   Professional operational management for e-commerce live streaming broadcasting, video content production & optimization, and GMV conversion analytics.
                 </p>
                 
-                <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
+                <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
                   <strong>⭐ Key Capabilities & Focus:</strong><br/>
                   <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Live Studio Equipment & Technical Broadcasting</span><br/>
                   <span>• Shopee Video Content Production & Editing</span><br/>
                   <span>• GMV Sales Analytics & Conversion Optimization</span>
                 </div>
               </div>
-
-              {isAuthenticated ? (
-                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setActiveTab('tabShopeeTracker'); }}>
-                  Open Operational Dashboard <ArrowRight style={{ width: 16, height: 16 }} />
-                </button>
-              ) : (
-                <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                  <Lock style={{ width: 15, height: 15 }} /> Admin Portal Login
-                </button>
-              )}
             </div>
 
             {/* PILLAR 2: LESTARI EDU-TECH */}
