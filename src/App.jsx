@@ -971,11 +971,8 @@ export default function App() {
     return (
       <div style={{ background: 'var(--bg-main)', minHeight: '100vh', color: 'var(--text-main)' }}>
         
-        {/* PUBLIC TOP NAVIGATION BAR */}
-        <header style={{ 
-          background: 'rgba(255, 255, 255, 0.95)', 
-          backdropFilter: 'blur(10px)',
-          borderBottom: '1px solid var(--border-color)', 
+        {/* PUBLIC HEADER NAVIGATION */}
+        <header className="glass-header" style={{ 
           position: 'sticky', 
           top: 0, 
           zIndex: 100,
@@ -993,8 +990,8 @@ export default function App() {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', flexShrink: 0 }}>
               <nav className="public-nav-links" style={{ display: 'flex', gap: '1.25rem', fontSize: '0.875rem', fontWeight: 600 }}>
-                <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Layanan & Venture</a>
-                <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Live & Video</a>
+                <a href="#ventures" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Ventures & Operations</a>
+                <a href="#shopee" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Shopee Operations</a>
                 <a href="#lestari" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>Lestari Edu-Tech</a>
                 <a href="#ijustfound" style={{ color: 'var(--text-main)', textDecoration: 'none' }}>I Just Found This!</a>
               </nav>
@@ -1005,7 +1002,7 @@ export default function App() {
                 </button>
               ) : (
                 <button className="btn btn-secondary btn-sm" onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                  <Lock style={{ width: 14, height: 14 }} /> Portal Admin Login
+                  <Lock style={{ width: 14, height: 14 }} /> Admin Portal Login
                 </button>
               )}
             </div>
@@ -1019,23 +1016,23 @@ export default function App() {
             <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Paramara Studio Ecosystem
           </div>
           <h1 className="public-hero-title" style={{ fontSize: '2.3rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.3, marginBottom: '1rem', letterSpacing: '-0.02em' }}>
-            Studio Operasi Digital & Ekosistem Media Berbasis Data.
+            Digital Venture Building & Data-Driven Operations.
           </h1>
           <p className="public-hero-desc" style={{ fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: '2rem', maxWidth: 740, margin: '0 auto 2rem' }}>
-            <strong>Paramara Studio</strong> mengelola operasi media dan teknologi terintegrasi: manajemen & teknik operasi Shopee Live/Video Commerce, platform edu-tech kebudayaan <em>Lestari</em>, serta kanal media kurasi produk pasar Amerika Serikat.
+            <strong>Paramara Studio</strong> operates an integrated portfolio of specialized media and technology ventures: Shopee Live & Video Commerce management, the <em>Lestari</em> Indonesian cultural edu-tech platform, and US-market product discovery media.
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', flexWrap: 'wrap' }}>
             <a href="#ventures" className="btn btn-primary" style={{ padding: '10px 22px', fontSize: '0.9rem' }}>
-              Lihat Layanan & Ekosistem <ArrowRight style={{ width: 16, height: 16 }} />
+              Explore Operations & Ventures <ArrowRight style={{ width: 16, height: 16 }} />
             </a>
             {isAuthenticated ? (
               <button className="btn btn-secondary" style={{ padding: '10px 22px', fontSize: '0.9rem' }} onClick={() => setViewMode('admin')}>
-                <Monitor style={{ width: 16, height: 16 }} /> Portal Admin Studio
+                <Monitor style={{ width: 16, height: 16 }} /> Admin Portal Dashboard
               </button>
             ) : (
               <button className="btn btn-secondary" style={{ padding: '10px 22px', fontSize: '0.9rem' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                <Lock style={{ width: 16, height: 16 }} /> Portal Admin Login
+                <Lock style={{ width: 16, height: 16 }} /> Admin Portal Login
               </button>
             )}
           </div>
@@ -1044,8 +1041,8 @@ export default function App() {
         {/* VENTURES GRID SECTION */}
         <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '1.5rem 1.25rem 5rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Fokus Operasi Paramara Studio</h2>
-            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>Operasi e-commerce, edu-tech kebudayaan, dan media kurasi produk internasional.</p>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Paramara Studio Core Operations</h2>
+            <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>E-commerce operations, cultural edu-tech, and international media hubs.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
@@ -1059,24 +1056,24 @@ export default function App() {
                 <span className="brand-badge" style={{ marginBottom: 8 }}>E-Commerce Operations</span>
                 <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Shopee Live & Video Management</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Layanan manajemen profesional untuk optimasi penyiaran live streaming e-commerce, produksi & penyuntingan konten Shopee Video, serta analisis data performa penjualan berbasis konversi GMV.
+                  Professional operational management for e-commerce live streaming broadcasting, video content production & optimization, and GMV conversion analytics.
                 </p>
                 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>⭐ Layanan & Spesialisasi Utama:</strong><br/>
-                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Setup Teknis & Peralatan Studio Live</span><br/>
-                  <span>• Produksi & Optimasi Konten Shopee Video</span><br/>
-                  <span>• Analitik Penjualan & Strategi Konversi GMV</span>
+                  <strong>⭐ Key Capabilities & Focus:</strong><br/>
+                  <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Live Studio Equipment & Technical Broadcasting</span><br/>
+                  <span>• Shopee Video Content Production & Editing</span><br/>
+                  <span>• GMV Sales Analytics & Conversion Optimization</span>
                 </div>
               </div>
 
               {isAuthenticated ? (
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setActiveTab('tabShopeeTracker'); }}>
-                  Buka Dashboard Operasional <ArrowRight style={{ width: 16, height: 16 }} />
+                  Open Operational Dashboard <ArrowRight style={{ width: 16, height: 16 }} />
                 </button>
               ) : (
                 <button className="btn btn-secondary" style={{ width: '100%', justifyContent: 'center' }} onClick={() => { setViewMode('admin'); setShowLoginModal(true); }}>
-                  <Lock style={{ width: 15, height: 15 }} /> Login Admin Portal
+                  <Lock style={{ width: 15, height: 15 }} /> Admin Portal Login
                 </button>
               )}
             </div>
@@ -1088,23 +1085,23 @@ export default function App() {
                   <Leaf style={{ width: 24, height: 24 }} />
                 </div>
                 <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669', borderColor: 'rgba(5, 150, 105, 0.3)', marginBottom: 8 }}>
-                  Edu-Tech Kebudayaan Nusantara
+                  Indonesian Cultural Edu-Tech
                 </span>
-                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestari Tari Tradisional</h3>
+                <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>Lestari Traditional Dance</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  <strong>Lestari</strong> adalah platform pendamping belajar tari tradisional nusantara yang menghubungkan kurikulum pembelajaran terstruktur dengan koreksi dari pengajar tari profesional.
+                  <strong>Lestari</strong> is an educational platform for learning traditional Indonesian dance, connecting structured curricula with expert instructor feedback.
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>💃 Fitur & Ekosistem Lestari:</strong><br/>
-                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Kurikulum Belajar Tari Nusantara Terstruktur</span><br/>
-                  <span>• Umpan Balik & Koreksi Presisi Guru Seni</span><br/>
-                  <span>• Platform Web Live: <strong>lestari-app.vercel.app</strong></span>
+                  <strong>💃 Features & Platform:</strong><br/>
+                  <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Structured Nusantara Dance Curricula</span><br/>
+                  <span>• Expert Instructor Guidance & Feedback</span><br/>
+                  <span>• Live Web Application: <strong>lestari-app.vercel.app</strong></span>
                 </div>
               </div>
 
               <a href="https://lestari-app.vercel.app/" target="_blank" rel="noreferrer" className="btn btn-accent" style={{ width: '100%', justifyContent: 'center' }}>
-                Kunjungi Platform Lestari <ExternalLink style={{ width: 16, height: 16 }} />
+                Visit Lestari Platform <ExternalLink style={{ width: 16, height: 16 }} />
               </a>
             </div>
 
@@ -1117,14 +1114,14 @@ export default function App() {
                 <span className="brand-badge" style={{ marginBottom: 8 }}>US Market & Media Hub</span>
                 <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: '0.75rem' }}>I Just Found This! (US Market)</h3>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.25rem' }}>
-                  Kanal kurasi produk viral Amazon dan media afiliasi yang ditargetkan khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & platform media digital.
+                  A curated product discovery and affiliate media hub targeted specifically at the United States consumer market via Pinterest and digital channels.
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>🇺🇸 Profil Kanal & Niche:</strong><br/>
+                  <strong>🇺🇸 Channel Focus & Profile:</strong><br/>
                   <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Account: @productijustfound (Amazon Finds)</span><br/>
-                  <span>• Performansi: 2.6k+ Impressions & 200+ Engagements</span><br/>
-                  <span>• Target Audience: United States (Demografi 18-34, 70% Female)</span>
+                  <span>• Content: Home Essentials, Travel Gear & Gift Guides</span><br/>
+                  <span>• Target Audience: United States Consumer Market</span>
                 </div>
               </div>
 
