@@ -672,11 +672,8 @@ export default function App() {
 
     try {
       // Analyze INSTANTLY with Gemini Vision AI via Vercel serverless proxy
-      const result = await analyzeShopeeScreenshots(filesToProcess);
-      // Komisi kotor TIDAK di-auto kalkulasi — user isi manual karena % komisi beda tiap sesi
-      if (!result.grossCommission) {
-        result.grossCommission = 0;
-      }
+      // Komisi kotor dikosongkan agar user memasukkan angka komisi secara manual
+      result.grossCommission = "";
 
       setScannedPreview(result);
       remoteLog.info('AI Scan success (Shopee Live)', { revenue: result.revenue, orders: result.orders });
@@ -690,9 +687,10 @@ export default function App() {
 
   // Save Session & Asynchronously Upload to Firebase in background
   const handleSaveScannedSession = async () => {
-    if (!scannedPreview) return;
-
-    const sessionToSave = { ...scannedPreview };
+    const sessionToSave = { 
+      ...scannedPreview,
+      grossCommission: parseInt(scannedPreview.grossCommission) || 0
+    };
 
     // 1. Immediately Save to Local State so UI updates instantly!
     setStudioData(prev => ({
@@ -752,9 +750,7 @@ export default function App() {
 
     try {
       const result = await analyzeShopeeVideoScreenshots(filesToProcess);
-      if (!result.grossCommission) {
-        result.grossCommission = Math.round((result.revenue || 0) * 0.1);
-      }
+      result.grossCommission = "";
       setScannedVideoPreview(result);
       remoteLog.info('AI Scan success (Shopee Video)', { revenue: result.revenue, orders: result.totalOrders });
     } catch (err) {
@@ -769,7 +765,10 @@ export default function App() {
   const handleSaveScannedVideoSession = async () => {
     if (!scannedVideoPreview) return;
 
-    const videoToSave = { ...scannedVideoPreview };
+    const videoToSave = { 
+      ...scannedVideoPreview,
+      grossCommission: parseInt(scannedVideoPreview.grossCommission) || 0
+    };
 
     setStudioData(prev => ({
       ...prev,
@@ -2708,7 +2707,7 @@ export default function App() {
                   {/* GROSS COMMISSION INPUT */}
                   <div className="form-group">
                     <label className="form-label" style={{ color: 'var(--accent-gold)' }}>💵 Komisi Kotor Studio (Rp)</label>
-                    <input className="form-input" type="number" value={scannedPreview.grossCommission || Math.round((scannedPreview.revenue || 0) * 0.1)} onChange={e => setScannedPreview({ ...scannedPreview, grossCommission: parseInt(e.target.value) || 0 })} />
+                    <input className="form-input" type="number" placeholder="Kosong (Silakan isi nominal komisi)" value={scannedPreview.grossCommission ?? ''} onChange={e => setScannedPreview({ ...scannedPreview, grossCommission: e.target.value })} />
                   </div>
 
                   <div className="form-group">
@@ -2900,7 +2899,7 @@ export default function App() {
 
                   <div className="form-group">
                     <label className="form-label">💵 Estimasi Komisi (Rp)</label>
-                    <input className="form-input" type="number" value={scannedVideoPreview.grossCommission || Math.round((scannedVideoPreview.revenue || 0) * 0.1)} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, grossCommission: parseInt(e.target.value) || 0 })} />
+                    <input className="form-input" type="number" placeholder="Kosong (Silakan isi nominal komisi)" value={scannedVideoPreview.grossCommission ?? ''} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, grossCommission: e.target.value })} />
                   </div>
 
                   <div className="form-group">
