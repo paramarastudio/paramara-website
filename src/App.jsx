@@ -571,7 +571,7 @@ export default function App() {
   const [pinterestSubTab, setPinterestSubTab] = useState('overview'); // 'overview' | 'audience' | 'files'
 
   // Handler for uploading Pinterest Analytics CSV (Smart Merge for Overview vs Audience files)
-  const handlePinterestCsvUpload = (e) => {
+  const handlePinterestCsvUpload = (e, forcedType = null) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -583,8 +583,8 @@ export default function App() {
         const text = evt.target.result;
         const parsedData = parsePinterestCsv(text);
 
-        const isAudienceFile = fileName.toLowerCase().includes("audience") || text.includes("Category,Bulk Sheet Category") || text.includes("Audience View") || text.includes("Audience Size");
-        const isOverviewFile = fileName.toLowerCase().includes("overview") || text.includes("Date,Impressions") || text.includes("Top Boards");
+        const isAudienceFile = forcedType === 'audience' || (forcedType === null && (fileName.toLowerCase().includes("audience") || text.includes("Category,Bulk Sheet Category") || text.includes("Audience View") || text.includes("Audience Size")));
+        const isOverviewFile = forcedType === 'overview' || (forcedType === null && (fileName.toLowerCase().includes("overview") || text.includes("Date,Impressions") || text.includes("Top Boards")));
 
         setStudioData(prev => {
           const existingList = [...(prev.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics)];
@@ -622,8 +622,8 @@ export default function App() {
               if (parsedData.demographics.interests.length > 0) current.demographics.interests = parsedData.demographics.interests;
             }
 
-            // File history log
-            const history = current.fileHistory ? [...current.fileHistory] : [
+            // Deduplicate file history by fileType so we keep the latest uploaded file for each type
+            let history = current.fileHistory ? [...current.fileHistory] : [
               {
                 id: "file_init_1",
                 fileName: "Pinterest Analytics overview 20260701-20260731 (1).csv",
@@ -642,10 +642,13 @@ export default function App() {
               }
             ];
 
+            const fileTypeLabel = isAudienceFile ? "Audience Insights" : "Overview Performance";
+            
+            history = history.filter(h => h.fileType !== fileTypeLabel);
             history.unshift({
               id: "file_" + Date.now(),
               fileName: fileName,
-              fileType: isAudienceFile ? "Audience Insights" : isOverviewFile ? "Overview Performance" : "CSV Export",
+              fileType: fileTypeLabel,
               uploadedAt: new Date().toLocaleString('id-ID'),
               rowsCount: text.split(/\r?\n/).length,
               status: "Active & Synced"
@@ -2292,11 +2295,17 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 10 }}>
-                <label className="btn btn-primary" style={{ cursor: 'pointer', gap: 6, margin: 0 }}>
-                  <PlusCircle style={{ width: 15, height: 15 }} />
-                  <span>Upload CSV Pinterest</span>
-                  <input type="file" accept=".csv, .txt" onChange={handlePinterestCsvUpload} style={{ display: 'none' }} />
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', gap: 6, margin: 0 }}>
+                  <PlusCircle style={{ width: 14, height: 14 }} />
+                  <span>Upload Overview Performance CSV</span>
+                  <input type="file" accept=".csv, .txt" onChange={(e) => handlePinterestCsvUpload(e, 'overview')} style={{ display: 'none' }} />
+                </label>
+
+                <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', gap: 6, margin: 0 }}>
+                  <PlusCircle style={{ width: 14, height: 14 }} />
+                  <span>Upload Audience Insights CSV</span>
+                  <input type="file" accept=".csv, .txt" onChange={(e) => handlePinterestCsvUpload(e, 'audience')} style={{ display: 'none' }} />
                 </label>
               </div>
             </div>
@@ -2598,11 +2607,6 @@ export default function App() {
                             </h3>
                             <p style={{ fontSize: '0.775rem', color: 'var(--text-dim)', marginTop: 2 }}>Daftar file laporan Excel/CSV Pinterest yang aktif diimpor ke sistem</p>
                           </div>
-
-                          <label className="btn btn-sm btn-primary" style={{ cursor: 'pointer' }}>
-                            <PlusCircle style={{ width: 14, height: 14 }} /> Upload File Baru
-                            <input type="file" accept=".csv, .txt" onChange={handlePinterestCsvUpload} style={{ display: 'none' }} />
-                          </label>
                         </div>
 
                         <div className="table-wrapper">
