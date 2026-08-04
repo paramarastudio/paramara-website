@@ -4,7 +4,8 @@ import {
   Camera, Sparkles, TrendingUp, PieChart, PlusCircle, 
   CheckCircle, Save, Menu, Lock, LogOut, Eye, EyeOff, Trash2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
-  Leaf, Compass, Monitor, Cloud, CloudOff, Loader2, PanelLeftClose, Film, DollarSign, CheckCircle2, WifiOff
+  Leaf, Compass, Monitor, Cloud, CloudOff, Loader2, PanelLeftClose, Film, DollarSign, CheckCircle2, WifiOff,
+  Sun, Moon
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -59,6 +60,21 @@ export default function App() {
   // Portal Navigation State
   const [activeTab, setActiveTab] = useState('tabAnalytics');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
+  
+  // Light/Dark Theme state
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("paramara_theme") || "light";
+  });
+
+  // Apply theme class to document
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", theme);
+    localStorage.setItem("paramara_theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
   
   const [studioData, setStudioData] = useState(() => {
     const saved = localStorage.getItem("paramara_studio_admin_data_v2");
@@ -998,6 +1014,17 @@ export default function App() {
         </div>
 
         <div className="sidebar-footer">
+          <button 
+            className="btn btn-secondary btn-sm" 
+            style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6, gap: '8px' }} 
+            onClick={toggleTheme}
+          >
+            {theme === 'light' ? (
+              <><Moon style={{ width: 14, height: 14 }} /> Mode Gelap</>
+            ) : (
+              <><Sun style={{ width: 14, height: 14 }} /> Mode Terang</>
+            )}
+          </button>
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6 }} onClick={() => setViewMode('public')}>
             <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik
           </button>
@@ -1005,7 +1032,7 @@ export default function App() {
             <LogOut style={{ width: 14, height: 14 }} /> Keluar / Logout
           </button>
           <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', textAlign: 'center', marginTop: 8 }}>
-            Build: v2.5.0 (Serverless Scan Engine)
+            Build: v2.6.0 (Dual Theme Support)
           </div>
         </div>
       </aside>
