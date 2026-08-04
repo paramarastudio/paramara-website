@@ -1255,11 +1255,6 @@ export default function App() {
               {theme === 'light' ? <Moon style={{ width: 15, height: 15 }} /> : <Sun style={{ width: 15, height: 15 }} />}
             </button>
 
-            <button className="btn btn-secondary" style={{ gap: 6 }} onClick={() => setViewMode('public')}>
-              <Globe style={{ width: 14, height: 14 }} />
-              <span className="btn-label">Homepage</span>
-            </button>
-            
             {/* CONTEXTUAL ACTION BUTTONS */}
             {activeTab === 'tabShopeeTracker' && (
               <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
