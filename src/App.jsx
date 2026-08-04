@@ -168,6 +168,9 @@ export default function App() {
 
   // ====== FIREBASE FIRESTORE CROSS-DEVICE SYNC ======
 
+  // Track when we last saved to prevent onSnapshot echo loop
+  const lastSaveTimestamp = useRef(null);
+
   // 1. On mount: Load from Firestore (if configured), then subscribe to real-time updates
   useEffect(() => {
     if (!isFirebaseConfigured) {
@@ -177,62 +180,79 @@ export default function App() {
     }
 
     let unsubscribe = null;
+    let isMounted = true;
 
     async function initFirestoreSync() {
-      // First, try to load data from Firestore
       setCloudSyncStatus('syncing');
-      const cloudData = await loadStudioDataFromFirestore();
 
-      if (cloudData) {
-        // Cloud data exists — use it (merge with defaults for any missing keys)
-        isRemoteUpdate.current = true;
-        setStudioData(prev => ({
-          ...prev,
-          ...cloudData,
-          // Ensure arrays exist even if missing in cloud
-          shopeeSessions: cloudData.shopeeSessions || prev.shopeeSessions || [],
-          shopeeVideoSessions: cloudData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
-          clientProjects: cloudData.clientProjects || prev.clientProjects || [],
-          liveSchedules: cloudData.liveSchedules || prev.liveSchedules || [],
-          capexList: cloudData.capexList || prev.capexList || [],
-          opexList: cloudData.opexList || prev.opexList || [],
-          adminUsers: cloudData.adminUsers || prev.adminUsers || [],
-        }));
-        setCloudSyncStatus('synced');
-      } else {
-        // No cloud data yet — push current localStorage data to Firestore
-        const localData = JSON.parse(localStorage.getItem("paramara_studio_admin_data_v2") || "null");
-        if (localData) {
-          await saveStudioDataToFirestore(localData);
+      try {
+        // Race between Firestore load and a 5-second timeout
+        const cloudData = await Promise.race([
+          loadStudioDataFromFirestore(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
+        ]);
+
+        if (!isMounted) return;
+
+        if (cloudData) {
+          isRemoteUpdate.current = true;
+          setStudioData(prev => ({
+            ...prev,
+            ...cloudData,
+            shopeeSessions: cloudData.shopeeSessions || prev.shopeeSessions || [],
+            shopeeVideoSessions: cloudData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
+            clientProjects: cloudData.clientProjects || prev.clientProjects || [],
+            liveSchedules: cloudData.liveSchedules || prev.liveSchedules || [],
+            capexList: cloudData.capexList || prev.capexList || [],
+            opexList: cloudData.opexList || prev.opexList || [],
+            adminUsers: cloudData.adminUsers || prev.adminUsers || [],
+          }));
+          setCloudSyncStatus('synced');
+        } else {
+          // No cloud data yet — push current localStorage data to Firestore
+          const localData = JSON.parse(localStorage.getItem("paramara_studio_admin_data_v2") || "null");
+          if (localData) {
+            lastSaveTimestamp.current = Date.now();
+            await saveStudioDataToFirestore(localData);
+          }
+          if (isMounted) setCloudSyncStatus('synced');
         }
-        setCloudSyncStatus('synced');
+      } catch (err) {
+        console.warn("Firestore init sync failed:", err.message);
+        if (isMounted) setCloudSyncStatus('offline');
       }
 
       isInitialLoad.current = false;
 
       // Subscribe to real-time updates from other devices
       unsubscribe = subscribeToStudioData((remoteData) => {
-        if (remoteData) {
-          isRemoteUpdate.current = true;
-          setStudioData(prev => ({
-            ...prev,
-            ...remoteData,
-            shopeeSessions: remoteData.shopeeSessions || prev.shopeeSessions || [],
-            shopeeVideoSessions: remoteData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
-            clientProjects: remoteData.clientProjects || prev.clientProjects || [],
-            liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
-            capexList: remoteData.capexList || prev.capexList || [],
-            opexList: remoteData.opexList || prev.opexList || [],
-            adminUsers: remoteData.adminUsers || prev.adminUsers || [],
-          }));
-          setCloudSyncStatus('synced');
+        if (!isMounted || !remoteData) return;
+
+        // Skip if this snapshot is an echo of our own save (within 3 seconds)
+        if (lastSaveTimestamp.current && (Date.now() - lastSaveTimestamp.current) < 3000) {
+          return;
         }
+
+        isRemoteUpdate.current = true;
+        setStudioData(prev => ({
+          ...prev,
+          ...remoteData,
+          shopeeSessions: remoteData.shopeeSessions || prev.shopeeSessions || [],
+          shopeeVideoSessions: remoteData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
+          clientProjects: remoteData.clientProjects || prev.clientProjects || [],
+          liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
+          capexList: remoteData.capexList || prev.capexList || [],
+          opexList: remoteData.opexList || prev.opexList || [],
+          adminUsers: remoteData.adminUsers || prev.adminUsers || [],
+        }));
+        setCloudSyncStatus('synced');
       });
     }
 
     initFirestoreSync();
 
     return () => {
+      isMounted = false;
       if (unsubscribe) unsubscribe();
     };
   }, []);
@@ -251,7 +271,7 @@ export default function App() {
     // Skip Firestore save during initial load
     if (isInitialLoad.current) return;
 
-    // Debounced save to Firestore (2 seconds)
+    // Debounced save to Firestore (1 second)
     if (!isFirebaseConfigured) return;
 
     if (saveDebounceTimer.current) {
@@ -260,9 +280,10 @@ export default function App() {
 
     setCloudSyncStatus('syncing');
     saveDebounceTimer.current = setTimeout(async () => {
+      lastSaveTimestamp.current = Date.now();
       const success = await saveStudioDataToFirestore(studioData);
       setCloudSyncStatus(success ? 'synced' : 'offline');
-    }, 2000);
+    }, 1000);
 
     return () => {
       if (saveDebounceTimer.current) {
