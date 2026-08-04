@@ -58,192 +58,65 @@ export function fileToBase64(file) {
   });
 }
 
-export async function analyzeShopeeScreenshots(files, passedApiKey) {
+export async function analyzeShopeeScreenshots(files) {
   const fileArray = Array.isArray(files) ? files : [files];
-  
-  // Prioritize passed API Key, then local storage, then environment variable
-  const activeKey = passedApiKey || localStorage.getItem("gemini_api_key") || import.meta.env.VITE_GEMINI_API_KEY || "";
 
-  // Convert all uploaded image files to base64 inline_data parts
+  // Convert files to base64 strings
   const imageParts = await Promise.all(
     fileArray.map(async (file) => {
       const base64 = await fileToBase64(file);
-      return {
-        inline_data: {
-          mime_type: file.type || "image/jpeg",
-          data: base64
-        }
-      };
+      return base64;
     })
   );
 
-  const endpointsToTry = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
-  ];
+  // Send to Vercel Serverless Function proxy
+  const response = await fetch('/api/scan-live', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ images: imageParts })
+  });
 
-  if (!activeKey || activeKey.trim() === "") {
-    throw new Error("Gemini API Key tidak ditemukan. Silakan tambahkan VITE_GEMINI_API_KEY di environment variables Vercel atau masukkan API Key di tab Manajemen Admin.");
-  }
-
-  const errors = [];
-  for (const url of endpointsToTry) {
+  if (!response.ok) {
+    let errMsg = response.statusText;
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-goog-api-key": activeKey.trim()
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
-          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
-        })
-      });
-
-      if (!response.ok) {
-        let errMsg = `HTTP ${response.status} ${response.statusText}`;
-        try {
-          const errJson = await response.json();
-          if (errJson.error?.message) {
-            errMsg = errJson.error.message;
-          }
-        } catch (_) {}
-        throw new Error(`${errMsg} (Status: ${response.status})`);
-      }
-
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (text) {
-        const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-        const parsed = JSON.parse(cleanJson);
-        parsed.id = "session_" + Date.now();
-        parsed.dateFormatted = parsed.startTime || new Date().toLocaleString("id-ID");
-        
-        if (!parsed.grossCommission && parsed.revenue) {
-          parsed.grossCommission = 0; // default to 0, user fills manually
-        }
-
-        return parsed;
-      } else {
-        throw new Error("Respon API tidak mengandung konten teks data.");
-      }
-    } catch (err) {
-      console.warn(`Gemini model call failed on endpoint: ${url}`, err.message);
-      errors.push(err.message);
-    }
+      const errJson = await response.json();
+      if (errJson.error) errMsg = errJson.error;
+    } catch (_) {}
+    throw new Error(errMsg || `HTTP ${response.status}`);
   }
 
-  // If all model endpoints fail, throw a detailed error listing all endpoint failures
-  throw new Error("Gagal memindai gambar menggunakan Gemini API. Semua model mengembalikan error:\n- " + [...new Set(errors)].join("\n- "));
+  return await response.json();
 }
 
-export const GEMINI_VIDEO_PROMPT = `
-Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Performa Video Shopee dari screenshot HP.
-Anda mungkin diberikan 1 atau 2 screenshot HP sekaligus (Screenshot Penonton/Audience, Screenshot Penjualan/Sales).
+export const GEMINI_VIDEO_PROMPT = ``;
 
-Tugas Anda:
-Bacalah seluruh teks, angka, metrik interaksi, dan penjualan dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
-
-{
-  "title": "string (Nama/Periode Laporan Video, contoh: Performa Video 03-08-2026)",
-  "dateFormatted": "string (Tanggal analisis, contoh: 03-08-2026)",
-  "totalViews": number (Penonton, baca dari angka seperti 22,7RB menjadi 22700, contoh: 22700),
-  "likes": number (Suka, contoh: 41),
-  "shares": number (Konten Dibagikan, contoh: 14),
-  "commentsCount": number (Komentar, contoh: 1),
-  "profileVisits": number (Kunjungan Profil, contoh: 23),
-  "newFollowers": number (Pengikut Baru, contoh: 14),
-  "videosWithProducts": number (Video dengan Produk, contoh: 177),
-  "monetizedVideos": number (Video Berpendapatan, contoh: 9),
-  "productsSold": number (Produk Terjual, contoh: 16),
-  "buyers": number (Pembeli, contoh: 13),
-  "revenue": number (Penjualan / GMV, baca dari angka seperti 6.5JT menjadi 6500000, contoh: 6500000),
-  "totalOrders": number (Pesanan, contoh: 16),
-  "productClicks": number (Klik pada Produk, contoh: 165),
-  "conversionRatePercent": number (Tingkat Konversi, contoh: 0.1),
-  "aiSummary": "string (Format ringkasan AI: 'Performa Video menghasilkan Rp[revenue] GMV dari [productsSold] produk terjual. Dilihat oleh [totalViews] penonton dengan konversi [conversionRatePercent]%.')"
-}
-`;
-
-export async function analyzeShopeeVideoScreenshots(files, passedApiKey) {
+export async function analyzeShopeeVideoScreenshots(files) {
   const fileArray = Array.isArray(files) ? files : [files];
-  // Prioritize passed API Key, then local storage, then environment variable
-  const activeKey = passedApiKey || localStorage.getItem("gemini_api_key") || import.meta.env.VITE_GEMINI_API_KEY || "";
 
+  // Convert files to base64 strings
   const imageParts = await Promise.all(
     fileArray.map(async (file) => {
       const base64 = await fileToBase64(file);
-      return {
-        inline_data: {
-          mime_type: file.type || "image/jpeg",
-          data: base64
-        }
-      };
+      return base64;
     })
   );
 
-  const endpointsToTry = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
-  ];
+  // Send to Vercel Serverless Function proxy
+  const response = await fetch('/api/scan-video', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ images: imageParts })
+  });
 
-  if (!activeKey || activeKey.trim() === "") {
-    throw new Error("Gemini API Key tidak ditemukan. Silakan tambahkan VITE_GEMINI_API_KEY di environment variables Vercel atau masukkan API Key di tab Manajemen Admin.");
-  }
-
-  const errors = [];
-  for (const url of endpointsToTry) {
+  if (!response.ok) {
+    let errMsg = response.statusText;
     try {
-      const response = await fetch(url, {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json",
-          "x-goog-api-key": activeKey.trim()
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: GEMINI_VIDEO_PROMPT }, ...imageParts] }],
-          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
-        })
-      });
-
-      if (!response.ok) {
-        let errMsg = `HTTP ${response.status} ${response.statusText}`;
-        try {
-          const errJson = await response.json();
-          if (errJson.error?.message) {
-            errMsg = errJson.error.message;
-          }
-        } catch (_) {}
-        throw new Error(`${errMsg} (Status: ${response.status})`);
-      }
-
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
-      if (text) {
-        const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-        const parsed = JSON.parse(cleanJson);
-        parsed.id = "video_" + Date.now();
-        if (!parsed.dateFormatted) {
-          parsed.dateFormatted = new Date().toLocaleDateString("id-ID");
-        }
-        return parsed;
-      } else {
-        throw new Error("Respon API tidak mengandung konten teks data.");
-      }
-    } catch (err) {
-      console.warn(`Gemini model call failed on endpoint: ${url}`, err.message);
-      errors.push(err.message);
-    }
+      const errJson = await response.json();
+      if (errJson.error) errMsg = errJson.error;
+    } catch (_) {}
+    throw new Error(errMsg || `HTTP ${response.status}`);
   }
 
-  // If all model endpoints fail, throw a detailed error listing all endpoint failures
-  throw new Error("Gagal memindai gambar menggunakan Gemini API. Semua model mengembalikan error:\n- " + [...new Set(errors)].join("\n- "));
+  return await response.json();
 }
 
