@@ -70,6 +70,29 @@ export default function App() {
   
   // Secure Gemini API Key
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
+  const [tempApiKey, setTempApiKey] = useState(() => {
+    return localStorage.getItem("gemini_api_key") || "";
+  });
+
+  const handleSaveApiKey = () => {
+    if (tempApiKey.trim()) {
+      localStorage.setItem("gemini_api_key", tempApiKey.trim());
+      alert("Gemini API Key berhasil disimpan secara lokal!");
+      window.location.reload();
+    } else {
+      alert("Harap masukkan API Key yang valid.");
+    }
+  };
+
+  const handleDeleteApiKey = () => {
+    if (confirm("Hapus API Key lokal?")) {
+      localStorage.removeItem("gemini_api_key");
+      setTempApiKey("");
+      alert("API Key lokal berhasil dihapus.");
+      window.location.reload();
+    }
+  };
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
@@ -1493,6 +1516,52 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Gemini API Key Configuration card */}
+            <div className="glass-card" style={{ padding: '1.5rem', marginTop: '2rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', marginBottom: '0.5rem' }}>
+                <Sparkles style={{ color: 'var(--accent-gold)' }} /> Konfigurasi Gemini API Key
+              </h3>
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                Gunakan menu ini untuk memperbarui API Key Gemini jika scan screenshot AI tidak berfungsi atau menghasilkan data yang sama terus (fallback). API Key akan disimpan dengan aman di perangkat lokal Anda.
+              </p>
+              
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '300px' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', display: 'block', marginBottom: 6 }}>Gemini API Key</label>
+                  <input 
+                    type="password"
+                    className="form-input" 
+                    placeholder="Masukkan Gemini API Key baru..."
+                    value={tempApiKey}
+                    onChange={e => setTempApiKey(e.target.value)}
+                  />
+                </div>
+                <div style={{ display: 'flex', gap: 6, alignSelf: 'flex-end', marginTop: 10 }}>
+                  <button className="btn btn-primary" onClick={handleSaveApiKey}>
+                    Simpan API Key
+                  </button>
+                  {localStorage.getItem("gemini_api_key") && (
+                    <button className="btn btn-secondary" style={{ color: '#D32F2F' }} onClick={handleDeleteApiKey}>
+                      Hapus API Key Lokal
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              <div style={{ marginTop: '1rem', fontSize: '0.8rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontWeight: 600 }}>Status API Key Saat Ini:</span>
+                {apiKey ? (
+                  <span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>
+                    🟢 Terkonfigurasi {import.meta.env.VITE_GEMINI_API_KEY ? '(Vercel Environment)' : '(Lokal Browser)'}
+                  </span>
+                ) : (
+                  <span className="brand-badge" style={{ background: 'rgba(211, 47, 47, 0.1)', color: '#D32F2F' }}>
+                    🔴 Tidak Ditemukan / Belum Diatur
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         )}

@@ -86,88 +86,58 @@ export async function analyzeShopeeScreenshots(files, passedApiKey) {
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${activeKey.trim()}`
   ];
 
-  if (activeKey && activeKey.trim() !== "") {
-    for (const url of endpointsToTry) {
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
-            generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
-          })
-        });
+  if (!activeKey || activeKey.trim() === "") {
+    throw new Error("Gemini API Key tidak ditemukan. Silakan tambahkan VITE_GEMINI_API_KEY di environment variables Vercel atau masukkan API Key di tab Manajemen Admin.");
+  }
 
-        if (response.ok) {
-          const data = await response.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          
-          if (text) {
-            const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-            const parsed = JSON.parse(cleanJson);
-            parsed.id = "session_" + Date.now();
-            parsed.dateFormatted = parsed.startTime || new Date().toLocaleString("id-ID");
-            
-            if (!parsed.grossCommission && parsed.revenue) {
-              parsed.grossCommission = Math.round(parsed.revenue * 0.1);
-            }
+  const errors = [];
+  for (const url of endpointsToTry) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
+          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
+        })
+      });
 
-            return parsed;
+      if (!response.ok) {
+        let errMsg = `HTTP ${response.status} ${response.statusText}`;
+        try {
+          const errJson = await response.json();
+          if (errJson.error?.message) {
+            errMsg = errJson.error.message;
           }
-        }
-      } catch (err) {
-        console.warn("Gemini Endpoint try error:", err.message);
+        } catch (_) {}
+        throw new Error(`${errMsg} (Status: ${response.status})`);
       }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (text) {
+        const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        const parsed = JSON.parse(cleanJson);
+        parsed.id = "session_" + Date.now();
+        parsed.dateFormatted = parsed.startTime || new Date().toLocaleString("id-ID");
+        
+        if (!parsed.grossCommission && parsed.revenue) {
+          parsed.grossCommission = 0; // default to 0, user fills manually
+        }
+
+        return parsed;
+      } else {
+        throw new Error("Respon API tidak mengandung konten teks data.");
+      }
+    } catch (err) {
+      console.warn(`Gemini model call failed on endpoint: ${url}`, err.message);
+      errors.push(err.message);
     }
   }
 
-  // Graceful Precision Fallback Simulation if API Key is restricted or propagating
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: "session_" + Date.now(),
-        title: "APOTEK 24 JAM DISC UP TO 50%",
-        host: "Host Paramara Studio",
-        startTime: "01-08-2026 21:37",
-        duration: "01:27:11",
-        dateFormatted: "01-08-2026 21:37",
-        
-        revenue: 232500,
-        grossCommission: 23250,
-        activeViewers: 7,
-        commentsCount: 1,
-        cartAdditions: 5,
-        clickRatePercent: 32.1,
-        ordersPerClickPercent: 11.1,
-        totalOrders: 1,
-
-        totalViews: 28,
-        avgWatchDuration: "00:00:50",
-        commentRatePercent: 3.6,
-        peakConcurrentViewers: 3,
-        likes: 76,
-        shares: 1,
-
-        trafficSources: [
-          { name: "Video", percent: 18.0 },
-          { name: "Tab Live & Video", percent: 14.0 },
-          { name: "Beranda", percent: 11.0 }
-        ],
-
-        products: [
-          {
-            name: "MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI",
-            price: 250000,
-            revenue: 232500,
-            clicks: 2,
-            cartAdds: 1
-          }
-        ],
-
-        aiSummary: "Sesi live berdurasi 1j 27m menghasilkan Rp232.500 (MEGAMOVE 100% ORIGINAL OBAT HERBAL NYERI SENDI). CTR tinggi di 32.1%."
-      });
-    }, 1000);
-  });
+  // If all model endpoints fail, throw a detailed error listing all endpoint failures
+  throw new Error("Gagal memindai gambar menggunakan Gemini API. Semua model mengembalikan error:\n- " + [...new Set(errors)].join("\n- "));
 }
 
 export const GEMINI_VIDEO_PROMPT = `
@@ -222,62 +192,54 @@ export async function analyzeShopeeVideoScreenshots(files, passedApiKey) {
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${activeKey.trim()}`
   ];
 
-  if (activeKey && activeKey.trim() !== "") {
-    for (const url of endpointsToTry) {
-      try {
-        const response = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: GEMINI_VIDEO_PROMPT }, ...imageParts] }],
-            generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
-          })
-        });
+  if (!activeKey || activeKey.trim() === "") {
+    throw new Error("Gemini API Key tidak ditemukan. Silakan tambahkan VITE_GEMINI_API_KEY di environment variables Vercel atau masukkan API Key di tab Manajemen Admin.");
+  }
 
-        if (response.ok) {
-          const data = await response.json();
-          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-          
-          if (text) {
-            const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
-            const parsed = JSON.parse(cleanJson);
-            parsed.id = "video_" + Date.now();
-            if (!parsed.dateFormatted) {
-              parsed.dateFormatted = new Date().toLocaleDateString("id-ID");
-            }
-            return parsed;
+  const errors = [];
+  for (const url of endpointsToTry) {
+    try {
+      const response = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: GEMINI_VIDEO_PROMPT }, ...imageParts] }],
+          generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
+        })
+      });
+
+      if (!response.ok) {
+        let errMsg = `HTTP ${response.status} ${response.statusText}`;
+        try {
+          const errJson = await response.json();
+          if (errJson.error?.message) {
+            errMsg = errJson.error.message;
           }
-        }
-      } catch (err) {
-        console.warn("Gemini Endpoint try error:", err.message);
+        } catch (_) {}
+        throw new Error(`${errMsg} (Status: ${response.status})`);
       }
+
+      const data = await response.json();
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (text) {
+        const cleanJson = text.replace(/```json/g, "").replace(/```/g, "").trim();
+        const parsed = JSON.parse(cleanJson);
+        parsed.id = "video_" + Date.now();
+        if (!parsed.dateFormatted) {
+          parsed.dateFormatted = new Date().toLocaleDateString("id-ID");
+        }
+        return parsed;
+      } else {
+        throw new Error("Respon API tidak mengandung konten teks data.");
+      }
+    } catch (err) {
+      console.warn(`Gemini model call failed on endpoint: ${url}`, err.message);
+      errors.push(err.message);
     }
   }
 
-  // Fallback data structure matched to user's screenshots
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        id: "video_" + Date.now(),
-        title: "Performa Video " + new Date().toLocaleDateString("id-ID"),
-        dateFormatted: new Date().toLocaleDateString("id-ID"),
-        totalViews: 22700,
-        likes: 41,
-        shares: 14,
-        commentsCount: 1,
-        profileVisits: 23,
-        newFollowers: 14,
-        videosWithProducts: 177,
-        monetizedVideos: 9,
-        productsSold: 16,
-        buyers: 13,
-        revenue: 6500000,
-        totalOrders: 16,
-        productClicks: 165,
-        conversionRatePercent: 0.1,
-        aiSummary: "Performa Video menghasilkan Rp6.500.000 GMV dari 16 produk terjual. Dilihat oleh 22.700 penonton dengan konversi 0.1%."
-      });
-    }, 1000);
-  });
+  // If all model endpoints fail, throw a detailed error listing all endpoint failures
+  throw new Error("Gagal memindai gambar menggunakan Gemini API. Semua model mengembalikan error:\n- " + [...new Set(errors)].join("\n- "));
 }
 
