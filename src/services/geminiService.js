@@ -78,9 +78,9 @@ export async function analyzeShopeeScreenshots(files, passedApiKey) {
   );
 
   const endpointsToTry = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${activeKey.trim()}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey.trim()}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${activeKey.trim()}`
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
   ];
 
   if (!activeKey || activeKey.trim() === "") {
@@ -92,7 +92,10 @@ export async function analyzeShopeeScreenshots(files, passedApiKey) {
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-goog-api-key": activeKey.trim()
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
           generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
@@ -182,9 +185,9 @@ export async function analyzeShopeeVideoScreenshots(files, passedApiKey) {
   );
 
   const endpointsToTry = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${activeKey.trim()}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${activeKey.trim()}`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${activeKey.trim()}`
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
   ];
 
   if (!activeKey || activeKey.trim() === "") {
@@ -196,7 +199,10 @@ export async function analyzeShopeeVideoScreenshots(files, passedApiKey) {
     try {
       const response = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "x-goog-api-key": activeKey.trim()
+        },
         body: JSON.stringify({
           contents: [{ parts: [{ text: GEMINI_VIDEO_PROMPT }, ...imageParts] }],
           generationConfig: { temperature: 0.1, response_mime_type: "application/json" }
