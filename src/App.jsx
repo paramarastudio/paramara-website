@@ -1485,7 +1485,7 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  <span style={{ color: 'var(--text-dim)' }}>Belum ada data. Upload screenshot Shopee Live atau Video untuk mendapatkan insight otomatis dari AI.</span>
+                  <span style={{ color: 'var(--text-dim)' }}>Belum ada data sesi Shopee Live atau Shopee Video yang terekam.</span>
                 )}
               </div>
             </div>
