@@ -1057,66 +1057,78 @@ export default function App() {
             </div>
           </div>
 
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div className="header-actions">
             {/* Cloud Sync Status Indicator */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: '0.7rem', fontWeight: 600, padding: '5px 10px', borderRadius: 8, background: cloudSyncStatus === 'synced' ? 'rgba(5, 150, 105, 0.1)' : cloudSyncStatus === 'syncing' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(156, 163, 175, 0.15)', color: cloudSyncStatus === 'synced' ? '#059669' : cloudSyncStatus === 'syncing' ? '#b45309' : '#6b7280', border: `1px solid ${cloudSyncStatus === 'synced' ? 'rgba(5,150,105,0.25)' : cloudSyncStatus === 'syncing' ? 'rgba(234,179,8,0.25)' : 'rgba(156,163,175,0.25)'}` }}>
-              {cloudSyncStatus === 'synced' && <><Cloud style={{ width: 13, height: 13 }} /> Synced</>}
-              {cloudSyncStatus === 'syncing' && <><Loader2 style={{ width: 13, height: 13, animation: 'spin 1s linear infinite' }} /> Syncing...</>}
-              {cloudSyncStatus === 'offline' && <><CloudOff style={{ width: 13, height: 13 }} /> Local Only</>}
-              {cloudSyncStatus === 'idle' && <><Cloud style={{ width: 13, height: 13 }} /> ...</>}
+            <div className="sync-pill" style={{
+              background: cloudSyncStatus === 'synced' ? 'rgba(5, 150, 105, 0.1)' : cloudSyncStatus === 'syncing' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(156, 163, 175, 0.1)',
+              color: cloudSyncStatus === 'synced' ? '#059669' : cloudSyncStatus === 'syncing' ? '#b45309' : '#6b7280',
+              borderColor: cloudSyncStatus === 'synced' ? 'rgba(5,150,105,0.25)' : cloudSyncStatus === 'syncing' ? 'rgba(234,179,8,0.25)' : 'rgba(156,163,175,0.2)'
+            }}>
+              {cloudSyncStatus === 'synced' && <><Cloud style={{ width: 12, height: 12 }} /> Synced</>}
+              {cloudSyncStatus === 'syncing' && <><Loader2 style={{ width: 12, height: 12, animation: 'spin 1s linear infinite' }} /> Syncing...</>}
+              {cloudSyncStatus === 'offline' && <><CloudOff style={{ width: 12, height: 12 }} /> Offline</>}
+              {cloudSyncStatus === 'idle' && <><Cloud style={{ width: 12, height: 12 }} /> ...</>}
             </div>
 
-            <button className="btn btn-secondary" onClick={() => setViewMode('public')}>
-              <Globe /> Homepage
+            <button className="btn btn-secondary" style={{ gap: 6 }} onClick={() => setViewMode('public')}>
+              <Globe style={{ width: 14, height: 14 }} />
+              <span className="btn-label">Homepage</span>
             </button>
             
             {/* CONTEXTUAL ACTION BUTTONS */}
             {activeTab === 'tabShopeeTracker' && (
               <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-                <Camera /> Input Shopee Live (2 Foto)
+                <Camera style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Input Live (2 Foto)</span>
               </button>
             )}
 
             {activeTab === 'tabShopeeVideo' && (
               <button className="btn btn-primary" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }}>
-                <Film /> Input Shopee Video (2 Foto)
+                <Film style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Input Video (2 Foto)</span>
               </button>
             )}
 
             {activeTab === 'tabFinance' && (
               <button className="btn btn-primary" onClick={() => { setItemName(""); setItemCategory(""); setItemAmount(""); setItemDate(""); setOpexFrequency("Once"); setFinancialType("capex"); setModalType('finance'); }}>
-                <PlusCircle /> Tambah Transaksi Keuangan
+                <PlusCircle style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Tambah Transaksi</span>
               </button>
             )}
 
             {activeTab === 'tabProjects' && (
               <button className="btn btn-primary" onClick={() => setModalType('project')}>
-                <PlusCircle /> Input Proyek Baru
+                <PlusCircle style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Input Proyek</span>
               </button>
             )}
 
             {activeTab === 'tabSchedules' && (
               <button className="btn btn-primary" onClick={() => setModalType('schedule')}>
-                <PlusCircle /> Input Jadwal Baru
+                <PlusCircle style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Input Jadwal</span>
               </button>
             )}
 
             {activeTab === 'tabAdminUsers' && (
               <button className="btn btn-primary" onClick={() => setModalType('addAdmin')}>
-                <UserPlus /> Tambah Admin Baru
+                <UserPlus style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Tambah Admin</span>
               </button>
             )}
 
             {activeTab === 'tabAnalytics' && (
               <button className="btn btn-primary" onClick={() => { setActiveTab('tabShopeeTracker'); setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-                <Camera /> Input Shopee Live (2 Foto)
+                <Camera style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Input Live</span>
               </button>
             )}
           </div>
         </div>
 
         {/* ====== TIMEFRAME FILTER BAR ====== */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+        <div className="filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 2.5rem', background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 Filter:</span>
           {[
             { key: 'all', label: 'Semua' },
@@ -1172,19 +1184,25 @@ export default function App() {
 
         {/* Tab 1: Executive Dashboard */}
         {activeTab === 'tabAnalytics' && (
-          <div className="tab-content">
+          <div className="tab-content main-inner">
             
             {/* 4 Premium Executive KPI Cards */}
             <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
               <div className="glass-card kpi-card" style={{ '--kpi-accent': netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                <div className="kpi-icon" style={{ '--kpi-accent': netProfit >= 0 ? '#059669' : '#D32F2F', background: netProfit >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(211,47,47,0.1)', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                  <TrendingUp style={{ width: 16, height: 16 }} />
+                </div>
                 <div className="kpi-title">Laba Bersih (Net Profit)</div>
-                <div className="kpi-value" style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F', fontWeight: 800 }}>
+                <div className="kpi-value" style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
                   Rp {netProfit.toLocaleString('id-ID')}
                 </div>
                 <div className="kpi-subtext">Margin Bersih: {netProfitMarginPercent.toFixed(1)}%</div>
               </div>
 
-              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--primary)' }}>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--secondary-emerald)' }}>
+                <div className="kpi-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
+                  <DollarSign style={{ width: 16, height: 16 }} />
+                </div>
                 <div className="kpi-title">Pendapatan Kotor Studio</div>
                 <div className="kpi-value text-success">
                   Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}
@@ -1193,6 +1211,9 @@ export default function App() {
               </div>
 
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
+                <div className="kpi-icon" style={{ background: 'rgba(184,142,57,0.1)', color: '#B88E39' }}>
+                  <PieChart style={{ width: 16, height: 16 }} />
+                </div>
                 <div className="kpi-title">Total Pengeluaran</div>
                 <div className="kpi-value text-warning">
                   Rp {totalExpenses.toLocaleString('id-ID')}
@@ -1200,7 +1221,10 @@ export default function App() {
                 <div className="kpi-subtext">CAPEX: Rp {totalCapex.toLocaleString('id-ID')} | OPEX: Rp {totalOpex.toLocaleString('id-ID')}</div>
               </div>
 
-              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#082F26' }}>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--primary)' }}>
+                <div className="kpi-icon" style={{ background: 'var(--primary-glow)', color: 'var(--primary)' }}>
+                  <Briefcase style={{ width: 16, height: 16 }} />
+                </div>
                 <div className="kpi-title">Total E-Commerce GMV</div>
                 <div className="kpi-value">
                   Rp {totalCombinedGMV.toLocaleString('id-ID')}
@@ -1301,7 +1325,7 @@ export default function App() {
 
         {/* Tab 2: Shopee Live Tracker */}
         {activeTab === 'tabShopeeTracker' && (
-          <div className="tab-content">
+          <div className="tab-content main-inner">
             {sessions.length > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
@@ -1463,7 +1487,7 @@ export default function App() {
 
         {/* TAB MANAJEMEN ADMIN */}
         {activeTab === 'tabAdminUsers' && (
-          <div className="tab-content">
+          <div className="tab-content main-inner">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UserCheck style={{ color: 'var(--primary)' }} /> Manajemen Akun Admin Paramara Studio</h3>
@@ -1531,7 +1555,7 @@ export default function App() {
 
         {/* Tab 2b: Shopee Video Tracker */}
         {activeTab === 'tabShopeeVideo' && (
-          <div className="tab-content">
+          <div className="tab-content main-inner">
             {videoSessions.length > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
@@ -1644,7 +1668,7 @@ export default function App() {
 
         {/* Tab 2c: Keuangan (CAPEX / OPEX) */}
         {activeTab === 'tabFinance' && (
-          <div className="tab-content">
+          <div className="tab-content main-inner">
             
             {/* Keuangan KPI Headers */}
             <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
@@ -1826,7 +1850,7 @@ export default function App() {
 
         {/* Tab 4: Projects */}
         {activeTab === 'tabProjects' && (
-          <div className="tab-content">
+          <div className="tab-content main-inner">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Briefcase style={{ color: 'var(--primary)' }} /> Manajemen Proyek & Klien Studio</h3>
