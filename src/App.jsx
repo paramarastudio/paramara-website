@@ -1028,7 +1028,7 @@ export default function App() {
             <LogOut style={{ width: 14, height: 14 }} /> Keluar / Logout
           </button>
           <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', textAlign: 'center', marginTop: 8 }}>
-            Build: v2.3.0 (Strict AI Mode)
+            Build: v2.4.0 (Gemini 2.5 Flash Support)
           </div>
         </div>
       </aside>
