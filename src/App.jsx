@@ -1385,7 +1385,7 @@ export default function App() {
               <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> AI Executive Insight</div>
               <div className="ai-summary-text">
                 {sessions.length > 0 || videoSessions.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                  <div className="ai-insight-grid">
                     <div>
                       <strong>Sesi Live Terbaru:</strong><br/>
                       {sessions.length > 0 ? (
