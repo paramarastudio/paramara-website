@@ -47,5 +47,104 @@ export const INITIAL_STUDIO_DATA = {
 
   // 4. Financial Lists
   capexList: [],
-  opexList: []
+  opexList: [],
+
+  // 5. Pinterest Analytics (US Affiliate Market)
+  pinterestAnalytics: [
+    {
+      id: "pin_2026_07",
+      month: "2026-07",
+      dateRange: "2026-07-01 - 2026-07-31",
+      account: "@productijustfound",
+      impressions: 2640,
+      engagements: 214,
+      outboundClicks: 0,
+      saves: 12,
+      totalAudience: 833,
+      engagedAudience: 64,
+      monthlyTotalAudience: 10000,
+      dailyImpressions: [
+        { date: '07-15', impressions: 115 },
+        { date: '07-16', impressions: 31 },
+        { date: '07-17', impressions: 87 },
+        { date: '07-18', impressions: 121 },
+        { date: '07-19', impressions: 68 },
+        { date: '07-20', impressions: 92 },
+        { date: '07-21', impressions: 119 },
+        { date: '07-22', impressions: 140 },
+        { date: '07-23', impressions: 111 },
+        { date: '07-24', impressions: 96 },
+        { date: '07-25', impressions: 259 },
+        { date: '07-26', impressions: 95 },
+        { date: '07-27', impressions: 260 },
+        { date: '07-28', impressions: 109 },
+        { date: '07-29', impressions: 258 },
+        { date: '07-30', impressions: 180 },
+        { date: '07-31', impressions: 501 }
+      ],
+      topBoards: [
+        { name: "home-essentials", link: "https://www.pinterest.com/productijustfound/home-essentials/", impressions: 1174, engagements: 93, pinClicks: 90, outboundClicks: 0, saves: 3 },
+        { name: "suitcase", link: "https://www.pinterest.com/productijustfound/suitcase/", impressions: 968, engagements: 75, pinClicks: 68, outboundClicks: 0, saves: 7 },
+        { name: "travel-essentials", link: "https://www.pinterest.com/productijustfound/travel-essentials/", impressions: 317, engagements: 26, pinClicks: 24, outboundClicks: 0, saves: 2 },
+        { name: "gifts", link: "https://www.pinterest.com/productijustfound/gifts/", impressions: 183, engagements: 20, pinClicks: 20, outboundClicks: 0, saves: 0 }
+      ],
+      topPins: [
+        { id: "1150177192366025316", link: "https://www.pinterest.com/pin/1150177192366025316/", type: "Organic", source: "From you", impressions: 790 },
+        { id: "1150177192366245057", link: "https://www.pinterest.com/pin/1150177192366245057/", type: "Organic", source: "From you", impressions: 132 },
+        { id: "1150177192366331558", link: "https://www.pinterest.com/pin/1150177192366331558/", type: "Organic", source: "From you", impressions: 112 },
+        { id: "1150177192365957086", link: "https://www.pinterest.com/pin/1150177192365957086/", type: "Organic", source: "From you", impressions: 107 },
+        { id: "1150177192366021448", link: "https://www.pinterest.com/pin/1150177192366021448/", type: "Organic", source: "From you", impressions: 98 }
+      ],
+      demographics: {
+        age: [
+          { label: '25-34', percent: 38.8 },
+          { label: '18-24', percent: 30.1 },
+          { label: '35-44', percent: 15.0 },
+          { label: '45-49', percent: 4.5 },
+          { label: '55-64', percent: 1.9 },
+          { label: '50-54', percent: 1.8 },
+          { label: '65+', percent: 1.5 }
+        ],
+        gender: [
+          { label: 'Female', percent: 69.6 },
+          { label: 'Male', percent: 23.6 },
+          { label: 'Unspecified', percent: 6.8 }
+        ],
+        device: [
+          { label: 'iPhone', percent: 57.3 },
+          { label: 'Android Mobile', percent: 30.1 },
+          { label: 'Web', percent: 24.0 },
+          { label: 'iPad', percent: 14.5 },
+          { label: 'Mobile Web', percent: 4.8 }
+        ],
+        countries: [
+          { label: 'United States', percent: 15.9 },
+          { label: 'India', percent: 13.3 },
+          { label: 'United Kingdom', percent: 3.4 },
+          { label: 'Nigeria', percent: 3.1 },
+          { label: 'Canada', percent: 3.0 },
+          { label: 'Philippines', percent: 2.9 },
+          { label: 'Other', percent: 51.1 }
+        ],
+        metros: [
+          { label: 'New York', percent: 6.6 },
+          { label: 'Los Angeles', percent: 5.6 },
+          { label: 'Washington, DC', percent: 4.2 },
+          { label: 'Phoenix', percent: 3.3 },
+          { label: 'Charleston, SC', percent: 2.8 },
+          { label: 'San Francisco', percent: 2.8 }
+        ],
+        interests: [
+          { category: 'Home Decor', percent: 78.3, affinity: 1.24 },
+          { category: 'Art', percent: 78.1, affinity: 1.20 },
+          { category: 'Entertainment', percent: 76.7, affinity: 1.22 },
+          { category: 'Education', percent: 75.1, affinity: 1.30 },
+          { category: "Women's Fashion", percent: 74.6, affinity: 1.35 },
+          { category: 'Design', percent: 74.3, affinity: 1.30 },
+          { category: 'Travel', percent: 72.6, affinity: 1.51 },
+          { category: 'Health', percent: 72.6, affinity: 1.39 }
+        ]
+      }
+    }
+  ]
 };
