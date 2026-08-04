@@ -1,4 +1,3 @@
-
 export const GEMINI_VIDEO_PROMPT = `
 Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Performa Video Shopee dari screenshot HP.
 Anda mungkin diberikan 1 atau 2 screenshot HP sekaligus (Screenshot Penonton/Audience, Screenshot Penjualan/Sales).
@@ -27,8 +26,62 @@ Bacalah seluruh teks, angka, metrik interaksi, dan penjualan dari SEMUA gambar y
 }
 `;
 
+async function getSupportedGeminiModels(apiKey) {
+  const fallbackModels = [
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-2.0-flash-lite",
+    "gemini-1.5-flash-002",
+    "gemini-1.5-flash-001",
+    "gemini-pro-vision"
+  ];
+
+  try {
+    const listUrl = `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`;
+    const res = await fetch(listUrl, {
+      method: "GET",
+      headers: {
+        "x-goog-api-key": apiKey
+      }
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data.models)) {
+        const validModels = data.models
+          .filter(m => Array.isArray(m.supportedGenerationMethods) && m.supportedGenerationMethods.includes("generateContent"))
+          .map(m => (m.name || "").replace(/^models\//, ""))
+          .filter(Boolean);
+
+        if (validModels.length > 0) {
+          // Sort models: 2.5-flash > 2.0-flash > 1.5-flash > others
+          validModels.sort((a, b) => {
+            const rank = (name) => {
+              const lower = name.toLowerCase();
+              if (lower.includes("2.5-flash")) return 1;
+              if (lower.includes("2.0-flash")) return 2;
+              if (lower.includes("1.5-flash")) return 3;
+              if (lower.includes("flash")) return 4;
+              if (lower.includes("2.0")) return 5;
+              if (lower.includes("1.5")) return 6;
+              return 10;
+            };
+            return rank(a) - rank(b);
+          });
+          return validModels;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn("[SERVERLESS WARN] Failed to fetch available Gemini models dynamically:", e);
+  }
+
+  return fallbackModels;
+}
+
 export default async function handler(req, res) {
-  // CORS configuration
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -53,7 +106,6 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Mohon kirimkan setidaknya satu gambar screenshot.' });
   }
 
-  // Map base64 strings to Gemini API inline_data format
   const imageParts = images.map((base64) => ({
     inline_data: {
       mime_type: 'image/jpeg',
@@ -61,65 +113,65 @@ export default async function handler(req, res) {
     }
   }));
 
-  const endpointsToTry = [
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
-    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
-  ];
+  const availableModels = await getSupportedGeminiModels(apiKey);
+  const apiVersions = ["v1beta", "v1"];
+  let lastErrorMessage = "";
 
-  const errors = [];
-  for (const url of endpointsToTry) {
-    try {
-      console.log(`[SERVERLESS] Attempting scan on endpoint: ${url.split('/models/')[1].split(':')[0]}`);
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey
-        },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: GEMINI_VIDEO_PROMPT }, ...imageParts] }],
-          generationConfig: { temperature: 0.1, response_mime_type: 'application/json' }
-        })
-      });
+  for (const model of availableModels) {
+    for (const apiVer of apiVersions) {
+      try {
+        const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+        console.log(`[SERVERLESS] Attempting scan on: ${model} (${apiVer})`);
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-goog-api-key': apiKey
+          },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: GEMINI_VIDEO_PROMPT }, ...imageParts] }],
+            generationConfig: { temperature: 0.1, response_mime_type: 'application/json' }
+          })
+        });
 
-      if (!response.ok) {
-        let errMsg = `HTTP ${response.status} ${response.statusText}`;
-        try {
-          const errJson = await response.json();
-          if (errJson.error?.message) {
-            errMsg = errJson.error.message;
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.warn(`[SERVERLESS WARN] Model ${model} (${apiVer}) failed with status ${response.status}:`, errorText);
+          try {
+            const errObj = JSON.parse(errorText);
+            lastErrorMessage = errObj.error?.message || errorText;
+          } catch {
+            lastErrorMessage = errorText;
           }
-        } catch (_) {}
-        throw new Error(`${errMsg} (Status: ${response.status})`);
-      }
-
-      const data = await response.json();
-      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-
-      if (text) {
-        const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
-        const parsed = JSON.parse(cleanJson);
-        parsed.id = 'video_' + Date.now();
-        if (!parsed.dateFormatted) {
-          parsed.dateFormatted = new Date().toLocaleDateString('id-ID');
+          continue; // Try next model/version
         }
 
-        console.log(`[SERVERLESS SUCCESS] Shopee Video screenshot scanned successfully.`);
-        return res.status(200).json(parsed);
-      } else {
-        throw new Error('API response did not contain candidates or content text.');
+        const data = await response.json();
+        const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+
+        if (text) {
+          const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
+          const parsed = JSON.parse(cleanJson);
+          parsed.id = 'video_' + Date.now();
+          if (!parsed.dateFormatted) {
+            parsed.dateFormatted = new Date().toLocaleDateString('id-ID');
+          }
+
+          console.log(`[SERVERLESS SUCCESS] Scanned successfully using ${model} (${apiVer})`);
+          return res.status(200).json(parsed);
+        } else {
+          throw new Error('API response did not contain candidates or content text.');
+        }
+      } catch (err) {
+        console.warn(`[SERVERLESS WARN] Model ${model} (${apiVer}) try failed:`, err.message);
+        lastErrorMessage = err.message || String(err);
       }
-    } catch (err) {
-      console.warn(`[SERVERLESS WARN] Model failed:`, err.message);
-      errors.push(err.message);
     }
   }
 
-  // If all model endpoints fail
   console.error(`[SERVERLESS ERROR] All Gemini models failed to scan image.`);
   return res.status(500).json({ 
-    error: 'Gagal memindai gambar menggunakan Gemini API. Semua model mengembalikan error:\n- ' + [...new Set(errors)].join('\n- ')
+    error: `Gagal memindai gambar menggunakan Gemini API. Detail error terakhir:\n- ${lastErrorMessage}`
   });
 }

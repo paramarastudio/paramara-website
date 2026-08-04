@@ -706,7 +706,7 @@ export default function App() {
   // =========================================================================
   if (viewMode === 'public') {
     return (
-      <div style={{ background: '#F4F8F6', minHeight: '100vh', color: 'var(--text-main)' }}>
+      <div style={{ background: 'var(--bg-main)', minHeight: '100vh', color: 'var(--text-main)' }}>
         
         {/* PUBLIC TOP NAVIGATION BAR */}
         <header style={{ 
@@ -799,7 +799,7 @@ export default function App() {
                   Layanan manajemen live streaming e-commerce serta optimasi konten Shopee Video secara profesional. Menyediakan host berbakat, setup penyiaran konversi tinggi, produksi video promosi kreatif, dan analitik optimasi performa penjualan.
                 </p>
                 
-                <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
+                <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
                   <strong>⭐ Layanan & Fitur Utama:</strong><br/>
                   <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Penyiaran Host Live Streamer Profesional</span><br/>
                   <span>• Produksi & Optimasi Konten Shopee Video</span><br/>
@@ -832,7 +832,7 @@ export default function App() {
                   <strong>Lestari</strong> adalah platform pendamping belajar tari tradisional nusantara yang menghubungkan kurikulum terstruktur dengan koreksi presisi langsung dari guru ahli.
                 </p>
 
-                <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
+                <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
                   <strong>💃 Fitur & Ekosistem Lestari:</strong><br/>
                   <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Kurikulum Belajar Tari Nusantara Terstruktur</span><br/>
                   <span>• Umpan Balik & Koreksi Presisi Guru Ahli</span><br/>
@@ -857,7 +857,7 @@ export default function App() {
                   Kanal kurasi produk viral dan media afiliasi Amazon yang ditargetkan secara khusus untuk pasar Amerika Serikat (US Market) melalui Pinterest & media sosial.
                 </p>
 
-                <div style={{ background: '#F8FAF9', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
+                <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
                   <strong>🇺🇸 Channel Profile & Niche:</strong><br/>
                   <span style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>• Account: @productijustfound</span><br/>
                   <span>• Bio: Amazon Finds | Everything You Need!</span><br/>
@@ -889,7 +889,7 @@ export default function App() {
         </section>
 
         {/* PUBLIC FOOTER */}
-        <footer style={{ background: '#FFFFFF', borderTop: '1px solid var(--border-color)', padding: '2rem 1.25rem', textAlign: 'center' }}>
+        <footer style={{ background: 'var(--bg-sidebar)', borderTop: '1px solid var(--border-color)', padding: '2rem 1.25rem', textAlign: 'center' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
               <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 30, height: 30, borderRadius: 8 }} onError={(e) => { e.target.src = '/logo.png'; }} />
@@ -1116,7 +1116,7 @@ export default function App() {
         </div>
 
         {/* ====== TIMEFRAME FILTER BAR ====== */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'rgba(8, 47, 38, 0.03)', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
           <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 Filter:</span>
           {[
             { key: 'all', label: 'Semua' },
@@ -1135,8 +1135,8 @@ export default function App() {
                 fontWeight: dateFilterPreset === opt.key ? 700 : 500,
                 borderRadius: 20,
                 border: `1.5px solid ${dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--border-color)'}`,
-                background: dateFilterPreset === opt.key ? 'var(--primary)' : 'white',
-                color: dateFilterPreset === opt.key ? 'white' : 'var(--text-main)',
+                background: dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--bg-input)',
+                color: dateFilterPreset === opt.key ? (theme === 'dark' ? '#09110F' : 'white') : 'var(--text-main)',
                 cursor: 'pointer',
                 transition: 'all 0.2s ease',
               }}
@@ -1151,14 +1151,14 @@ export default function App() {
                 type="date"
                 value={customDateStart}
                 onChange={e => setCustomDateStart(e.target.value)}
-                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'white' }}
+                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
               />
               <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
               <input
                 type="date"
                 value={customDateEnd}
                 onChange={e => setCustomDateEnd(e.target.value)}
-                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'white' }}
+                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
               />
             </div>
           )}
@@ -1250,7 +1250,7 @@ export default function App() {
                 <div className="chart-container" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: 280, overflowY: 'auto' }}>
                   {sessions.length > 0 ? (
                     sessions.slice(0, 5).map(s => (
-                      <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#F8FAF9', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                      <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
                         <div>
                           <strong style={{ fontSize: '0.85rem' }}>{s.title}</strong>
                           <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
@@ -1277,7 +1277,7 @@ export default function App() {
                 <div className="chart-container" style={{ padding: '1rem', display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: 280, overflowY: 'auto' }}>
                   {videoSessions.length > 0 ? (
                     videoSessions.slice(0, 5).map(v => (
-                      <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: '#F8FAF9', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
+                      <div key={v.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
                         <div>
                           <strong style={{ fontSize: '0.85rem' }}>{v.title}</strong>
                           <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
@@ -1360,7 +1360,7 @@ export default function App() {
                         display: 'grid', 
                         gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
                         gap: '0.75rem',
-                        background: '#F8FAF9',
+                        background: 'var(--bg-input)',
                         padding: '1rem',
                         borderRadius: 12,
                         border: '1px solid var(--border-color)'
@@ -1406,7 +1406,7 @@ export default function App() {
                             <div>
                               <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>🛒 Rincian Produk Terjual:</h4>
                               {(s.products || []).map((prod, idx) => (
-                                <div key={idx} style={{ padding: '8px 12px', background: '#FFFFFF', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
+                                <div key={idx} style={{ padding: '8px 12px', background: 'var(--bg-card)', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
                                   <strong style={{ color: 'var(--primary)' }}>{prod.name}</strong>
                                   <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 4 }}>
                                     <span>{prod.clicks} Klik | {prod.cartAdds} Keranjang</span>
@@ -1418,7 +1418,7 @@ export default function App() {
 
                             <div>
                               <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>📊 Interaksi & Traffic:</h4>
-                              <div style={{ background: '#FFFFFF', padding: '12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
+                              <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                                   <span>Penonton Terbanyak:</span>
                                   <strong>{s.peakConcurrentViewers || 0} orang</strong>
@@ -1586,7 +1586,7 @@ export default function App() {
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.25rem' }}>
                             
                             {/* TAB PENONTON */}
-                            <div style={{ background: '#F8FAF9', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                            <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
                               <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>👥 Data Utama: Penonton</h4>
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
                                 <div>Penonton: <strong>{(v.totalViews || 0).toLocaleString('id-ID')}</strong></div>
@@ -1599,7 +1599,7 @@ export default function App() {
                             </div>
 
                             {/* TAB PENJUALAN */}
-                            <div style={{ background: '#F8FAF9', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                            <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
                               <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>🛒 Data Utama: Penjualan</h4>
                               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
                                 <div>Video dengan Produk: <strong>{v.videosWithProducts || 0}</strong></div>
@@ -1630,7 +1630,7 @@ export default function App() {
               </div>
             ) : (
               <div className="glass-card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
-                <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#F4F8F6', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--text-dim)' }}>
+                <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--text-dim)' }}>
                   <Film style={{ width: 28, height: 28 }} />
                 </div>
                 <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Belum Ada Data Shopee Video</h3>
@@ -1674,7 +1674,7 @@ export default function App() {
               <div className="table-wrapper">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
                   <thead>
-                    <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
+                    <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
                       <th style={{ textAlign: 'left', padding: '10px' }}>Komponen Keuangan</th>
                       <th style={{ textAlign: 'right', padding: '10px' }}>Nilai Riil (Rp)</th>
                       <th style={{ textAlign: 'left', padding: '10px' }}>Keterangan / Breakdown</th>
@@ -1696,7 +1696,7 @@ export default function App() {
                       <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalProjectRev.toLocaleString('id-ID')}</td>
                       <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Total nilai anggaran kontrak jasa produksi/live klien aktif</td>
                     </tr>
-                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#F4F8F6' }}>
+                    <tr style={{ borderBottom: '2px solid var(--primary)', background: 'var(--bg-table-header)' }}>
                       <td style={{ padding: '10px', fontWeight: 800 }}>PENDAPATAN KOTOR (STUDIO REVENUE)</td>
                       <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 800 }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</td>
                       <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>Total Pendapatan Terkombinasi</td>
@@ -1711,7 +1711,7 @@ export default function App() {
                       <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalOpex.toLocaleString('id-ID')}</td>
                       <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Gaji host/talent, biaya internet, listrik, sewa tempat, operasional harian</td>
                     </tr>
-                    <tr style={{ borderBottom: '2px solid var(--primary)', background: '#FAF6F6' }}>
+                    <tr style={{ borderBottom: '2px solid var(--accent-gold)', background: 'var(--bg-table-header)' }}>
                       <td style={{ padding: '10px', fontWeight: 800 }}>TOTAL PENGELUARAN (TOTAL EXPENSES)</td>
                       <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 800 }}>Rp {totalExpenses.toLocaleString('id-ID')}</td>
                       <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>CAPEX + OPEX</td>
@@ -1744,7 +1744,7 @@ export default function App() {
                 <div className="table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                     <thead>
-                      <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
+                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
                         <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
                         <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
                         <th style={{ textAlign: 'left', padding: '8px' }}>Tanggal</th>
@@ -1787,7 +1787,7 @@ export default function App() {
                 <div className="table-wrapper">
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                     <thead>
-                      <tr style={{ background: '#F8FAF9', borderBottom: '1px solid var(--border-color)' }}>
+                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
                         <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
                         <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
                         <th style={{ textAlign: 'left', padding: '8px' }}>Siklus</th>
