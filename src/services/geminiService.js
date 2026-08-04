@@ -78,6 +78,7 @@ export async function analyzeShopeeScreenshots(files, passedApiKey) {
   );
 
   const endpointsToTry = [
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
@@ -186,6 +187,7 @@ export async function analyzeShopeeVideoScreenshots(files, passedApiKey) {
   );
 
   const endpointsToTry = [
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent`,
     `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent`
