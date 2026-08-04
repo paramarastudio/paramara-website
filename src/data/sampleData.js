@@ -56,6 +56,26 @@ export const INITIAL_STUDIO_DATA = {
       month: "2026-07",
       dateRange: "2026-07-01 - 2026-07-31",
       account: "@productijustfound",
+      overviewFileName: "Pinterest Analytics overview 20260701-20260731 (1).csv",
+      audienceFileName: "audience-insights-total-audience-2026-08-02.csv",
+      fileHistory: [
+        {
+          id: "file_init_1",
+          fileName: "Pinterest Analytics overview 20260701-20260731 (1).csv",
+          fileType: "Overview Performance",
+          uploadedAt: "2026-08-02 08:00",
+          rowsCount: 65,
+          status: "Active & Synced"
+        },
+        {
+          id: "file_init_2",
+          fileName: "audience-insights-total-audience-2026-08-02.csv",
+          fileType: "Audience Insights",
+          uploadedAt: "2026-08-02 08:05",
+          rowsCount: 140,
+          status: "Active & Synced"
+        }
+      ],
       impressions: 2640,
       engagements: 214,
       outboundClicks: 0,
