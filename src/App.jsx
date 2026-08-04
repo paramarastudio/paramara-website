@@ -1307,8 +1307,8 @@ export default function App() {
               <Menu />
             </button>
             <div className="header-title">
-              <h2>Executive Dashboard & Studio Operations</h2>
-              <p>Selamat datang kembali, <strong>Malikh</strong>! Ikhtisar aktivitas Paramara Studio.</p>
+              <h2>Paramara Executive Intelligence</h2>
+              <p>Real-Time Operations, Financial Matrix & Omnichannel Growth Hub</p>
             </div>
           </div>
 
