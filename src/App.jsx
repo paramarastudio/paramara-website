@@ -75,6 +75,17 @@ export default function App() {
   const toggleTheme = () => {
     setTheme(prev => prev === 'light' ? 'dark' : 'light');
   };
+
+  // ====== TOAST NOTIFICATION SYSTEM ======
+  const [toast, setToast] = useState(null); // { message, type: 'success'|'error'|'info' }
+  const toastTimer = useRef(null);
+
+  const showToast = useCallback((message, type = 'success', duration = 3000) => {
+    if (toastTimer.current) clearTimeout(toastTimer.current);
+    setToast({ message, type });
+    toastTimer.current = setTimeout(() => setToast(null), duration);
+  }, []);
+
   
   const [studioData, setStudioData] = useState(() => {
     const saved = localStorage.getItem("paramara_studio_admin_data_v2");
@@ -339,7 +350,7 @@ export default function App() {
   const handleClearAllSessions = () => {
     if (confirm("Apakah Anda yakin ingin menghapus seluruh data sesi Shopee Live?")) {
       setStudioData(prev => ({ ...prev, shopeeSessions: [] }));
-      alert("Seluruh data sesi berhasil dibersihkan!");
+      showToast('Seluruh data sesi berhasil dibersihkan!');
     }
   };
   // ====== GLOBAL TIMEFRAME FILTER ======
@@ -464,7 +475,7 @@ export default function App() {
     setNewAdminUsername("");
     setNewAdminFullName("");
     setModalType(null);
-    alert("Akun Admin berhasil ditambahkan!");
+    showToast('Akun Admin berhasil ditambahkan!');
   };
 
   // Save Edit Admin User
@@ -479,14 +490,14 @@ export default function App() {
 
     setEditingAdminUser(null);
     setModalType(null);
-    alert("Data profil admin berhasil diperbarui!");
+    showToast('Data profil admin berhasil diperbarui!');
   };
 
   // INSTANT AI Vision Scanning Handler (NO SLOW CLOUD WAITING)
   const handleDualAnalysis = async () => {
     const filesToProcess = [fileSlot1, fileSlot2].filter(Boolean);
     if (filesToProcess.length === 0) {
-      alert("Mohon pilih minimal 1 foto screenshot!");
+      showToast('Mohon pilih minimal 1 foto screenshot!', 'error');
       return;
     }
 
@@ -504,7 +515,7 @@ export default function App() {
       setScannedPreview(result);
       remoteLog.info('AI Scan success (Shopee Live)', { revenue: result.revenue, orders: result.orders });
     } catch (err) {
-      alert("Gagal membaca screenshot: " + err.message);
+      showToast('Gagal membaca screenshot: ' + err.message, 'error');
       remoteLog.error('AI Scan failed (Shopee Live)', { error: err.message });
     } finally {
       setScanning(false);
@@ -530,7 +541,7 @@ export default function App() {
     setPreviewUrl2(null);
     setModalType(null);
 
-    alert("✅ Metrik & Komisi Kotor Berhasil Disimpan!");
+    showToast('Metrik & Komisi Kotor Berhasil Disimpan!');
     remoteLog.info('Shopee Live session saved', { sessionId: sessionToSave.id, revenue: sessionToSave.revenue });
 
     // 2. Asynchronously upload to Firebase Storage in background without blocking user UI
@@ -559,14 +570,14 @@ export default function App() {
     }));
     setEditingSession(null);
     setModalType(null);
-    alert("Perubahan data sesi berhasil disimpan!");
+    showToast('Perubahan data sesi berhasil disimpan!');
   };
 
   // Shopee Video Analysis
   const handleVideoDualAnalysis = async () => {
     const filesToProcess = [videoFileSlot1, videoFileSlot2].filter(Boolean);
     if (filesToProcess.length === 0) {
-      alert("Mohon pilih minimal 1 foto screenshot!");
+      showToast('Mohon pilih minimal 1 foto screenshot!', 'error');
       return;
     }
 
@@ -581,7 +592,7 @@ export default function App() {
       setScannedVideoPreview(result);
       remoteLog.info('AI Scan success (Shopee Video)', { revenue: result.revenue, orders: result.totalOrders });
     } catch (err) {
-      alert("Gagal membaca screenshot video: " + err.message);
+      showToast('Gagal membaca screenshot video: ' + err.message, 'error');
       remoteLog.error('AI Scan failed (Shopee Video)', { error: err.message });
     } finally {
       setScanning(false);
@@ -606,7 +617,7 @@ export default function App() {
     setVideoPreviewUrl2(null);
     setModalType(null);
 
-    alert("✅ Metrik & Pendapatan Video Berhasil Disimpan!");
+    showToast('Metrik & Pendapatan Video Berhasil Disimpan!');
 
     // Background upload if Firebase active
     if (firebaseStorage) {
@@ -635,13 +646,13 @@ export default function App() {
     }));
     setEditingVideoSession(null);
     setModalType(null);
-    alert("Perubahan data video berhasil disimpan!");
+    showToast('Perubahan data video berhasil disimpan!');
   };
 
   const handleClearAllVideoSessions = () => {
     if (confirm("Apakah Anda yakin ingin menghapus seluruh data Shopee Video?")) {
       setStudioData(prev => ({ ...prev, shopeeVideoSessions: [] }));
-      alert("Seluruh data Shopee Video berhasil dibersihkan!");
+      showToast('Seluruh data Shopee Video berhasil dibersihkan!');
     }
   };
 
@@ -649,7 +660,7 @@ export default function App() {
   const handleAddFinancialItem = (e) => {
     e.preventDefault();
     if (!itemName || !itemAmount) {
-      alert("Nama Item dan Jumlah harus diisi!");
+      showToast('Nama Item dan Jumlah harus diisi!', 'error');
       return;
     }
 
@@ -680,7 +691,7 @@ export default function App() {
     setItemDate("");
     setOpexFrequency("Once");
     setModalType(null);
-    alert("Transaksi keuangan berhasil ditambahkan!");
+    showToast('Transaksi keuangan berhasil ditambahkan!');
   };
 
   const handleDeleteCapex = (id) => {
@@ -999,7 +1010,7 @@ export default function App() {
               <Film /> Shopee Video Tracker
             </button>
             <button className={`tab-btn ${activeTab === 'tabFinance' ? 'active' : ''}`} onClick={() => { setActiveTab('tabFinance'); setSidebarOpen(false); }}>
-              <DollarSign /> Keuangan (CAPEX/OPEX)
+              <DollarSign /> Keuangan
             </button>
             <button className={`tab-btn ${activeTab === 'tabProjects' ? 'active' : ''}`} onClick={() => { setActiveTab('tabProjects'); setSidebarOpen(false); }}>
               <Briefcase /> Proyek & Klien Studio
@@ -1014,17 +1025,6 @@ export default function App() {
         </div>
 
         <div className="sidebar-footer">
-          <button 
-            className="btn btn-secondary btn-sm" 
-            style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6, gap: '8px' }} 
-            onClick={toggleTheme}
-          >
-            {theme === 'light' ? (
-              <><Moon style={{ width: 14, height: 14 }} /> Mode Gelap</>
-            ) : (
-              <><Sun style={{ width: 14, height: 14 }} /> Mode Terang</>
-            )}
-          </button>
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6 }} onClick={() => setViewMode('public')}>
             <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik
           </button>
@@ -1032,7 +1032,7 @@ export default function App() {
             <LogOut style={{ width: 14, height: 14 }} /> Keluar / Logout
           </button>
           <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', textAlign: 'center', marginTop: 8 }}>
-            Build: v2.6.0 (Dual Theme Support)
+            Build: v2.7.0
           </div>
         </div>
       </aside>
@@ -1069,6 +1069,23 @@ export default function App() {
               {cloudSyncStatus === 'offline' && <><CloudOff style={{ width: 12, height: 12 }} /> Offline</>}
               {cloudSyncStatus === 'idle' && <><Cloud style={{ width: 12, height: 12 }} /> ...</>}
             </div>
+
+            {/* Theme toggle */}
+            <button
+              onClick={toggleTheme}
+              title={theme === 'light' ? 'Switch to Dark Mode' : 'Switch to Light Mode'}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                width: 34, height: 34, borderRadius: 10,
+                background: 'var(--bg-card)', border: '1px solid var(--border-color)',
+                color: 'var(--text-muted)', cursor: 'pointer', transition: 'var(--transition)',
+                flexShrink: 0
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = 'var(--primary)'; e.currentTarget.style.color = theme === 'dark' ? '#09110F' : '#fff'; e.currentTarget.style.borderColor = 'var(--primary)'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'var(--bg-card)'; e.currentTarget.style.color = 'var(--text-muted)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+            >
+              {theme === 'light' ? <Moon style={{ width: 15, height: 15 }} /> : <Sun style={{ width: 15, height: 15 }} />}
+            </button>
 
             <button className="btn btn-secondary" style={{ gap: 6 }} onClick={() => setViewMode('public')}>
               <Globe style={{ width: 14, height: 14 }} />
@@ -1185,7 +1202,36 @@ export default function App() {
         {/* Tab 1: Executive Dashboard */}
         {activeTab === 'tabAnalytics' && (
           <div className="tab-content main-inner">
-            
+
+            {/* AI EXECUTIVE INSIGHT — TOP POSITION */}
+            <div className="glass-card ai-summary-card" style={{ marginBottom: '1.5rem' }}>
+              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> AI Executive Insight</div>
+              <div className="ai-summary-text">
+                {sessions.length > 0 || videoSessions.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+                    <div>
+                      <strong>Sesi Live Terbaru:</strong><br/>
+                      {sessions.length > 0 ? (
+                        <span>{sessions[0].aiSummary || `Sesi live "${sessions[0].title}" berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan GMV Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data live stream terbaru.</span>
+                      )}
+                    </div>
+                    <div>
+                      <strong>Analisis Video Terbaru:</strong><br/>
+                      {videoSessions.length > 0 ? (
+                        <span>{videoSessions[0].aiSummary || `Video "${videoSessions[0].title}" menghasilkan Rp${(videoSessions[0].revenue || 0).toLocaleString('id-ID')} GMV dari ${(videoSessions[0].productsSold || 0)} produk terjual.`}</span>
+                      ) : (
+                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data performa video terbaru.</span>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <span style={{ color: 'var(--text-dim)' }}>Belum ada data. Upload screenshot Shopee Live atau Video untuk mendapatkan insight otomatis dari AI.</span>
+                )}
+              </div>
+            </div>
+
             {/* 4 Premium Executive KPI Cards */}
             <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
               <div className="glass-card kpi-card" style={{ '--kpi-accent': netProfit >= 0 ? '#059669' : '#D32F2F' }}>
@@ -2475,6 +2521,30 @@ export default function App() {
 
             </form>
           </div>
+        </div>
+      {/* FLOATING TOAST NOTIFICATION */}
+      {toast && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: 24,
+            right: 24,
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10,
+            padding: '12px 18px',
+            borderRadius: 12,
+            background: toast.type === 'error' ? '#D32F2F' : 'var(--primary)',
+            color: toast.type === 'error' ? '#ffffff' : (theme === 'dark' ? '#09110F' : '#ffffff'),
+            fontWeight: 700,
+            fontSize: '0.85rem',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.25)',
+            animation: 'slideUpToast 0.3s cubic-bezier(0.16, 1, 0.3, 1)'
+          }}
+        >
+          {toast.type === 'error' ? <WifiOff style={{ width: 16, height: 16 }} /> : <CheckCircle2 style={{ width: 16, height: 16 }} />}
+          <span>{toast.message}</span>
         </div>
       )}
 
