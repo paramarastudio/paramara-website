@@ -69,7 +69,8 @@ export default function App() {
   });
   
   // Secure Gemini API Key
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
+  // Load from localStorage first so user-entered UI keys take precedence over stale Vercel env variables
+  const apiKey = localStorage.getItem("gemini_api_key") || import.meta.env.VITE_GEMINI_API_KEY || "";
   const [tempApiKey, setTempApiKey] = useState(() => {
     return localStorage.getItem("gemini_api_key") || "";
   });

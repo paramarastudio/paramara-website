@@ -61,8 +61,8 @@ export function fileToBase64(file) {
 export async function analyzeShopeeScreenshots(files, passedApiKey) {
   const fileArray = Array.isArray(files) ? files : [files];
   
-  // Use Environment Variable or passed API Key
-  const activeKey = passedApiKey || import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
+  // Prioritize passed API Key, then local storage, then environment variable
+  const activeKey = passedApiKey || localStorage.getItem("gemini_api_key") || import.meta.env.VITE_GEMINI_API_KEY || "";
 
   // Convert all uploaded image files to base64 inline_data parts
   const imageParts = await Promise.all(
@@ -170,7 +170,8 @@ Bacalah seluruh teks, angka, metrik interaksi, dan penjualan dari SEMUA gambar y
 
 export async function analyzeShopeeVideoScreenshots(files, passedApiKey) {
   const fileArray = Array.isArray(files) ? files : [files];
-  const activeKey = passedApiKey || import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem("gemini_api_key") || "";
+  // Prioritize passed API Key, then local storage, then environment variable
+  const activeKey = passedApiKey || localStorage.getItem("gemini_api_key") || import.meta.env.VITE_GEMINI_API_KEY || "";
 
   const imageParts = await Promise.all(
     fileArray.map(async (file) => {
