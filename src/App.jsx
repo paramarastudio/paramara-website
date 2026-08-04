@@ -1613,13 +1613,10 @@ export default function App() {
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content main-inner">
             {sessions.length > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ marginBottom: '1.25rem' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                   {sessions.length} sesi live terekam
                 </p>
-                <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={handleClearAllSessions}>
-                  <Trash2 style={{ width: 14, height: 14 }} /> Bersihkan Seluruh Sesi
-                </button>
               </div>
             )}
 
@@ -1756,6 +1753,26 @@ export default function App() {
                   );
                 })}
               </div>
+              <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+                <button 
+                  onClick={() => setModalType('confirm_clear_live')} 
+                  style={{ 
+                    background: 'transparent', 
+                    border: '1px solid var(--border-color)', 
+                    color: 'var(--text-dim)', 
+                    fontSize: '0.75rem', 
+                    padding: '6px 14px', 
+                    borderRadius: 8, 
+                    cursor: 'pointer',
+                    opacity: 0.6,
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#D32F2F'; e.currentTarget.style.borderColor = 'rgba(211,47,47,0.3)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                >
+                  <Trash2 style={{ width: 12, height: 12, display: 'inline-block', marginRight: 4, verticalAlign: 'middle' }} /> Hapus Seluruh Data Sesi Live...
+                </button>
+              </div>
             ) : (
               <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
                 <div style={{ width: 60, height: 60, borderRadius: 16, background: 'rgba(8, 47, 38, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', color: 'var(--primary)' }}>
@@ -1843,13 +1860,10 @@ export default function App() {
         {activeTab === 'tabShopeeVideo' && (
           <div className="tab-content main-inner">
             {videoSessions.length > 0 && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+              <div style={{ marginBottom: '1.25rem' }}>
                 <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
                   {videoSessions.length} performa video terekam
                 </p>
-                <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={handleClearAllVideoSessions}>
-                  <Trash2 style={{ width: 14, height: 14 }} /> Bersihkan Seluruh Video
-                </button>
               </div>
             )}
 
@@ -1937,6 +1951,26 @@ export default function App() {
                     </div>
                   );
                 })}
+              </div>
+              <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+                <button 
+                  onClick={() => setModalType('confirm_clear_video')} 
+                  style={{ 
+                    background: 'transparent', 
+                    border: '1px solid var(--border-color)', 
+                    color: 'var(--text-dim)', 
+                    fontSize: '0.75rem', 
+                    padding: '6px 14px', 
+                    borderRadius: 8, 
+                    cursor: 'pointer',
+                    opacity: 0.6,
+                    transition: 'all 0.2s ease'
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#D32F2F'; e.currentTarget.style.borderColor = 'rgba(211,47,47,0.3)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                >
+                  <Trash2 style={{ width: 12, height: 12, display: 'inline-block', marginRight: 4, verticalAlign: 'middle' }} /> Hapus Seluruh Data Sesi Video...
+                </button>
               </div>
             ) : (
               <div className="glass-card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
@@ -3247,6 +3281,56 @@ export default function App() {
               </button>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* SAFETY CONFIRMATION MODAL: CLEAR ALL LIVE SESSIONS */}
+      {modalType === 'confirm_clear_live' && (
+        <div className="modal-overlay" onClick={() => setModalType(null)}>
+          <div className="glass-card modal-content" style={{ maxWidth: 440, padding: '2rem' }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(211,47,47,0.1)', color: '#D32F2F', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+                <Trash2 style={{ width: 28, height: 28 }} />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 8 }}>Hapus Seluruh Data Shopee Live?</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                Apakah Anda yakin ingin menghapus seluruh data <strong>({sessions.length} sesi)</strong> Shopee Live yang terekam? Data yang dihapus tidak dapat dikembalikan.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModalType(null)}>
+                  Batal
+                </button>
+                <button className="btn" style={{ flex: 1, background: '#D32F2F', color: '#fff', border: 'none', fontWeight: 700 }} onClick={() => { setStudioData(prev => ({ ...prev, shopeeSessions: [] })); setModalType(null); showToast('Seluruh data sesi live berhasil dibersihkan'); }}>
+                  Ya, Hapus Semua
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* SAFETY CONFIRMATION MODAL: CLEAR ALL VIDEO SESSIONS */}
+      {modalType === 'confirm_clear_video' && (
+        <div className="modal-overlay" onClick={() => setModalType(null)}>
+          <div className="glass-card modal-content" style={{ maxWidth: 440, padding: '2rem' }} onClick={e => e.stopPropagation()}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(211,47,47,0.1)', color: '#D32F2F', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
+                <Trash2 style={{ width: 28, height: 28 }} />
+              </div>
+              <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 8 }}>Hapus Seluruh Data Shopee Video?</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                Apakah Anda yakin ingin menghapus seluruh data <strong>({videoSessions.length} performa)</strong> Shopee Video yang terekam? Data yang dihapus tidak dapat dikembalikan.
+              </p>
+              <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
+                <button className="btn btn-secondary" style={{ flex: 1 }} onClick={() => setModalType(null)}>
+                  Batal
+                </button>
+                <button className="btn" style={{ flex: 1, background: '#D32F2F', color: '#fff', border: 'none', fontWeight: 700 }} onClick={() => { setStudioData(prev => ({ ...prev, shopeeVideoSessions: [] })); setModalType(null); showToast('Seluruh data sesi video berhasil dibersihkan'); }}>
+                  Ya, Hapus Semua
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
