@@ -10,6 +10,7 @@ import {
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
 import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots } from './services/geminiService';
 import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage, saveStudioDataToFirestore, loadStudioDataFromFirestore, subscribeToStudioData, isFirebaseConfigured } from './services/firebaseService';
+import { remoteLog } from './services/remoteLogger';
 
 export default function App() {
   // URL-based View Mode State ('public' at '/' vs 'admin' at '/admin')
@@ -176,6 +177,7 @@ export default function App() {
     if (!isFirebaseConfigured) {
       setCloudSyncStatus('offline');
       isInitialLoad.current = false;
+      remoteLog.warn('Firebase not configured — running in Local Only mode');
       return;
     }
 
@@ -208,6 +210,7 @@ export default function App() {
             adminUsers: cloudData.adminUsers || prev.adminUsers || [],
           }));
           setCloudSyncStatus('synced');
+          remoteLog.info('Firestore initial sync: loaded cloud data', { sessions: (cloudData.shopeeSessions||[]).length, videos: (cloudData.shopeeVideoSessions||[]).length });
         } else {
           // No cloud data yet — push current localStorage data to Firestore
           const localData = JSON.parse(localStorage.getItem("paramara_studio_admin_data_v2") || "null");
@@ -218,7 +221,7 @@ export default function App() {
           if (isMounted) setCloudSyncStatus('synced');
         }
       } catch (err) {
-        console.warn("Firestore init sync failed:", err.message);
+        remoteLog.error('Firestore init sync failed', { error: err.message });
         if (isMounted) setCloudSyncStatus('offline');
       }
 
@@ -283,6 +286,7 @@ export default function App() {
       lastSaveTimestamp.current = Date.now();
       const success = await saveStudioDataToFirestore(studioData);
       setCloudSyncStatus(success ? 'synced' : 'offline');
+      if (!success) remoteLog.error('Firestore debounced save failed');
     }, 1000);
 
     return () => {
@@ -301,8 +305,10 @@ export default function App() {
       setLoginError("");
       setShowLoginModal(false);
       setViewMode('admin');
+      remoteLog.info('Admin login successful', { user: loginUsername.trim() });
     } else {
       setLoginError("Username atau password tidak cocok. Silakan coba lagi.");
+      remoteLog.warn('Admin login failed', { attemptedUser: loginUsername.trim() });
     }
   };
 
@@ -408,6 +414,7 @@ export default function App() {
     }
 
     setScanning(true);
+    remoteLog.info('AI Scan started (Shopee Live)', { fileCount: filesToProcess.length });
 
     try {
       // Analyze INSTANTLY with Gemini Vision AI using in-memory Base64
@@ -417,8 +424,10 @@ export default function App() {
       }
 
       setScannedPreview(result);
+      remoteLog.info('AI Scan success (Shopee Live)', { revenue: result.revenue, orders: result.orders });
     } catch (err) {
       alert("Gagal membaca screenshot: " + err.message);
+      remoteLog.error('AI Scan failed (Shopee Live)', { error: err.message });
     } finally {
       setScanning(false);
     }
@@ -444,6 +453,7 @@ export default function App() {
     setModalType(null);
 
     alert("✅ Metrik & Komisi Kotor Berhasil Disimpan!");
+    remoteLog.info('Shopee Live session saved', { sessionId: sessionToSave.id, revenue: sessionToSave.revenue });
 
     // 2. Asynchronously upload to Firebase Storage in background without blocking user UI
     if (firebaseStorage) {
