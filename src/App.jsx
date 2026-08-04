@@ -2522,6 +2522,8 @@ export default function App() {
             </form>
           </div>
         </div>
+      )}
+
       {/* FLOATING TOAST NOTIFICATION */}
       {toast && (
         <div 
