@@ -419,8 +419,9 @@ export default function App() {
     try {
       // Analyze INSTANTLY with Gemini Vision AI using in-memory Base64
       const result = await analyzeShopeeScreenshots(filesToProcess, apiKey);
+      // Komisi kotor TIDAK di-auto kalkulasi — user isi manual karena % komisi beda tiap sesi
       if (!result.grossCommission) {
-        result.grossCommission = Math.round((result.revenue || 0) * 0.1);
+        result.grossCommission = 0;
       }
 
       setScannedPreview(result);
