@@ -1023,9 +1023,12 @@ export default function App() {
           <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', marginBottom: 6 }} onClick={() => setViewMode('public')}>
             <Globe style={{ width: 14, height: 14 }} /> Lihat Homepage Publik
           </button>
-          <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', color: '#D32F2F' }} onClick={handleLogout}>
+          <button className="btn btn-secondary btn-sm" style={{ width: '100%', justifyContent: 'flex-start', color: '#D32F2F', marginBottom: 6 }} onClick={handleLogout}>
             <LogOut style={{ width: 14, height: 14 }} /> Keluar / Logout
           </button>
+          <div style={{ fontSize: '0.65rem', color: 'var(--text-dim)', textAlign: 'center', marginTop: 8 }}>
+            Build: v2.3.0 (Strict AI Mode)
+          </div>
         </div>
       </aside>
 
