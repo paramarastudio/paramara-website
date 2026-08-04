@@ -5,7 +5,7 @@ import {
   CheckCircle, Save, Menu, Lock, LogOut, Eye, EyeOff, Trash2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
   Leaf, Compass, Monitor, Cloud, CloudOff, Loader2, PanelLeftClose, Film, DollarSign, CheckCircle2, WifiOff,
-  Sun, Moon
+  Sun, Moon, ArrowUpRight, ArrowDownRight, Receipt, Wallet, Scale
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -1716,99 +1716,219 @@ export default function App() {
         {activeTab === 'tabFinance' && (
           <div className="tab-content main-inner">
             
-            {/* Keuangan KPI Headers */}
+            {/* 1. EXECUTIVE FINANCIAL KPI HEADERS */}
             <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--secondary-emerald)' }}>
+                <div className="kpi-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
+                  <ArrowUpRight style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Pendapatan Kotor Studio</div>
+                <div className="kpi-value text-success">Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</div>
+                <div className="kpi-subtext">Live (10%) + Video (10%) + Proyek</div>
+              </div>
+
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
-                <div className="kpi-title">Total Capital Expenditure (CAPEX)</div>
-                <div className="kpi-value">Rp {totalCapex.toLocaleString('id-ID')}</div>
-                <div className="kpi-subtext">Pengeluaran aset fisik & investasi studio</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#D32F2F' }}>
-                <div className="kpi-title">Total Operational Expenditure (OPEX)</div>
-                <div className="kpi-value text-danger">Rp {totalOpex.toLocaleString('id-ID')}</div>
-                <div className="kpi-subtext">Biaya gaji, internet, sewa & operasional</div>
-              </div>
-              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--primary)' }}>
-                <div className="kpi-title">Total Pengeluaran Bulan Ini</div>
+                <div className="kpi-icon" style={{ background: 'rgba(184,142,57,0.1)', color: '#B88E39' }}>
+                  <ArrowDownRight style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Total Pengeluaran Studio</div>
                 <div className="kpi-value text-warning">Rp {totalExpenses.toLocaleString('id-ID')}</div>
-                <div className="kpi-subtext">Kombinasi CAPEX & OPEX</div>
+                <div className="kpi-subtext">CAPEX Rp {totalCapex.toLocaleString('id-ID')} | OPEX Rp {totalOpex.toLocaleString('id-ID')}</div>
+              </div>
+
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                <div className="kpi-icon" style={{ background: netProfit >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(211,47,47,0.1)', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                  <TrendingUp style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Laba Bersih (Net Profit)</div>
+                <div className="kpi-value" style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                  Rp {netProfit.toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">
+                  Margin: <strong>{netProfitMarginPercent.toFixed(1)}%</strong> {netProfit >= 0 ? "• SURPLUS 📈" : "• DEFISIT 📉"}
+                </div>
               </div>
             </div>
 
-            {/* CORPORATE PROFIT & LOSS BREAKDOWN TABLE */}
+            {/* 2. EXECUTIVE FINANCIAL MATRIX (P&L BREAKDOWN CARDS) */}
             <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
-              <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <DollarSign style={{ width: 18, height: 18 }} /> Laporan Laba Rugi & Arus Kas Studio (Profit & Loss Statement)
-              </h3>
-              
-              <div className="table-wrapper">
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }}>
-                  <thead>
-                    <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
-                      <th style={{ textAlign: 'left', padding: '10px' }}>Komponen Keuangan</th>
-                      <th style={{ textAlign: 'right', padding: '10px' }}>Nilai Riil (Rp)</th>
-                      <th style={{ textAlign: 'left', padding: '10px' }}>Keterangan / Breakdown</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>1. Pendapatan Komisi Shopee Live</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossCommission.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Live Rp {totalShopeeRev.toLocaleString('id-ID')}</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>2. Pendapatan Komisi Shopee Video</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalGrossVideoCommission.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Hasil komisi 10% dari GMV Video Rp {totalVideoRev.toLocaleString('id-ID')}</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>3. Pendapatan Kontrak Proyek & Klien</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 700 }}>Rp {totalProjectRev.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Total nilai anggaran kontrak jasa produksi/live klien aktif</td>
-                    </tr>
-                    <tr style={{ borderBottom: '2px solid var(--primary)', background: 'var(--bg-table-header)' }}>
-                      <td style={{ padding: '10px', fontWeight: 800 }}>PENDAPATAN KOTOR (STUDIO REVENUE)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#059669', fontWeight: 800 }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>Total Pendapatan Terkombinasi</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>4. Pengeluaran Modal (CAPEX)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalCapex.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Investasi aset fisik, alat broadcast, kamera & dekorasi studio</td>
-                    </tr>
-                    <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
-                      <td style={{ padding: '10px', fontWeight: 600 }}>5. Pengeluaran Operasional (OPEX)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 700 }}>Rp {totalOpex.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', color: 'var(--text-muted)' }}>Gaji host/talent, biaya internet, listrik, sewa tempat, operasional harian</td>
-                    </tr>
-                    <tr style={{ borderBottom: '2px solid var(--accent-gold)', background: 'var(--bg-table-header)' }}>
-                      <td style={{ padding: '10px', fontWeight: 800 }}>TOTAL PENGELUARAN (TOTAL EXPENSES)</td>
-                      <td style={{ padding: '10px', textAlign: 'right', color: '#D32F2F', fontWeight: 800 }}>Rp {totalExpenses.toLocaleString('id-ID')}</td>
-                      <td style={{ padding: '10px', fontWeight: 700, color: 'var(--primary)' }}>CAPEX + OPEX</td>
-                    </tr>
-                    <tr style={{ background: '#EAF5F0' }}>
-                      <td style={{ padding: '12px 10px', fontWeight: 900, fontSize: '0.95rem' }}>LABA BERSIH (NET PROFIT)</td>
-                      <td style={{ padding: '12px 10px', textAlign: 'right', color: netProfit >= 0 ? '#059669' : '#D32F2F', fontWeight: 900, fontSize: '1rem' }}>
-                        Rp {netProfit.toLocaleString('id-ID')}
-                      </td>
-                      <td style={{ padding: '12px 10px', fontWeight: 800, color: '#059669' }}>
-                        Margin Operasional: {netProfitMarginPercent.toFixed(1)}% {netProfit >= 0 ? "📈 SURPLUS" : "📉 DEFISIT"}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
+                    <Receipt style={{ width: 18, height: 18, color: 'var(--primary)' }} /> Ringkasan Laba Rugi & Arus Kas Studio
+                  </h3>
+                  <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: 2 }}>Breakdown real-time aliran pendapatan vs pengeluaran operasional</p>
+                </div>
+                <span className="brand-badge" style={{ padding: '4px 12px', fontSize: '0.725rem' }}>P&L Statement</span>
               </div>
+
+              {/* DUAL FLOW GRID */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
+                
+                {/* REVENUE STREAMS COLUMN */}
+                <div style={{ background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 8 }}>
+                    <h4 style={{ fontSize: '0.875rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                      <ArrowUpRight style={{ width: 16, height: 16 }} /> Sumber Pendapatan (Revenue Streams)
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Arus Masuk</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    
+                    {/* Item 1 */}
+                    <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600 }}>Komisi Shopee Live</span>
+                        <strong style={{ color: '#059669' }}>Rp {totalGrossCommission.toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Dari GMV Rp {totalShopeeRev.toLocaleString('id-ID')}</span>
+                        <span>{totalStudioGrossRevenue > 0 ? ((totalGrossCommission / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
+                      </div>
+                      <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalGrossCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
+                      </div>
+                    </div>
+
+                    {/* Item 2 */}
+                    <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600 }}>Komisi Shopee Video</span>
+                        <strong style={{ color: '#059669' }}>Rp {totalGrossVideoCommission.toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Dari GMV Rp {totalVideoRev.toLocaleString('id-ID')}</span>
+                        <span>{totalStudioGrossRevenue > 0 ? ((totalGrossVideoCommission / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
+                      </div>
+                      <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalGrossVideoCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
+                      </div>
+                    </div>
+
+                    {/* Item 3 */}
+                    <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600 }}>Kontrak Proyek & Klien</span>
+                        <strong style={{ color: '#059669' }}>Rp {totalProjectRev.toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Nilai Kontrak Klien Aktif</span>
+                        <span>{totalStudioGrossRevenue > 0 ? ((totalProjectRev / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
+                      </div>
+                      <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalProjectRev / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
+                      </div>
+                    </div>
+
+                    {/* Revenue Total Row */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px dashed var(--border-color)', fontSize: '0.85rem' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Total Pendapatan Kotor</span>
+                      <strong style={{ fontSize: '1rem', color: '#059669' }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* EXPENDITURES COLUMN */}
+                <div style={{ background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 8 }}>
+                    <h4 style={{ fontSize: '0.875rem', color: '#B88E39', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                      <ArrowDownRight style={{ width: 16, height: 16 }} /> Struktur Pengeluaran (Expenditures)
+                    </h4>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Arus Keluar</span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                    
+                    {/* Item 1: CAPEX */}
+                    <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600 }}>Belanja Modal (CAPEX)</span>
+                        <strong style={{ color: '#B88E39' }}>Rp {totalCapex.toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Aset Fisik & Alat Studio</span>
+                        <span>{totalExpenses > 0 ? ((totalCapex / totalExpenses) * 100).toFixed(0) : 0}% alokasi</span>
+                      </div>
+                      <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                        <div style={{ width: `${totalExpenses > 0 ? Math.min(100, (totalCapex / totalExpenses) * 100) : 0}%`, height: '100%', background: '#B88E39', borderRadius: 2 }} />
+                      </div>
+                    </div>
+
+                    {/* Item 2: OPEX */}
+                    <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600 }}>Operasional (OPEX)</span>
+                        <strong style={{ color: '#D32F2F' }}>Rp {totalOpex.toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Gaji Host, Internet, Sewa, Listrik</span>
+                        <span>{totalExpenses > 0 ? ((totalOpex / totalExpenses) * 100).toFixed(0) : 0}% alokasi</span>
+                      </div>
+                      <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                        <div style={{ width: `${totalExpenses > 0 ? Math.min(100, (totalOpex / totalExpenses) * 100) : 0}%`, height: '100%', background: '#D32F2F', borderRadius: 2 }} />
+                      </div>
+                    </div>
+
+                    {/* Expense Total Row */}
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px dashed var(--border-color)', fontSize: '0.85rem', marginTop: 12 }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Total Pengeluaran Studio</span>
+                      <strong style={{ fontSize: '1rem', color: '#D32F2F' }}>Rp {totalExpenses.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                  </div>
+                </div>
+
+              </div>
+
+              {/* NET PROFIT HIGHLIGHT BANNER */}
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '1.25rem 1.5rem',
+                borderRadius: 12,
+                background: netProfit >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)',
+                border: `1.5px solid ${netProfit >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}`,
+                flexWrap: 'wrap', gap: 12
+              }}>
+                <div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                    📈 Hasil Akhir Laba Bersih (Net Profit)
+                  </span>
+                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: netProfit >= 0 ? '#059669' : '#D32F2F', marginTop: 2 }}>
+                    Rp {netProfit.toLocaleString('id-ID')}
+                  </div>
+                </div>
+
+                <div style={{ textAlign: 'right' }}>
+                  <span className="brand-badge" style={{
+                    background: netProfit >= 0 ? '#059669' : '#D32F2F',
+                    color: '#fff',
+                    padding: '6px 14px',
+                    fontSize: '0.8rem',
+                    fontWeight: 800,
+                    borderRadius: 20
+                  }}>
+                    Margin: {netProfitMarginPercent.toFixed(1)}% {netProfit >= 0 ? "• SURPLUS" : "• DEFISIT"}
+                  </span>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 4 }}>
+                    {netProfit >= 0 ? "✅ Performansi Keuangan Sangat Sehat" : "⚠️ Pengeluaran Melebihi Pendapatan"}
+                  </div>
+                </div>
+              </div>
+
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+            {/* 3. CAPEX & OPEX TRANSACTION LEDGER TABLES */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               
               {/* CAPEX Table */}
               <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
                     📦 Pengeluaran Aset (CAPEX)
                   </h3>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600 }}>Investasi Jangka Panjang</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Investasi Jangka Panjang</span>
                 </div>
 
                 <div className="table-wrapper">
@@ -1827,11 +1947,13 @@ export default function App() {
                         capexList.map(c => (
                           <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                             <td style={{ padding: '8px' }}><strong>{c.name}</strong></td>
-                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: '#F0F4F2', color: 'var(--primary)' }}>{c.category}</span></td>
+                            <td style={{ padding: '8px' }}><span className="brand-badge">{c.category}</span></td>
                             <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{c.date}</td>
-                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700 }}>Rp {c.amount.toLocaleString('id-ID')}</td>
+                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>Rp {c.amount.toLocaleString('id-ID')}</td>
                             <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteCapex(c.id)}>Hapus</button>
+                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteCapex(c.id)}>
+                                <Trash2 style={{ width: 13, height: 13 }} />
+                              </button>
                             </td>
                           </tr>
                         ))
@@ -1848,10 +1970,10 @@ export default function App() {
               {/* OPEX Table */}
               <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '1rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
                     ⚙️ Operasional Bulanan (OPEX)
                   </h3>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600 }}>Biaya Rutin / Berulang</span>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Biaya Rutin / Berulang</span>
                 </div>
 
                 <div className="table-wrapper">
@@ -1870,11 +1992,13 @@ export default function App() {
                         opexList.map(o => (
                           <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                             <td style={{ padding: '8px' }}><strong>{o.name}</strong></td>
-                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: '#FAF6F0', color: 'var(--accent-gold)' }}>{o.category}</span></td>
+                            <td style={{ padding: '8px' }}><span className="brand-badge">{o.category}</span></td>
                             <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{o.frequency}</td>
                             <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#D32F2F' }}>Rp {o.amount.toLocaleString('id-ID')}</td>
                             <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOpex(o.id)}>Hapus</button>
+                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOpex(o.id)}>
+                                <Trash2 style={{ width: 13, height: 13 }} />
+                              </button>
                             </td>
                           </tr>
                         ))
