@@ -1107,7 +1107,7 @@ export default function App() {
 
             <div className="form-group">
               <label className="form-label">Username Admin</label>
-              <input type="text" className="form-input" placeholder="abdumalikh" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
+              <input type="text" className="form-input" placeholder="Masukkan Username" value={loginUsername} onChange={e => setLoginUsername(e.target.value)} required />
             </div>
 
             <div className="form-group" style={{ marginBottom: '1.75rem' }}>
