@@ -328,14 +328,77 @@ export default function App() {
       alert("Seluruh data sesi berhasil dibersihkan!");
     }
   };
+  // ====== GLOBAL TIMEFRAME FILTER ======
+  const [dateFilterPreset, setDateFilterPreset] = useState('all'); // 'all' | 'today' | '7d' | '30d' | 'thisMonth' | 'custom'
+  const [customDateStart, setCustomDateStart] = useState('');
+  const [customDateEnd, setCustomDateEnd] = useState('');
 
-  // Derived Calculations
-  const sessions = studioData.shopeeSessions || [];
-  const videoSessions = studioData.shopeeVideoSessions || [];
-  const capexList = studioData.capexList || [];
-  const opexList = studioData.opexList || [];
-  const projects = studioData.clientProjects || [];
+  // Parse various date formats used in the app into a Date object
+  const parseItemDate = (item) => {
+    // Financial items use 'date' field: "2026-08-01"
+    if (item.date) return new Date(item.date);
+    // Shopee Live sessions use 'dateFormatted' or 'startTime': "01-08-2026 21:37" or "01-08-2026"
+    const raw = item.dateFormatted || item.startTime || '';
+    if (!raw) return null;
+    // Try DD-MM-YYYY HH:MM or DD-MM-YYYY
+    const match = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+    if (match) {
+      return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+    }
+    // Try ISO or other standard formats
+    const d = new Date(raw);
+    return isNaN(d.getTime()) ? null : d;
+  };
+
+  // Calculate date range from preset
+  const getDateRange = () => {
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    switch (dateFilterPreset) {
+      case 'today':
+        return { start: todayStart, end: new Date(todayStart.getTime() + 86400000) };
+      case '7d':
+        return { start: new Date(todayStart.getTime() - 6 * 86400000), end: new Date(todayStart.getTime() + 86400000) };
+      case '30d':
+        return { start: new Date(todayStart.getTime() - 29 * 86400000), end: new Date(todayStart.getTime() + 86400000) };
+      case 'thisMonth':
+        return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(todayStart.getTime() + 86400000) };
+      case 'custom':
+        return {
+          start: customDateStart ? new Date(customDateStart) : new Date(0),
+          end: customDateEnd ? new Date(new Date(customDateEnd).getTime() + 86400000) : new Date(todayStart.getTime() + 86400000)
+        };
+      default: // 'all'
+        return null;
+    }
+  };
+
+  // Filter any array by date range
+  const filterByDate = (items) => {
+    const range = getDateRange();
+    if (!range) return items; // 'all' — no filter
+    return items.filter(item => {
+      const d = parseItemDate(item);
+      if (!d) return true; // If no date parseable, include it
+      return d >= range.start && d < range.end;
+    });
+  };
+
+  // Derived Calculations (with timeframe filter applied)
+  const allSessions = studioData.shopeeSessions || [];
+  const allVideoSessions = studioData.shopeeVideoSessions || [];
+  const allCapexList = studioData.capexList || [];
+  const allOpexList = studioData.opexList || [];
+  const allProjects = studioData.clientProjects || [];
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
+
+  // Filtered data arrays used everywhere
+  const sessions = filterByDate(allSessions);
+  const videoSessions = filterByDate(allVideoSessions);
+  const capexList = filterByDate(allCapexList);
+  const opexList = filterByDate(allOpexList);
+  const projects = allProjects; // Projects don't have date field yet
 
   // Revenue
   const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
@@ -1019,6 +1082,61 @@ export default function App() {
               </button>
             )}
           </div>
+        </div>
+
+        {/* ====== TIMEFRAME FILTER BAR ====== */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'rgba(8, 47, 38, 0.03)', borderBottom: '1px solid var(--border-color)', flexWrap: 'wrap' }}>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>📅 Filter:</span>
+          {[
+            { key: 'all', label: 'Semua' },
+            { key: 'today', label: 'Hari Ini' },
+            { key: '7d', label: '7 Hari' },
+            { key: '30d', label: '30 Hari' },
+            { key: 'thisMonth', label: 'Bulan Ini' },
+            { key: 'custom', label: 'Custom' },
+          ].map(opt => (
+            <button
+              key={opt.key}
+              onClick={() => setDateFilterPreset(opt.key)}
+              style={{
+                padding: '5px 14px',
+                fontSize: '0.75rem',
+                fontWeight: dateFilterPreset === opt.key ? 700 : 500,
+                borderRadius: 20,
+                border: `1.5px solid ${dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--border-color)'}`,
+                background: dateFilterPreset === opt.key ? 'var(--primary)' : 'white',
+                color: dateFilterPreset === opt.key ? 'white' : 'var(--text-main)',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+              }}
+            >
+              {opt.label}
+            </button>
+          ))}
+
+          {dateFilterPreset === 'custom' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 4 }}>
+              <input
+                type="date"
+                value={customDateStart}
+                onChange={e => setCustomDateStart(e.target.value)}
+                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'white' }}
+              />
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
+              <input
+                type="date"
+                value={customDateEnd}
+                onChange={e => setCustomDateEnd(e.target.value)}
+                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'white' }}
+              />
+            </div>
+          )}
+
+          {dateFilterPreset !== 'all' && (
+            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginLeft: 'auto', fontStyle: 'italic' }}>
+              Menampilkan {sessions.length} live, {videoSessions.length} video, {capexList.length + opexList.length} transaksi
+            </span>
+          )}
         </div>
 
         {/* Tab 1: Executive Dashboard */}
