@@ -1386,9 +1386,7 @@ export default function App() {
 
         {/* ====== TIMEFRAME FILTER BAR ====== */}
         <div className="filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 2.5rem', background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 4, textTransform: 'uppercase', letterSpacing: '0.05em', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
-            <Calendar style={{ width: 13, height: 13 }} /> Filter:
-          </span>
+          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>FILTER:</span>
           {[
             { key: 'all', label: 'Semua' },
             { key: 'today', label: 'Hari Ini' },
