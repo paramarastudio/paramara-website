@@ -581,6 +581,7 @@ export default function App() {
     }
 
     setScanning(true);
+    remoteLog.info('AI Scan started (Shopee Video)', { fileCount: filesToProcess.length });
 
     try {
       const result = await analyzeShopeeVideoScreenshots(filesToProcess, apiKey);
@@ -588,8 +589,10 @@ export default function App() {
         result.grossCommission = Math.round((result.revenue || 0) * 0.1);
       }
       setScannedVideoPreview(result);
+      remoteLog.info('AI Scan success (Shopee Video)', { revenue: result.revenue, orders: result.totalOrders });
     } catch (err) {
       alert("Gagal membaca screenshot video: " + err.message);
+      remoteLog.error('AI Scan failed (Shopee Video)', { error: err.message });
     } finally {
       setScanning(false);
     }
@@ -2056,9 +2059,9 @@ export default function App() {
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
                   onClick={handleDualAnalysis}
-                  disabled={!fileSlot1 && !fileSlot2}
+                  disabled={(!fileSlot1 && !fileSlot2) || scanning}
                 >
-                  <Sparkles /> Scan & Ekstrak Data Instan ([{[fileSlot1, fileSlot2].filter(Boolean).length}] Foto)
+                  <Sparkles /> {scanning ? 'Scanning...' : 'Scan & Ekstrak Data Instan'} ({[fileSlot1, fileSlot2].filter(Boolean).length} Foto)
                 </button>
               </div>
             )}
@@ -2249,9 +2252,9 @@ export default function App() {
                   className="btn btn-primary" 
                   style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
                   onClick={handleVideoDualAnalysis}
-                  disabled={!videoFileSlot1 && !videoFileSlot2}
+                  disabled={(!videoFileSlot1 && !videoFileSlot2) || scanning}
                 >
-                  <Sparkles /> Scan & Ekstrak Data Video ([{[videoFileSlot1, videoFileSlot2].filter(Boolean).length}] Foto)
+                  <Sparkles /> {scanning ? 'Scanning...' : 'Scan & Ekstrak Data Video'} ({[videoFileSlot1, videoFileSlot2].filter(Boolean).length} Foto)
                 </button>
               </div>
             )}
