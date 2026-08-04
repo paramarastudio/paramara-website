@@ -1622,157 +1622,133 @@ export default function App() {
 
             {/* EXPANDABLE EXECUTIVE SESSION CARDS OR CLEAN ZERO STATE */}
             {sessions.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {sessions.map(s => {
-                  const isExpanded = expandedSessionId === s.id;
-                  return (
-                    <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
-                      
-                      {/* CARD HEADER */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
-                        <div>
-                          <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{s.title}</h3>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            <span>🕒 Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
-                            <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
-                            {s.screenshotUrlTop && (
-                              <a href={s.screenshotUrlTop} target="_blank" rel="noreferrer" style={{ color: 'var(--secondary-emerald)', textDecoration: 'none', fontWeight: 600 }}>
-                                🔥 Firebase Cloud Screenshot 1 ↗
-                              </a>
-                            )}
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {sessions.map(s => {
+                    const isExpanded = expandedSessionId === s.id;
+                    return (
+                      <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
+                        
+                        {/* CARD HEADER */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+                          <div>
+                            <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{s.title}</h3>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                              <span>🕒 Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
+                              <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <button 
+                              className="btn btn-sm btn-secondary" 
+                              onClick={() => setExpandedSessionId(isExpanded ? null : s.id)}
+                              style={{ display: 'flex', alignItems: 'center', gap: 6 }}
+                            >
+                              {isExpanded ? <ChevronUp style={{ width: 14, height: 14 }} /> : <ChevronDown style={{ width: 14, height: 14 }} />}
+                              <span>{isExpanded ? 'Tutup Metrik' : 'Lihat Metrik & Produk'}</span>
+                            </button>
+
+                            <button className="btn btn-sm btn-secondary" style={{ color: 'var(--primary)' }} onClick={() => { setEditingSession({ ...s }); setModalType('editSession'); }}>
+                              <Edit3 style={{ width: 14, height: 14 }} /> Edit Data
+                            </button>
+
+                            <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => handleDeleteSession(s.id)}>
+                              <Trash2 style={{ width: 14, height: 14 }} /> Hapus
+                            </button>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                          <button className="btn btn-sm btn-secondary" onClick={() => setExpandedSessionId(isExpanded ? null : s.id)}>
-                            {isExpanded ? <ChevronUp style={{ width: 15, height: 15 }} /> : <ChevronDown style={{ width: 15, height: 15 }} />}
-                            {isExpanded ? "Tutup Detail" : "Lihat Metrik & Produk"}
-                          </button>
-                          
-                          {/* EDIT BUTTON */}
-                          <button className="btn btn-sm btn-secondary" style={{ color: 'var(--primary)' }} onClick={() => { setEditingSession(s); setModalType('editSession'); }}>
-                            <Edit3 style={{ width: 14, height: 14 }} /> Edit Data
-                          </button>
+                        {/* EXECUTIVE SUMMARY METRICS BAR */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.75rem', background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Penjualan (GMV)</span>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--primary)' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</div>
+                          </div>
 
-                          <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
-                            setStudioData(prev => ({ ...prev, shopeeSessions: prev.shopeeSessions.filter(item => item.id !== s.id) }));
-                          }}>
-                            <Trash2 style={{ width: 14, height: 14 }} /> Hapus
-                          </button>
-                        </div>
-                      </div>
+                          <div style={{ background: 'rgba(184, 142, 57, 0.08)', padding: '4px 8px', borderRadius: 6, border: '1px solid var(--accent-gold-border)' }}>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>💵 Komisi Kotor</span>
+                            <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-gold)' }}>Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</div>
+                          </div>
 
-                      {/* DIRECT VISIBLE METRICS GRID */}
-                      <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', 
-                        gap: '0.75rem',
-                        background: 'var(--bg-input)',
-                        padding: '1rem',
-                        borderRadius: 12,
-                        border: '1px solid var(--border-color)'
-                      }}>
-                        <div>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENJUALAN (GMV)</span>
-                          <strong className="text-success" style={{ fontSize: '1.05rem' }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</strong>
-                        </div>
-                        <div style={{ background: 'rgba(184, 142, 57, 0.08)', padding: '6px 10px', borderRadius: 8, border: '1px solid var(--accent-gold-border)' }}>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', fontWeight: 700, display: 'block' }}>💵 KOMISI KOTOR</span>
-                          <strong className="text-warning" style={{ fontSize: '1.05rem' }}>Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PESANAN</span>
-                          <strong style={{ fontSize: '1.05rem', color: 'var(--primary)' }}>{s.totalOrders || 0} order</strong>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>PENONTON AKTIF</span>
-                          <strong style={{ fontSize: '1.05rem' }}>{s.activeViewers || 0} orang</strong>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KOMENTAR</span>
-                          <strong style={{ fontSize: '1.05rem' }}>{s.commentsCount || 0} chat</strong>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>KERANJANG</span>
-                          <strong style={{ fontSize: '1.05rem' }}>{s.cartAdditions || 0} item</strong>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>CTR KLIK</span>
-                          <span className="brand-badge" style={{ fontSize: '0.75rem' }}>{s.clickRatePercent || 0}% CTR</span>
-                        </div>
-                        <div>
-                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700, display: 'block' }}>TOTAL VIEWS</span>
-                          <strong style={{ fontSize: '1.05rem' }}>{s.totalViews || 0} views</strong>
-                        </div>
-                      </div>
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Pesanan</span>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--secondary-emerald)' }}>{s.totalOrders || 0} order</div>
+                          </div>
 
-                      {/* EXPANDABLE ACCORDION CONTENT */}
-                      {isExpanded && (
-                        <div style={{ marginTop: '1.25rem', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.25rem', marginBottom: '1rem' }}>
-                            <div>
-                              <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>🛒 Rincian Produk Terjual:</h4>
-                              {(s.products || []).map((prod, idx) => (
-                                <div key={idx} style={{ padding: '8px 12px', background: 'var(--bg-card)', borderRadius: 8, marginBottom: 6, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
-                                  <strong style={{ color: 'var(--primary)' }}>{prod.name}</strong>
-                                  <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-dim)', marginTop: 4 }}>
-                                    <span>{prod.clicks} Klik | {prod.cartAdds} Keranjang</span>
-                                    <strong className="text-success">Rp {(prod.revenue || 0).toLocaleString('id-ID')}</strong>
-                                  </div>
-                                </div>
-                              ))}
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Penonton Aktif</span>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{s.activeViewers || 0} orang</div>
+                          </div>
+
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Komentar</span>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{s.chatCount || 0} chat</div>
+                          </div>
+
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Keranjang</span>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{s.cartAdditions || 0} item</div>
+                          </div>
+
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CTR Klik</span>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--primary)' }}>
+                              <span style={{ background: 'var(--primary-glow)', padding: '2px 6px', borderRadius: 4 }}>{s.clickRatePercent || 0}% CTR</span>
                             </div>
+                          </div>
 
+                          <div>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Views</span>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{s.totalViews || 0} views</div>
+                          </div>
+                        </div>
+
+                        {/* DETAILED EXPANDED INSIGHTS */}
+                        {isExpanded && (
+                          <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                             <div>
-                              <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>📊 Interaksi & Traffic:</h4>
-                              <div style={{ background: 'var(--bg-card)', padding: '12px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                  <span>Penonton Terbanyak:</span>
-                                  <strong>{s.peakConcurrentViewers || 0} orang</strong>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                                  <span>Disukai (Likes):</span>
-                                  <strong>{s.likes || 0} likes</strong>
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                  <span>Dibagikan (Shares):</span>
-                                  <strong>{s.shares || 0} shares</strong>
-                                </div>
+                              <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>Interaksi & Traffic:</h4>
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                <div>Total Suka: <strong>{s.likeCount || 0}</strong></div>
+                                <div>Tingkat Konversi: <strong>{s.conversionRatePercent || 0}%</strong></div>
+                                <div>Rata-rata Menonton: <strong>{s.avgWatchTime}</strong></div>
+                                <div>Dua Menonton: <strong>{s.viewers2Min || 0} orang</strong></div>
                               </div>
                             </div>
-                          </div>
 
-                          <div className="ai-summary-text" style={{ background: 'rgba(184, 142, 57, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--accent-gold-border)', fontSize: '0.85rem' }}>
-                            <Sparkles style={{ width: 14, height: 14, color: 'var(--accent-gold)', verticalAlign: 'middle', marginRight: 6 }} />
-                            {s.aiSummary}
+                            <div className="ai-summary-text" style={{ background: 'rgba(184, 142, 57, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--accent-gold-border)', fontSize: '0.85rem' }}>
+                              <Sparkles style={{ width: 14, height: 14, color: 'var(--accent-gold)', verticalAlign: 'middle', marginRight: 6 }} />
+                              {s.aiSummary}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
 
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
-                <button 
-                  onClick={() => setModalType('confirm_clear_live')} 
-                  style={{ 
-                    background: 'transparent', 
-                    border: '1px solid var(--border-color)', 
-                    color: 'var(--text-dim)', 
-                    fontSize: '0.75rem', 
-                    padding: '6px 14px', 
-                    borderRadius: 8, 
-                    cursor: 'pointer',
-                    opacity: 0.6,
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#D32F2F'; e.currentTarget.style.borderColor = 'rgba(211,47,47,0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
-                >
-                  <Trash2 style={{ width: 12, height: 12, display: 'inline-block', marginRight: 4, verticalAlign: 'middle' }} /> Hapus Seluruh Data Sesi Live...
-                </button>
-              </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+                  <button 
+                    onClick={() => setModalType('confirm_clear_live')} 
+                    style={{ 
+                      background: 'transparent', 
+                      border: '1px solid var(--border-color)', 
+                      color: 'var(--text-dim)', 
+                      fontSize: '0.75rem', 
+                      padding: '6px 14px', 
+                      borderRadius: 8, 
+                      cursor: 'pointer',
+                      opacity: 0.6,
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#D32F2F'; e.currentTarget.style.borderColor = 'rgba(211,47,47,0.3)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                  >
+                    <Trash2 style={{ width: 12, height: 12, display: 'inline-block', marginRight: 4, verticalAlign: 'middle' }} /> Hapus Seluruh Data Sesi Live...
+                  </button>
+                </div>
+              </>
             ) : (
               <div className="glass-card" style={{ padding: '3.5rem 2rem', textAlign: 'center' }}>
                 <div style={{ width: 60, height: 60, borderRadius: 16, background: 'rgba(8, 47, 38, 0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', color: 'var(--primary)' }}>
@@ -1869,115 +1845,111 @@ export default function App() {
 
             {/* EXPANDABLE VIDEO SESSION CARDS OR CLEAN ZERO STATE */}
             {videoSessions.length > 0 ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                {videoSessions.map(v => {
-                  const isExpanded = expandedVideoId === v.id;
-                  return (
-                    <div key={v.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
-                      
-                      {/* CARD HEADER */}
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.5rem' }}>
-                        <div>
-                          <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{v.title}</h3>
-                          <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                            <span>📅 Analisis: <strong>{v.dateFormatted}</strong></span>
-                            <span>👁️ Penonton: <strong>{(v.totalViews || 0).toLocaleString('id-ID')}</strong></span>
-                            <span>🛍️ Terjual: <strong>{v.productsSold || 0} unit</strong></span>
-                            <span>💵 GMV: <strong style={{ color: '#059669' }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</strong></span>
+              <>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {videoSessions.map(v => {
+                    const isExpanded = expandedVideoId === v.id;
+                    return (
+                      <div key={v.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
+                        
+                        {/* CARD HEADER */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.5rem' }}>
+                          <div>
+                            <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{v.title}</h3>
+                            <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                              <span>Analisis: <strong>{v.dateFormatted}</strong></span>
+                              <span>Penonton: <strong>{(v.totalViews || 0).toLocaleString('id-ID')}</strong></span>
+                              <span>Terjual: <strong>{v.productsSold || 0} unit</strong></span>
+                              <span>GMV: <strong style={{ color: '#059669' }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</strong></span>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: 6 }}>
+                            <button className="btn btn-sm btn-secondary" onClick={() => setExpandedVideoId(isExpanded ? null : v.id)}>
+                              {isExpanded ? "Tutup Detail" : "Buka Detail"}
+                            </button>
+                            <button className="btn btn-sm btn-secondary" onClick={() => { setEditingVideoSession(v); setModalType('editVideoSession'); }}>
+                              Edit
+                            </button>
+                            <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => handleDeleteVideoSession(v.id)}>
+                              Hapus
+                            </button>
                           </div>
                         </div>
 
-                        <div style={{ display: 'flex', gap: 6 }}>
-                          <button className="btn btn-sm btn-secondary" onClick={() => setExpandedVideoId(isExpanded ? null : v.id)}>
-                            {isExpanded ? "Tutup Detail" : "Buka Detail"}
-                          </button>
-                          <button className="btn btn-sm btn-secondary" onClick={() => { setEditingVideoSession(v); setModalType('editVideoSession'); }}>
-                            Edit
-                          </button>
-                          <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
-                            if (confirm("Hapus data video ini?")) {
-                              setStudioData(prev => ({ ...prev, shopeeVideoSessions: prev.shopeeVideoSessions.filter(item => item.id !== v.id) }));
-                            }
-                          }}>
-                            Hapus
-                          </button>
-                        </div>
+                        {/* EXPANDED DETAILS */}
+                        {isExpanded && (
+                          <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '1rem', paddingTop: '1rem' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.25rem' }}>
+                              
+                              {/* TAB PENONTON */}
+                              <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                                <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>Data Utama: Penonton</h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
+                                  <div>Penonton: <strong>{(v.totalViews || 0).toLocaleString('id-ID')}</strong></div>
+                                  <div>Suka (Likes): <strong>{(v.likes || 0).toLocaleString('id-ID')}</strong></div>
+                                  <div>Komentar: <strong>{(v.commentsCount || 0).toLocaleString('id-ID')}</strong></div>
+                                  <div>Dibagikan (Shares): <strong>{(v.shares || 0).toLocaleString('id-ID')}</strong></div>
+                                  <div>Kunjungan Profil: <strong>{(v.profileVisits || 0).toLocaleString('id-ID')}</strong></div>
+                                  <div>Pengikut Baru: <strong>{(v.newFollowers || 0).toLocaleString('id-ID')}</strong></div>
+                                </div>
+                              </div>
+
+                              {/* TAB PENJUALAN */}
+                              <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                                <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>Data Utama: Penjualan</h4>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
+                                  <div>Video dengan Produk: <strong>{v.videosWithProducts || 0}</strong></div>
+                                  <div>Video Berpendapatan: <strong>{v.monetizedVideos || 0}</strong></div>
+                                  <div>Produk Terjual: <strong>{v.productsSold || 0}</strong></div>
+                                  <div>Pembeli: <strong>{v.buyers || 0}</strong></div>
+                                  <div>Klik pada Produk: <strong>{v.productClicks || 0}</strong></div>
+                                  <div>Pesanan: <strong>{v.totalOrders || 0}</strong></div>
+                                  <div>Penjualan GMV: <strong style={{ color: '#059669' }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</strong></div>
+                                  <div>Tingkat Konversi: <strong>{v.conversionRatePercent || 0}%</strong></div>
+                                </div>
+                              </div>
+
+                            </div>
+
+                            {/* AI SUMMARY INSIGHT */}
+                            {v.aiSummary && (
+                              <div style={{ background: 'var(--primary-glow)', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem', color: 'var(--primary)' }}>
+                                <strong>Summary Insight:</strong> {v.aiSummary}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
                       </div>
+                    );
+                  })}
+                </div>
 
-                      {/* EXPANDED DETAILS */}
-                      {isExpanded && (
-                        <div style={{ borderTop: '1px solid var(--border-color)', marginTop: '1rem', paddingTop: '1rem' }}>
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.25rem' }}>
-                            
-                            {/* TAB PENONTON */}
-                            <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
-                              <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>👥 Data Utama: Penonton</h4>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
-                                <div>Penonton: <strong>{(v.totalViews || 0).toLocaleString('id-ID')}</strong></div>
-                                <div>Suka (Likes): <strong>{(v.likes || 0).toLocaleString('id-ID')}</strong></div>
-                                <div>Komentar: <strong>{(v.commentsCount || 0).toLocaleString('id-ID')}</strong></div>
-                                <div>Dibagikan (Shares): <strong>{(v.shares || 0).toLocaleString('id-ID')}</strong></div>
-                                <div>Kunjungan Profil: <strong>{(v.profileVisits || 0).toLocaleString('id-ID')}</strong></div>
-                                <div>Pengikut Baru: <strong>{(v.newFollowers || 0).toLocaleString('id-ID')}</strong></div>
-                              </div>
-                            </div>
-
-                            {/* TAB PENJUALAN */}
-                            <div style={{ background: 'var(--bg-input)', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
-                              <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: '0.75rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 4 }}>🛒 Data Utama: Penjualan</h4>
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px 12px', fontSize: '0.8rem' }}>
-                                <div>Video dengan Produk: <strong>{v.videosWithProducts || 0}</strong></div>
-                                <div>Video Berpendapatan: <strong>{v.monetizedVideos || 0}</strong></div>
-                                <div>Produk Terjual: <strong>{v.productsSold || 0}</strong></div>
-                                <div>Pembeli: <strong>{v.buyers || 0}</strong></div>
-                                <div>Klik pada Produk: <strong>{v.productClicks || 0}</strong></div>
-                                <div>Pesanan: <strong>{v.totalOrders || 0}</strong></div>
-                                <div>Penjualan GMV: <strong style={{ color: '#059669' }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</strong></div>
-                                <div>Tingkat Konversi: <strong>{v.conversionRatePercent || 0}%</strong></div>
-                              </div>
-                            </div>
-
-                          </div>
-
-                          {/* AI SUMMARY INSIGHT */}
-                          {v.aiSummary && (
-                            <div style={{ background: 'var(--primary-glow)', padding: '12px 16px', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.825rem', color: 'var(--primary)' }}>
-                              <strong>📝 Summary Insight:</strong> {v.aiSummary}
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                    </div>
-                  );
-                })}
-              </div>
-              <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
-                <button 
-                  onClick={() => setModalType('confirm_clear_video')} 
-                  style={{ 
-                    background: 'transparent', 
-                    border: '1px solid var(--border-color)', 
-                    color: 'var(--text-dim)', 
-                    fontSize: '0.75rem', 
-                    padding: '6px 14px', 
-                    borderRadius: 8, 
-                    cursor: 'pointer',
-                    opacity: 0.6,
-                    transition: 'all 0.2s ease'
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#D32F2F'; e.currentTarget.style.borderColor = 'rgba(211,47,47,0.3)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
-                >
-                  <Trash2 style={{ width: 12, height: 12, display: 'inline-block', marginRight: 4, verticalAlign: 'middle' }} /> Hapus Seluruh Data Sesi Video...
-                </button>
-              </div>
+                <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+                  <button 
+                    onClick={() => setModalType('confirm_clear_video')} 
+                    style={{ 
+                      background: 'transparent', 
+                      border: '1px solid var(--border-color)', 
+                      color: 'var(--text-dim)', 
+                      fontSize: '0.75rem', 
+                      padding: '6px 14px', 
+                      borderRadius: 8, 
+                      cursor: 'pointer',
+                      opacity: 0.6,
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.opacity = 1; e.currentTarget.style.color = '#D32F2F'; e.currentTarget.style.borderColor = 'rgba(211,47,47,0.3)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.opacity = 0.6; e.currentTarget.style.color = 'var(--text-dim)'; e.currentTarget.style.borderColor = 'var(--border-color)'; }}
+                  >
+                    <Trash2 style={{ width: 12, height: 12, display: 'inline-block', marginRight: 4, verticalAlign: 'middle' }} /> Hapus Seluruh Data Sesi Video...
+                  </button>
+                </div>
+              </>
             ) : (
               <div className="glass-card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
                 <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--text-dim)' }}>
-                  <Film style={{ width: 28, height: 28 }} />
-                </div>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Belum Ada Data Shopee Video</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto' }}>
                   Seluruh data sample sebelumnya telah dibersihkan. Gunakan tombol <strong>"Input Shopee Video (2 Foto)"</strong> di pojok kanan atas untuk mengekstrak laporan HP Anda.
                 </p>
