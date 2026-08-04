@@ -2311,17 +2311,11 @@ export default function App() {
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                <label className="btn btn-primary btn-sm" style={{ cursor: 'pointer', gap: 6, margin: 0 }}>
-                  <PlusCircle style={{ width: 14, height: 14 }} />
-                  <span>Upload Overview Performance CSV</span>
-                  <input type="file" accept=".csv, .txt" onChange={(e) => handlePinterestCsvUpload(e, 'overview')} style={{ display: 'none' }} />
-                </label>
-
-                <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer', gap: 6, margin: 0 }}>
-                  <PlusCircle style={{ width: 14, height: 14 }} />
-                  <span>Upload Audience Insights CSV</span>
-                  <input type="file" accept=".csv, .txt" onChange={(e) => handlePinterestCsvUpload(e, 'audience')} style={{ display: 'none' }} />
+              <div>
+                <label className="btn btn-primary" style={{ cursor: 'pointer', gap: 8, margin: 0, padding: '10px 20px', fontSize: '0.875rem' }}>
+                  <PlusCircle style={{ width: 16, height: 16 }} />
+                  <span>Upload Data Pinterest (CSV / Excel)</span>
+                  <input type="file" accept=".csv, .txt" onChange={(e) => handlePinterestCsvUpload(e)} style={{ display: 'none' }} />
                 </label>
               </div>
             </div>
