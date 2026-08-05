@@ -1029,6 +1029,7 @@ export default function App() {
         ...prev,
         opexList: (prev.opexList || []).filter(item => item.id !== id)
       }));
+    }
   };
 
   const handleExportBackupData = () => {
@@ -3595,5 +3596,4 @@ export default function App() {
 
     </div>
   );
-}
 }
