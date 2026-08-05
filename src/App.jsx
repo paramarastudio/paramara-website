@@ -2852,7 +2852,7 @@ export default function App() {
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 740 }}>
             <div className="modal-header">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera style={{ color: 'var(--primary)' }} /> Dual Screenshot Scanner</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ImagePlus style={{ color: 'var(--primary)' }} /> Unggah Dual Screenshot</h3>
               <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
             </div>
 
@@ -2916,7 +2916,7 @@ export default function App() {
                   onClick={handleDualAnalysis}
                   disabled={(!fileSlot1 && !fileSlot2) || scanning}
                 >
-                  <Sparkles /> {scanning ? 'Scanning...' : 'Scan & Ekstrak Data Instan'} ({[fileSlot1, fileSlot2].filter(Boolean).length} Foto)
+                  <Sparkles /> {scanning ? 'Mengekstrak...' : 'Ekstrak Data Instan dari Galeri'} ({[fileSlot1, fileSlot2].filter(Boolean).length} Foto)
                 </button>
               </div>
             )}
@@ -3045,7 +3045,7 @@ export default function App() {
         <div className="modal-overlay active">
           <div className="modal-card" style={{ maxWidth: 740 }}>
             <div className="modal-header">
-              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Camera style={{ color: 'var(--primary)' }} /> Dual Screenshot Video Scanner</h3>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><ImagePlus style={{ color: 'var(--primary)' }} /> Unggah Dual Screenshot Video</h3>
               <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
             </div>
 
@@ -3109,7 +3109,7 @@ export default function App() {
                   onClick={handleVideoDualAnalysis}
                   disabled={(!videoFileSlot1 && !videoFileSlot2) || scanning}
                 >
-                  <Sparkles /> {scanning ? 'Scanning...' : 'Scan & Ekstrak Data Video'} ({[videoFileSlot1, videoFileSlot2].filter(Boolean).length} Foto)
+                  <Sparkles /> {scanning ? 'Mengekstrak...' : 'Ekstrak Data Video dari Galeri'} ({[videoFileSlot1, videoFileSlot2].filter(Boolean).length} Foto)
                 </button>
               </div>
             )}
