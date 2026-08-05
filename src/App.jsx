@@ -191,6 +191,26 @@ export function downloadCsv(filename, rows) {
   document.body.removeChild(link);
 }
 
+// ====== STRICT DEDUPLICATION UTILITY ======
+export function deduplicateSessions(sessions) {
+  if (!Array.isArray(sessions)) return [];
+  const seen = new Set();
+  const result = [];
+  for (const s of sessions) {
+    if (!s) continue;
+    const normTitle = (s.title || '').trim().toLowerCase();
+    const normTime = (s.startTime || s.dateFormatted || '').trim();
+    // Unique key: prefer ID, fallback to Title + StartTime/Date
+    const uniqueKey = s.id ? `id_${s.id}` : `key_${normTitle}_${normTime}`;
+    
+    if (!seen.has(uniqueKey)) {
+      seen.add(uniqueKey);
+      result.push(s);
+    }
+  }
+  return result;
+}
+
 export default function App() {
   // URL-based View Mode State ('public' at '/' vs 'admin' at '/admin')
   const [viewMode, setViewModeState] = useState(() => {
@@ -266,11 +286,16 @@ export default function App() {
 
   
   const [studioData, setStudioData] = useState(() => {
+    let rawData = INITIAL_STUDIO_DATA;
     const saved = localStorage.getItem("paramara_studio_admin_data_v2");
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
+      try { rawData = JSON.parse(saved); } catch (e) {}
     }
-    return INITIAL_STUDIO_DATA;
+    return {
+      ...rawData,
+      shopeeSessions: deduplicateSessions(rawData.shopeeSessions),
+      shopeeVideoSessions: deduplicateSessions(rawData.shopeeVideoSessions)
+    };
   });
   
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -405,8 +430,8 @@ export default function App() {
           setStudioData(prev => ({
             ...prev,
             ...cloudData,
-            shopeeSessions: cloudData.shopeeSessions || prev.shopeeSessions || [],
-            shopeeVideoSessions: cloudData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
+            shopeeSessions: deduplicateSessions(cloudData.shopeeSessions || prev.shopeeSessions || []),
+            shopeeVideoSessions: deduplicateSessions(cloudData.shopeeVideoSessions || prev.shopeeVideoSessions || []),
             clientProjects: cloudData.clientProjects || prev.clientProjects || [],
             liveSchedules: cloudData.liveSchedules || prev.liveSchedules || [],
             capexList: cloudData.capexList || prev.capexList || [],
@@ -444,8 +469,8 @@ export default function App() {
         setStudioData(prev => ({
           ...prev,
           ...remoteData,
-          shopeeSessions: remoteData.shopeeSessions || prev.shopeeSessions || [],
-          shopeeVideoSessions: remoteData.shopeeVideoSessions || prev.shopeeVideoSessions || [],
+          shopeeSessions: deduplicateSessions(remoteData.shopeeSessions || prev.shopeeSessions || []),
+          shopeeVideoSessions: deduplicateSessions(remoteData.shopeeVideoSessions || prev.shopeeVideoSessions || []),
           clientProjects: remoteData.clientProjects || prev.clientProjects || [],
           liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
           capexList: remoteData.capexList || prev.capexList || [],
@@ -820,11 +845,29 @@ export default function App() {
       grossCommission: parseInt(scannedPreview.grossCommission) || 0
     };
 
-    // 1. Immediately Save to Local State so UI updates instantly!
-    setStudioData(prev => ({
-      ...prev,
-      shopeeSessions: [sessionToSave, ...prev.shopeeSessions]
-    }));
+    // 1. Immediately Save to Local State so UI updates instantly (with deduplication)!
+    setStudioData(prev => {
+      const list = prev.shopeeSessions || [];
+      const normTitle = (sessionToSave.title || '').trim().toLowerCase();
+      const normTime = (sessionToSave.startTime || sessionToSave.dateFormatted || '').trim();
+
+      const existingIndex = list.findIndex(s => 
+        s.id === sessionToSave.id ||
+        ((s.title || '').trim().toLowerCase() === normTitle && (s.startTime || s.dateFormatted || '').trim() === normTime)
+      );
+
+      let updatedList = [...list];
+      if (existingIndex >= 0) {
+        updatedList[existingIndex] = { ...updatedList[existingIndex], ...sessionToSave };
+      } else {
+        updatedList.unshift(sessionToSave);
+      }
+
+      return {
+        ...prev,
+        shopeeSessions: deduplicateSessions(updatedList)
+      };
+    });
 
     setScannedPreview(null);
     setFileSlot1(null);
@@ -898,10 +941,28 @@ export default function App() {
       grossCommission: parseInt(scannedVideoPreview.grossCommission) || 0
     };
 
-    setStudioData(prev => ({
-      ...prev,
-      shopeeVideoSessions: [videoToSave, ...(prev.shopeeVideoSessions || [])]
-    }));
+    setStudioData(prev => {
+      const list = prev.shopeeVideoSessions || [];
+      const normTitle = (videoToSave.title || '').trim().toLowerCase();
+      const normTime = (videoToSave.startTime || videoToSave.dateFormatted || '').trim();
+
+      const existingIndex = list.findIndex(v => 
+        v.id === videoToSave.id ||
+        ((v.title || '').trim().toLowerCase() === normTitle && (v.startTime || v.dateFormatted || '').trim() === normTime)
+      );
+
+      let updatedList = [...list];
+      if (existingIndex >= 0) {
+        updatedList[existingIndex] = { ...updatedList[existingIndex], ...videoToSave };
+      } else {
+        updatedList.unshift(videoToSave);
+      }
+
+      return {
+        ...prev,
+        shopeeVideoSessions: deduplicateSessions(updatedList)
+      };
+    });
 
     setScannedVideoPreview(null);
     setVideoFileSlot1(null);
