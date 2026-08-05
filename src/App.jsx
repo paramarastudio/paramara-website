@@ -158,6 +158,39 @@ export function parsePinterestCsv(csvText) {
   return result;
 }
 
+// ====== EXCEL / CSV EXPORTER UTILITY ======
+export function downloadCsv(filename, rows) {
+  if (!rows || !rows.length) return;
+
+  const separator = ',';
+  const keys = Object.keys(rows[0]);
+
+  // Add UTF-8 BOM so Excel opens it automatically with correct character encoding and column separation
+  const csvContent =
+    '\uFEFF' +
+    keys.join(separator) + '\n' +
+    rows.map(row => {
+      return keys.map(k => {
+        let cell = row[k] === null || row[k] === undefined ? '' : row[k].toString();
+        cell = cell.replace(/"/g, '""');
+        if (cell.search(/("|,|\n)/) >= 0) {
+          cell = `"${cell}"`;
+        }
+        return cell;
+      }).join(separator);
+    }).join('\n');
+
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 export default function App() {
   // URL-based View Mode State ('public' at '/' vs 'admin' at '/admin')
   const [viewMode, setViewModeState] = useState(() => {
@@ -1079,6 +1112,80 @@ export default function App() {
     e.target.value = "";
   };
 
+  const handleExportLiveToExcel = () => {
+    if (!sessions || sessions.length === 0) {
+      showToast('Tidak ada data Shopee Live untuk diekspor!', 'error');
+      return;
+    }
+    const rows = sessions.map(s => ({
+      "Judul Sesi": s.title || '-',
+      "Tanggal & Waktu": s.startTime || s.dateFormatted || '-',
+      "Durasi": s.duration || '-',
+      "Penjualan GMV (Rp)": s.revenue || 0,
+      "Komisi Kotor (Rp)": s.grossCommission || 0,
+      "Pesanan": s.totalOrders || 0,
+      "Total Views": s.totalViews || 0,
+      "CTR Klik (%)": s.clickRatePercent || 0,
+      "Penonton Aktif": s.activeViewers || 0,
+      "Masuk Keranjang": s.cartAdditions || 0,
+      "Total Suka": s.likes ?? s.likeCount ?? 0,
+      "Tingkat Konversi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0
+    }));
+    downloadCsv(`Shopee_Live_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    showToast('Data Shopee Live berhasil diekspor ke Excel!');
+  };
+
+  const handleExportVideoToExcel = () => {
+    if (!videoSessions || videoSessions.length === 0) {
+      showToast('Tidak ada data Shopee Video untuk diekspor!', 'error');
+      return;
+    }
+    const rows = videoSessions.map(v => ({
+      "Judul Video": v.title || '-',
+      "Tanggal Waktu": v.startTime || v.dateFormatted || '-',
+      "Durasi": v.duration || '-',
+      "Penjualan GMV (Rp)": v.revenue || 0,
+      "Komisi Kotor (Rp)": v.grossCommission || 0,
+      "Total Pesanan": v.totalOrders || 0,
+      "Produk Terjual": v.productsSold || 0,
+      "Pembeli": v.buyers || 0,
+      "Klik Produk": v.productClicks || 0,
+      "Total Penonton": v.views || 0,
+      "Suka": v.likes || 0,
+      "Komentar": v.comments || 0,
+      "Dibagikan": v.shares || 0,
+      "Tingkat Konversi (%)": v.conversionRatePercent || 0
+    }));
+    downloadCsv(`Shopee_Video_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    showToast('Data Shopee Video berhasil diekspor ke Excel!');
+  };
+
+  const handleExportFinanceToExcel = () => {
+    const capex = (studioData.capexList || []).map(c => ({
+      "Tipe Transaksi": "CAPEX (Belanja Aset)",
+      "Nama Item": c.name,
+      "Kategori": c.category,
+      "Tanggal": c.date,
+      "Siklus": "-",
+      "Nominal (Rp)": c.amount
+    }));
+    const opex = (studioData.opexList || []).map(o => ({
+      "Tipe Transaksi": "OPEX (Operasional)",
+      "Nama Item": o.name,
+      "Kategori": o.category,
+      "Tanggal": o.date || "-",
+      "Siklus": o.frequency,
+      "Nominal (Rp)": o.amount
+    }));
+    const allFinance = [...capex, ...opex];
+    if (allFinance.length === 0) {
+      showToast('Tidak ada data keuangan untuk diekspor!', 'error');
+      return;
+    }
+    downloadCsv(`Laporan_Keuangan_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, allFinance);
+    showToast('Laporan Keuangan berhasil diekspor ke Excel!');
+  };
+
   // =========================================================================
   // VIEW MODE 1: PUBLIC OFFICIAL HOMEPAGE (URL: /)
   // =========================================================================
@@ -1437,24 +1544,42 @@ export default function App() {
 
             {/* CONTEXTUAL ACTION BUTTONS */}
             {activeTab === 'tabShopeeTracker' && (
-              <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-                <Camera style={{ width: 15, height: 15 }} />
-                <span className="btn-label">Input Live (2 Foto)</span>
-              </button>
+              <>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportLiveToExcel}>
+                  <FileText style={{ width: 14, height: 14, color: '#059669' }} />
+                  <span className="btn-label">Ekspor Excel</span>
+                </button>
+                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
+                  <ImagePlus style={{ width: 15, height: 15 }} />
+                  <span className="btn-label">Input Live (2 Foto)</span>
+                </button>
+              </>
             )}
 
             {activeTab === 'tabShopeeVideo' && (
-              <button className="btn btn-primary" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }}>
-                <Film style={{ width: 15, height: 15 }} />
-                <span className="btn-label">Input Video (2 Foto)</span>
-              </button>
+              <>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportVideoToExcel}>
+                  <FileText style={{ width: 14, height: 14, color: '#059669' }} />
+                  <span className="btn-label">Ekspor Excel</span>
+                </button>
+                <button className="btn btn-primary" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }}>
+                  <Film style={{ width: 15, height: 15 }} />
+                  <span className="btn-label">Input Video (2 Foto)</span>
+                </button>
+              </>
             )}
 
             {activeTab === 'tabFinance' && (
-              <button className="btn btn-primary" onClick={() => { setItemName(""); setItemCategory(""); setItemAmount(""); setItemDate(""); setOpexFrequency("Once"); setFinancialType("capex"); setModalType('finance'); }}>
-                <PlusCircle style={{ width: 15, height: 15 }} />
-                <span className="btn-label">Tambah Transaksi</span>
-              </button>
+              <>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportFinanceToExcel}>
+                  <FileText style={{ width: 14, height: 14, color: '#059669' }} />
+                  <span className="btn-label">Ekspor Excel</span>
+                </button>
+                <button className="btn btn-primary" onClick={() => { setItemName(""); setItemCategory(""); setItemAmount(""); setItemDate(""); setOpexFrequency("Once"); setFinancialType("capex"); setModalType('finance'); }}>
+                  <PlusCircle style={{ width: 15, height: 15 }} />
+                  <span className="btn-label">Tambah Transaksi</span>
+                </button>
+              </>
             )}
 
             {activeTab === 'tabPinterest' && (
