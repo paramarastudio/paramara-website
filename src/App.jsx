@@ -1029,7 +1029,8 @@ export default function App() {
         ...prev,
         opexList: (prev.opexList || []).filter(item => item.id !== id)
       }));
-    }
+  };
+
   const handleExportBackupData = () => {
     try {
       const dataStr = JSON.stringify(studioData, null, 2);
