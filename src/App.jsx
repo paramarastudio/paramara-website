@@ -690,7 +690,7 @@ export default function App() {
   const totalGrossCommission = sessions.reduce((acc, s) => acc + (s.grossCommission || 0), 0);
   
   const totalVideoRev = videoSessions.reduce((acc, v) => acc + (v.revenue || 0), 0);
-  const totalGrossVideoCommission = videoSessions.reduce((acc, v) => acc + (v.grossCommission || Math.round((v.revenue || 0) * 0.1)), 0);
+  const totalGrossVideoCommission = videoSessions.reduce((acc, v) => acc + (v.grossCommission || 0), 0);
 
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
 
@@ -1594,7 +1594,7 @@ export default function App() {
                         <div>
                           <strong style={{ fontSize: '0.85rem' }}>{v.title}</strong>
                           <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                            📈 {v.productsSold} Produk Terjual | 💵 Komisi: <strong className="text-warning">Rp {(v.grossCommission || Math.round((v.revenue || 0) * 0.1)).toLocaleString('id-ID')}</strong>
+                            📈 {v.productsSold} Produk Terjual | 💵 Komisi: <strong className="text-warning">Rp {(v.grossCommission || 0).toLocaleString('id-ID')}</strong>
                           </div>
                         </div>
                         <span className="text-success" style={{ fontWeight: 800 }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</span>
