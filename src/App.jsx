@@ -1951,10 +1951,64 @@ export default function App() {
                               </div>
                             </div>
 
-                            <div className="ai-summary-text" style={{ background: 'rgba(184, 142, 57, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--accent-gold-border)', fontSize: '0.85rem' }}>
-                              <Sparkles style={{ width: 14, height: 14, color: 'var(--accent-gold)', verticalAlign: 'middle', marginRight: 6 }} />
-                              {s.aiSummary}
-                            </div>
+                            {/* DETAILED PRODUCTS LIST */}
+                            {s.products && s.products.length > 0 && (
+                              <div>
+                                <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                                  <Briefcase style={{ width: 14, height: 14 }} /> Detail Produk ({s.products.length} Item Terdeteksi):
+                                </h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                  {s.products.map((p, pIdx) => (
+                                    <div key={pIdx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'var(--bg-input)', borderRadius: 8, border: '1px solid var(--border-color)', fontSize: '0.8rem', flexWrap: 'wrap', gap: '8px' }}>
+                                      <div style={{ flex: 1, minWidth: 200 }}>
+                                        <strong style={{ fontSize: '0.85rem', color: 'var(--text-main)' }}>{p.name}</strong>
+                                        {p.price > 0 && (
+                                          <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                                            Harga Katalog: Rp {p.price.toLocaleString('id-ID')}
+                                          </div>
+                                        )}
+                                      </div>
+                                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                        <div>
+                                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>Penjualan (GMV)</span>
+                                          <strong style={{ color: '#059669', fontSize: '0.85rem' }}>Rp {(p.revenue || 0).toLocaleString('id-ID')}</strong>
+                                        </div>
+                                        <div>
+                                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>Klik</span>
+                                          <strong>{p.clicks || 0}</strong>
+                                        </div>
+                                        <div>
+                                          <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block' }}>Masuk Keranjang</span>
+                                          <strong style={{ color: 'var(--primary)' }}>{p.cartAdds || 0} item</strong>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* TRAFFIC SOURCES */}
+                            {s.trafficSources && s.trafficSources.length > 0 && (
+                              <div>
+                                <h4 style={{ fontSize: '0.85rem', color: 'var(--primary)', marginBottom: 8, fontWeight: 700 }}>Sumber Traffic Utama:</h4>
+                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                  {s.trafficSources.map((t, tIdx) => (
+                                    <div key={tIdx} style={{ background: 'var(--bg-input)', padding: '6px 12px', borderRadius: 6, border: '1px solid var(--border-color)', fontSize: '0.775rem' }}>
+                                      <span style={{ color: 'var(--text-dim)' }}>{t.name}: </span>
+                                      <strong style={{ color: 'var(--primary)' }}>{t.percent}%</strong>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {s.aiSummary && (
+                              <div className="ai-summary-text" style={{ background: 'rgba(184, 142, 57, 0.06)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--accent-gold-border)', fontSize: '0.85rem' }}>
+                                <Sparkles style={{ width: 14, height: 14, color: 'var(--accent-gold)', verticalAlign: 'middle', marginRight: 6 }} />
+                                {s.aiSummary}
+                              </div>
+                            )}
                           </div>
                         )}
 
@@ -3140,9 +3194,16 @@ export default function App() {
                   </div>
                 </div>
                 <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: 6 }}>AI Vision Membaca Foto Screenshot...</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
                   Mengekstrak GMV, pesanan, CTR & produk terjual secara instan tanpa menunggu upload cloud.
                 </p>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', margin: '0 auto' }}
+                  onClick={() => { setModalType(null); showToast('⚡ Pemindaian AI berjalan di latar belakang...', 'info'); }}
+                >
+                  <PanelLeftClose style={{ width: 15, height: 15 }} /> Lanjutkan di Latar Belakang
+                </button>
               </div>
             )}
 
@@ -3343,9 +3404,16 @@ export default function App() {
                   </div>
                 </div>
                 <h3 style={{ fontSize: '1.2rem', color: 'var(--primary)', marginBottom: 6 }}>AI Vision Membaca Foto Screenshot Video...</h3>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.5rem' }}>
                   Mengekstrak GMV, produk terjual, klik & interaksi video secara instan.
                 </p>
+                <button 
+                  className="btn btn-secondary" 
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', margin: '0 auto' }}
+                  onClick={() => { setModalType(null); showToast('⚡ Pemindaian AI Video berjalan di latar belakang...', 'info'); }}
+                >
+                  <PanelLeftClose style={{ width: 15, height: 15 }} /> Lanjutkan di Latar Belakang
+                </button>
               </div>
             )}
 
