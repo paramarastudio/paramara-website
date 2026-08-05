@@ -3314,7 +3314,127 @@ export default function App() {
               </div>
             </div>
 
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveEditedSession}>
+            {/* EDITABLE PRODUCTS LIST SECTION */}
+            <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <label className="form-label" style={{ fontWeight: 800, color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <Briefcase style={{ width: 15, height: 15 }} /> Detail Produk Terjual & Masuk Keranjang ({ (editingSession.products || []).length } Item)
+                </label>
+
+                <button 
+                  type="button" 
+                  className="btn btn-secondary btn-sm" 
+                  style={{ gap: 4, padding: '4px 10px', fontSize: '0.75rem' }}
+                  onClick={() => {
+                    const newProds = [...(editingSession.products || []), { name: "Produk Baru", price: 0, revenue: 0, clicks: 0, cartAdds: 0 }];
+                    setEditingSession({ ...editingSession, products: newProds });
+                  }}
+                >
+                  <PlusCircle style={{ width: 13, height: 13 }} /> + Tambah Produk
+                </button>
+              </div>
+
+              {editingSession.products && editingSession.products.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', maxHeight: 240, overflowY: 'auto', paddingRight: 4 }}>
+                  {editingSession.products.map((prod, idx) => (
+                    <div key={idx} style={{ background: 'var(--bg-input)', padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input 
+                          className="form-input" 
+                          style={{ flex: 1, fontSize: '0.8rem', fontWeight: 700 }} 
+                          placeholder="Nama Produk"
+                          value={prod.name || ''} 
+                          onChange={e => {
+                            const updated = [...editingSession.products];
+                            updated[idx] = { ...prod, name: e.target.value };
+                            setEditingSession({ ...editingSession, products: updated });
+                          }} 
+                        />
+                        <button 
+                          type="button" 
+                          className="btn btn-sm btn-secondary" 
+                          style={{ color: '#D32F2F', padding: '6px 8px' }}
+                          onClick={() => {
+                            const updated = editingSession.products.filter((_, i) => i !== idx);
+                            setEditingSession({ ...editingSession, products: updated });
+                          }}
+                        >
+                          <Trash2 style={{ width: 13, height: 13 }} />
+                        </button>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px', fontSize: '0.75rem' }}>
+                        <div>
+                          <label style={{ fontSize: '0.675rem', color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Harga Katalog (Rp)</label>
+                          <input 
+                            className="form-input" 
+                            type="number" 
+                            style={{ fontSize: '0.75rem', padding: '4px 6px' }}
+                            value={prod.price || ''} 
+                            onChange={e => {
+                              const updated = [...editingSession.products];
+                              updated[idx] = { ...prod, price: parseInt(e.target.value) || 0 };
+                              setEditingSession({ ...editingSession, products: updated });
+                            }} 
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.675rem', color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>GMV Penjualan (Rp)</label>
+                          <input 
+                            className="form-input" 
+                            type="number" 
+                            style={{ fontSize: '0.75rem', padding: '4px 6px', fontWeight: 700, color: '#059669' }}
+                            value={prod.revenue || ''} 
+                            onChange={e => {
+                              const updated = [...editingSession.products];
+                              updated[idx] = { ...prod, revenue: parseInt(e.target.value) || 0 };
+                              setEditingSession({ ...editingSession, products: updated });
+                            }} 
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.675rem', color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Klik</label>
+                          <input 
+                            className="form-input" 
+                            type="number" 
+                            style={{ fontSize: '0.75rem', padding: '4px 6px' }}
+                            value={prod.clicks || ''} 
+                            onChange={e => {
+                              const updated = [...editingSession.products];
+                              updated[idx] = { ...prod, clicks: parseInt(e.target.value) || 0 };
+                              setEditingSession({ ...editingSession, products: updated });
+                            }} 
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ fontSize: '0.675rem', color: 'var(--text-dim)', display: 'block', marginBottom: 2 }}>Masuk Keranjang</label>
+                          <input 
+                            className="form-input" 
+                            type="number" 
+                            style={{ fontSize: '0.75rem', padding: '4px 6px', fontWeight: 700, color: 'var(--primary)' }}
+                            value={prod.cartAdds || ''} 
+                            onChange={e => {
+                              const updated = [...editingSession.products];
+                              updated[idx] = { ...prod, cartAdds: parseInt(e.target.value) || 0 };
+                              setEditingSession({ ...editingSession, products: updated });
+                            }} 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: '1rem', background: 'var(--bg-input)', borderRadius: 8, fontSize: '0.775rem', color: 'var(--text-dim)', textAlign: 'center' }}>
+                  Belum ada item produk terdaftar. Klik "+ Tambah Produk" di atas untuk menambahkan.
+                </div>
+              )}
+            </div>
+
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem' }} onClick={handleSaveEditedSession}>
               <Save /> Simpan Perubahan Data Sesi
             </button>
           </div>
