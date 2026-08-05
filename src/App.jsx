@@ -1821,10 +1821,8 @@ export default function App() {
                             <div>
                               <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>Interaksi & Traffic:</h4>
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                                <div>Total Suka: <strong>{s.likeCount || 0}</strong></div>
-                                <div>Tingkat Konversi: <strong>{s.conversionRatePercent || 0}%</strong></div>
-                                <div>Rata-rata Menonton: <strong>{s.avgWatchTime}</strong></div>
-                                <div>Dua Menonton: <strong>{s.viewers2Min || 0} orang</strong></div>
+                                <div>Total Suka: <strong>{(s.likes ?? s.likeCount ?? 0).toLocaleString('id-ID')}</strong></div>
+                                <div>Tingkat Konversi: <strong>{s.ordersPerClickPercent ?? s.conversionRatePercent ?? s.clickRatePercent ?? 0}%</strong></div>
                               </div>
                             </div>
 
@@ -3117,6 +3115,16 @@ export default function App() {
               <div className="form-group">
                 <label className="form-label">Masuk Keranjang</label>
                 <input className="form-input" type="number" value={editingSession.cartAdditions || 5} onChange={e => setEditingSession({ ...editingSession, cartAdditions: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Total Suka</label>
+                <input className="form-input" type="number" value={editingSession.likes ?? editingSession.likeCount ?? 0} onChange={e => setEditingSession({ ...editingSession, likes: parseInt(e.target.value) || 0, likeCount: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Tingkat Konversi (%)</label>
+                <input className="form-input" type="number" step="0.1" value={editingSession.ordersPerClickPercent ?? editingSession.conversionRatePercent ?? 0} onChange={e => setEditingSession({ ...editingSession, ordersPerClickPercent: parseFloat(e.target.value) || 0, conversionRatePercent: parseFloat(e.target.value) || 0 })} />
               </div>
             </div>
 
