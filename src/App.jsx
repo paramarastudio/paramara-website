@@ -1030,6 +1030,51 @@ export default function App() {
         opexList: (prev.opexList || []).filter(item => item.id !== id)
       }));
     }
+  const handleExportBackupData = () => {
+    try {
+      const dataStr = JSON.stringify(studioData, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `paramara_studio_backup_${new Date().toISOString().slice(0, 10)}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
+      showToast('Seluruh data berhasil diekspor & diunduh!');
+    } catch (err) {
+      showToast('Gagal mengekspor data: ' + err.message, 'error');
+    }
+  };
+
+  const handleImportBackupData = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!confirm("Apakah Anda yakin ingin menimpa seluruh data saat ini dengan file cadangan ini? Data lama Anda akan digantikan sepenuhnya.")) {
+      e.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const parsed = JSON.parse(evt.target.result);
+        
+        if (!parsed.shopeeSessions && !parsed.shopeeVideoSessions && !parsed.clientProjects) {
+          showToast('File backup tidak valid!', 'error');
+          return;
+        }
+
+        setStudioData(parsed);
+        showToast('Seluruh data berhasil dipulihkan dari file cadangan!');
+      } catch (err) {
+        showToast('Gagal membaca file backup: ' + err.message, 'error');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
   };
 
   // =========================================================================
@@ -1891,6 +1936,46 @@ export default function App() {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* BACKUP & RESTORE DATA SECTION */}
+            <div className="glass-card" style={{ padding: '1.5rem', marginTop: '1.5rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: 800 }}>
+                    <Cloud style={{ color: 'var(--primary)', width: 18, height: 18 }} /> Backup & Keamanan Sinkronisasi Data Studio
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                    Seluruh data Anda otomatis tersinkronisasi dua arah secara real-time ke **Firebase Cloud Database** dan tersimpan di **Local Storage Browser** Anda secara aman. 
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                <div style={{ flex: 1, minWidth: 260 }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Unduh Cadangan Manual (Offline Backup)</span>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.5 }}>
+                    Unduh seluruh basis data Paramara Studio (.json) langsung ke komputer Anda sebagai cadangan ekstra offline.
+                  </p>
+                  <button className="btn btn-secondary btn-sm" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }} onClick={handleExportBackupData}>
+                    <Save style={{ width: 14, height: 14 }} /> Ekspor & Unduh Data (.json)
+                  </button>
+                </div>
+
+                <div style={{ width: 1, background: 'var(--border-color)', alignSelf: 'stretch' }}></div>
+
+                <div style={{ flex: 1, minWidth: 260 }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Pulihkan Data dari File Cadangan (Restore Backup)</span>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.5 }}>
+                    Unggah file JSON cadangan yang telah Anda unduh sebelumnya untuk memulihkan seluruh data secara instan.
+                  </p>
+                  <label className="btn btn-secondary btn-sm" style={{ marginTop: '0.75rem', display: 'inline-flex', alignItems: 'center', gap: 6, cursor: 'pointer', margin: 0 }}>
+                    <Cloud style={{ width: 14, height: 14 }} />
+                    <span>Pilih File & Impor Data (.json)</span>
+                    <input type="file" accept=".json" onChange={handleImportBackupData} style={{ display: 'none' }} />
+                  </label>
+                </div>
+              </div>
             </div>
 
           </div>
