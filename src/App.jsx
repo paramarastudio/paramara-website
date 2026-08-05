@@ -254,6 +254,7 @@ export default function App() {
   const [editingSession, setEditingSession] = useState(null);
   const [editingVideoSession, setEditingVideoSession] = useState(null);
   const [editingAdminUser, setEditingAdminUser] = useState(null);
+  const [editingFinanceItem, setEditingFinanceItem] = useState(null);
   
   // Multi-Step Upload & Scan State
   const [scanning, setScanning] = useState(false);
@@ -951,6 +952,66 @@ export default function App() {
     setOpexFrequency("Once");
     setModalType(null);
     showToast('Transaksi keuangan berhasil ditambahkan!');
+  };
+
+  const handleStartEditCapex = (item) => {
+    setEditingFinanceItem({ ...item, type: 'capex' });
+    setItemName(item.name);
+    setItemCategory(item.category);
+    setItemAmount(item.amount.toString());
+    setItemDate(item.date);
+    setOpexFrequency(item.frequency || "Once");
+    setFinancialType('capex');
+    setModalType('edit_finance');
+  };
+
+  const handleStartEditOpex = (item) => {
+    setEditingFinanceItem({ ...item, type: 'opex' });
+    setItemName(item.name);
+    setItemCategory(item.category);
+    setItemAmount(item.amount.toString());
+    setItemDate(item.date || "");
+    setOpexFrequency(item.frequency);
+    setFinancialType('opex');
+    setModalType('edit_finance');
+  };
+
+  const handleSaveEditFinancialItem = (e) => {
+    e.preventDefault();
+    if (!itemName || !itemAmount) {
+      showToast('Nama Item dan Jumlah harus diisi!', 'error');
+      return;
+    }
+
+    const updatedItem = {
+      ...editingFinanceItem,
+      name: itemName.trim(),
+      category: itemCategory.trim() || "Umum",
+      amount: parseInt(itemAmount) || 0,
+      date: itemDate || new Date().toISOString().split('T')[0],
+      frequency: opexFrequency
+    };
+
+    if (editingFinanceItem.type === 'capex') {
+      setStudioData(prev => ({
+        ...prev,
+        capexList: (prev.capexList || []).map(item => item.id === editingFinanceItem.id ? updatedItem : item)
+      }));
+    } else {
+      setStudioData(prev => ({
+        ...prev,
+        opexList: (prev.opexList || []).map(item => item.id === editingFinanceItem.id ? updatedItem : item)
+      }));
+    }
+
+    setItemName("");
+    setItemCategory("");
+    setItemAmount("");
+    setItemDate("");
+    setOpexFrequency("Once");
+    setEditingFinanceItem(null);
+    setModalType(null);
+    showToast('Transaksi keuangan berhasil diperbarui!');
   };
 
   const handleDeleteCapex = (id) => {
@@ -2203,9 +2264,14 @@ export default function App() {
                             <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{c.date}</td>
                             <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>Rp {c.amount.toLocaleString('id-ID')}</td>
                             <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteCapex(c.id)}>
-                                <Trash2 style={{ width: 13, height: 13 }} />
-                              </button>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditCapex(c)}>
+                                  <Edit3 style={{ width: 13, height: 13 }} />
+                                </button>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteCapex(c.id)}>
+                                  <Trash2 style={{ width: 13, height: 13 }} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -2248,9 +2314,14 @@ export default function App() {
                             <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{o.frequency}</td>
                             <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#D32F2F' }}>Rp {o.amount.toLocaleString('id-ID')}</td>
                             <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOpex(o.id)}>
-                                <Trash2 style={{ width: 13, height: 13 }} />
-                              </button>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditOpex(o)}>
+                                  <Edit3 style={{ width: 13, height: 13 }} />
+                                </button>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOpex(o.id)}>
+                                  <Trash2 style={{ width: 13, height: 13 }} />
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))
@@ -3275,6 +3346,84 @@ export default function App() {
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px' }}>
                 <CheckCircle /> Simpan Transaksi Keuangan
+              </button>
+
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: EDIT TRANSAKSI KEUANGAN */}
+      {modalType === 'edit_finance' && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 520 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Edit3 style={{ color: 'var(--primary)' }} /> Edit Transaksi Keuangan</h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={handleSaveEditFinancialItem}>
+              
+              <div className="form-group">
+                <label className="form-label">Nama Transaksi / Item</label>
+                <input 
+                  className="form-input" 
+                  value={itemName} 
+                  onChange={e => setItemName(e.target.value)} 
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Kategori</label>
+                  <input 
+                    className="form-input" 
+                    value={itemCategory} 
+                    onChange={e => setItemCategory(e.target.value)} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Jumlah Nominal (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    value={itemAmount} 
+                    onChange={e => setItemAmount(e.target.value)} 
+                    required 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Tanggal Transaksi</label>
+                  <input 
+                    className="form-input" 
+                    type="date" 
+                    value={itemDate} 
+                    onChange={e => setItemDate(e.target.value)} 
+                  />
+                </div>
+                
+                {financialType === 'opex' && (
+                  <div className="form-group">
+                    <label className="form-label">Frekuensi Biaya</label>
+                    <select 
+                      className="form-select" 
+                      value={opexFrequency} 
+                      onChange={e => setOpexFrequency(e.target.value)}
+                    >
+                      <option value="Once">Sekali Pengeluaran</option>
+                      <option value="Monthly">Bulanan (Monthly)</option>
+                      <option value="Yearly">Tahunan (Yearly)</option>
+                    </select>
+                  </div>
+                )}
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px' }}>
+                <CheckCircle /> Perbarui Transaksi Keuangan
               </button>
 
             </form>
