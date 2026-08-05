@@ -1953,6 +1953,9 @@ export default function App() {
             ) : (
               <div className="glass-card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
                 <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'var(--bg-input)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--text-dim)' }}>
+                  <Film style={{ width: 28, height: 28 }} />
+                </div>
+                <h3 style={{ fontSize: '1.2rem', marginBottom: 6 }}>Belum Ada Data Shopee Video</h3>
                 <p style={{ fontSize: '0.875rem', color: 'var(--text-muted)', maxWidth: 480, margin: '0 auto' }}>
                   Seluruh data sample sebelumnya telah dibersihkan. Gunakan tombol <strong>"Input Shopee Video (2 Foto)"</strong> di pojok kanan atas untuk mengekstrak laporan HP Anda.
                 </p>
