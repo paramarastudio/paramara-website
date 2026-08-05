@@ -767,7 +767,7 @@ export default function App() {
 
     try {
       // Analyze INSTANTLY with Gemini Vision AI via Vercel serverless proxy
-      // Komisi kotor dikosongkan agar user memasukkan angka komisi secara manual
+      const result = await analyzeShopeeScreenshots(filesToProcess);
       result.grossCommission = "";
 
       setScannedPreview(result);
