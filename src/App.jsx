@@ -1117,22 +1117,54 @@ export default function App() {
       showToast('Tidak ada data Shopee Live untuk diekspor!', 'error');
       return;
     }
-    const rows = sessions.map(s => ({
-      "Judul Sesi": s.title || '-',
-      "Tanggal & Waktu": s.startTime || s.dateFormatted || '-',
-      "Durasi": s.duration || '-',
-      "Penjualan GMV (Rp)": s.revenue || 0,
-      "Komisi Kotor (Rp)": s.grossCommission || 0,
-      "Pesanan": s.totalOrders || 0,
-      "Total Views": s.totalViews || 0,
-      "CTR Klik (%)": s.clickRatePercent || 0,
-      "Penonton Aktif": s.activeViewers || 0,
-      "Masuk Keranjang": s.cartAdditions || 0,
-      "Total Suka": s.likes ?? s.likeCount ?? 0,
-      "Tingkat Konversi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0
-    }));
-    downloadCsv(`Shopee_Live_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, rows);
-    showToast('Data Shopee Live berhasil diekspor ke Excel!');
+    const rows = [];
+    sessions.forEach(s => {
+      if (s.products && s.products.length > 0) {
+        s.products.forEach(p => {
+          rows.push({
+            "Judul Sesi": s.title || '-',
+            "Tanggal & Waktu": s.startTime || s.dateFormatted || '-',
+            "Durasi Sesi": s.duration || '-',
+            "GMV Sesi (Rp)": s.revenue || 0,
+            "Komisi Kotor (Rp)": s.grossCommission || 0,
+            "Total Pesanan Sesi": s.totalOrders || 0,
+            "Total Views": s.totalViews || 0,
+            "CTR Klik Sesi (%)": s.clickRatePercent || 0,
+            "Penonton Aktif": s.activeViewers || 0,
+            "Keranjang Sesi": s.cartAdditions || 0,
+            "Total Suka": s.likes ?? s.likeCount ?? 0,
+            "Konversi Sesi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0,
+            "Nama Produk": p.name || '-',
+            "Harga Katalog (Rp)": p.price || 0,
+            "GMV Produk (Rp)": p.revenue || 0,
+            "Klik Produk": p.clicks || 0,
+            "Masuk Keranjang (Produk)": p.cartAdds || 0
+          });
+        });
+      } else {
+        rows.push({
+          "Judul Sesi": s.title || '-',
+          "Tanggal & Waktu": s.startTime || s.dateFormatted || '-',
+          "Durasi Sesi": s.duration || '-',
+          "GMV Sesi (Rp)": s.revenue || 0,
+          "Komisi Kotor (Rp)": s.grossCommission || 0,
+          "Total Pesanan Sesi": s.totalOrders || 0,
+          "Total Views": s.totalViews || 0,
+          "CTR Klik Sesi (%)": s.clickRatePercent || 0,
+          "Penonton Aktif": s.activeViewers || 0,
+          "Keranjang Sesi": s.cartAdditions || 0,
+          "Total Suka": s.likes ?? s.likeCount ?? 0,
+          "Konversi Sesi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0,
+          "Nama Produk": '-',
+          "Harga Katalog (Rp)": 0,
+          "GMV Produk (Rp)": 0,
+          "Klik Produk": 0,
+          "Masuk Keranjang (Produk)": 0
+        });
+      }
+    });
+    downloadCsv(`Shopee_Live_Detail_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    showToast('Data Detail Shopee Live berhasil diekspor ke Excel!');
   };
 
   const handleExportVideoToExcel = () => {
@@ -1544,16 +1576,10 @@ export default function App() {
 
             {/* CONTEXTUAL ACTION BUTTONS */}
             {activeTab === 'tabShopeeTracker' && (
-              <>
-                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportLiveToExcel}>
-                  <FileText style={{ width: 14, height: 14, color: '#059669' }} />
-                  <span className="btn-label">Ekspor Excel</span>
-                </button>
-                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-                  <ImagePlus style={{ width: 15, height: 15 }} />
-                  <span className="btn-label">Input Live (2 Foto)</span>
-                </button>
-              </>
+              <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
+                <ImagePlus style={{ width: 15, height: 15 }} />
+                <span className="btn-label">Input Live (2 Foto)</span>
+              </button>
             )}
 
             {activeTab === 'tabShopeeVideo' && (
@@ -2016,7 +2042,29 @@ export default function App() {
                     );
                   })}
                 </div>
-                <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)' }}>
+                <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                  <button 
+                    onClick={handleExportLiveToExcel} 
+                    style={{ 
+                      background: 'rgba(5, 150, 105, 0.08)', 
+                      border: '1px solid rgba(5, 150, 105, 0.25)', 
+                      color: '#059669', 
+                      fontSize: '0.775rem', 
+                      fontWeight: 700,
+                      padding: '8px 16px', 
+                      borderRadius: 8, 
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = '#ffffff'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = 'rgba(5, 150, 105, 0.08)'; e.currentTarget.style.color = '#059669'; }}
+                  >
+                    <FileText style={{ width: 14, height: 14 }} /> Ekspor Laporan Lengkap (.xlsx / .csv)
+                  </button>
+
                   <button 
                     onClick={() => setModalType('confirm_clear_live')} 
                     style={{ 
@@ -2024,7 +2072,7 @@ export default function App() {
                       border: '1px solid var(--border-color)', 
                       color: 'var(--text-dim)', 
                       fontSize: '0.75rem', 
-                      padding: '6px 14px', 
+                      padding: '8px 14px', 
                       borderRadius: 8, 
                       cursor: 'pointer',
                       opacity: 0.6,
