@@ -1178,54 +1178,67 @@ export default function App() {
       showToast('Tidak ada data Shopee Live untuk diekspor!', 'error');
       return;
     }
+
+    // Deduplicate sessions so each live session appears exactly once (1 Row / Session)
+    const uniqueSessions = deduplicateSessions(sessions);
+
+    const rows = uniqueSessions.map(s => {
+      const productSummaryList = (s.products || [])
+        .map(p => `${p.name} (GMV: Rp${(p.revenue||0).toLocaleString('id-ID')}, Keranjang: ${p.cartAdds||0})`)
+        .join(' | ');
+
+      return {
+        "Judul Sesi": s.title || '-',
+        "Tanggal & Waktu": s.startTime || s.dateFormatted || '-',
+        "Durasi Sesi": s.duration || '-',
+        "Penjualan GMV (Rp)": s.revenue || 0,
+        "Komisi Kotor (Rp)": s.grossCommission || 0,
+        "Total Pesanan": s.totalOrders || 0,
+        "Total Views": s.totalViews || 0,
+        "CTR Klik (%)": s.clickRatePercent || 0,
+        "Penonton Aktif": s.activeViewers || 0,
+        "Masuk Keranjang": s.cartAdditions || 0,
+        "Total Suka": s.likes ?? s.likeCount ?? 0,
+        "Tingkat Konversi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0,
+        "Rincian Produk Terjual": productSummaryList || '-'
+      };
+    });
+
+    downloadCsv(`Shopee_Live_Summary_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    showToast('Ringkasan Sesi Live (1 Baris / Sesi) berhasil diekspor ke Excel!');
+  };
+
+  const handleExportLiveProductsToExcel = () => {
+    if (!sessions || sessions.length === 0) {
+      showToast('Tidak ada data Shopee Live untuk diekspor!', 'error');
+      return;
+    }
+
+    const uniqueSessions = deduplicateSessions(sessions);
     const rows = [];
-    sessions.forEach(s => {
+    uniqueSessions.forEach(s => {
       if (s.products && s.products.length > 0) {
         s.products.forEach(p => {
           rows.push({
             "Judul Sesi": s.title || '-',
             "Tanggal & Waktu": s.startTime || s.dateFormatted || '-',
-            "Durasi Sesi": s.duration || '-',
-            "GMV Sesi (Rp)": s.revenue || 0,
-            "Komisi Kotor (Rp)": s.grossCommission || 0,
-            "Total Pesanan Sesi": s.totalOrders || 0,
-            "Total Views": s.totalViews || 0,
-            "CTR Klik Sesi (%)": s.clickRatePercent || 0,
-            "Penonton Aktif": s.activeViewers || 0,
-            "Keranjang Sesi": s.cartAdditions || 0,
-            "Total Suka": s.likes ?? s.likeCount ?? 0,
-            "Konversi Sesi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0,
             "Nama Produk": p.name || '-',
             "Harga Katalog (Rp)": p.price || 0,
             "GMV Produk (Rp)": p.revenue || 0,
             "Klik Produk": p.clicks || 0,
-            "Masuk Keranjang (Produk)": p.cartAdds || 0
+            "Masuk Keranjang": p.cartAdds || 0
           });
-        });
-      } else {
-        rows.push({
-          "Judul Sesi": s.title || '-',
-          "Tanggal & Waktu": s.startTime || s.dateFormatted || '-',
-          "Durasi Sesi": s.duration || '-',
-          "GMV Sesi (Rp)": s.revenue || 0,
-          "Komisi Kotor (Rp)": s.grossCommission || 0,
-          "Total Pesanan Sesi": s.totalOrders || 0,
-          "Total Views": s.totalViews || 0,
-          "CTR Klik Sesi (%)": s.clickRatePercent || 0,
-          "Penonton Aktif": s.activeViewers || 0,
-          "Keranjang Sesi": s.cartAdditions || 0,
-          "Total Suka": s.likes ?? s.likeCount ?? 0,
-          "Konversi Sesi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0,
-          "Nama Produk": '-',
-          "Harga Katalog (Rp)": 0,
-          "GMV Produk (Rp)": 0,
-          "Klik Produk": 0,
-          "Masuk Keranjang (Produk)": 0
         });
       }
     });
-    downloadCsv(`Shopee_Live_Detail_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, rows);
-    showToast('Data Detail Shopee Live berhasil diekspor ke Excel!');
+
+    if (rows.length === 0) {
+      showToast('Belum ada rincian produk terdaftar di sesi live!', 'error');
+      return;
+    }
+
+    downloadCsv(`Shopee_Live_Detail_Produk_${new Date().toISOString().slice(0, 10)}.csv`, rows);
+    showToast('Rincian Detail Produk berhasil diekspor ke Excel!');
   };
 
   const handleExportVideoToExcel = () => {
@@ -2103,7 +2116,7 @@ export default function App() {
                     );
                   })}
                 </div>
-                <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem', flexWrap: 'wrap' }}>
+                <div style={{ textAlign: 'center', marginTop: '2rem', paddingTop: '1.25rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
                   <button 
                     onClick={handleExportLiveToExcel} 
                     style={{ 
@@ -2123,7 +2136,29 @@ export default function App() {
                     onMouseEnter={e => { e.currentTarget.style.background = '#059669'; e.currentTarget.style.color = '#ffffff'; }}
                     onMouseLeave={e => { e.currentTarget.style.background = 'rgba(5, 150, 105, 0.08)'; e.currentTarget.style.color = '#059669'; }}
                   >
-                    <FileText style={{ width: 14, height: 14 }} /> Ekspor Laporan Lengkap (.xlsx / .csv)
+                    <FileText style={{ width: 14, height: 14 }} /> Ekspor Ringkasan Live (1 Baris / Sesi)
+                  </button>
+
+                  <button 
+                    onClick={handleExportLiveProductsToExcel} 
+                    style={{ 
+                      background: 'var(--bg-input)', 
+                      border: '1px solid var(--border-color)', 
+                      color: 'var(--text-main)', 
+                      fontSize: '0.775rem', 
+                      fontWeight: 600,
+                      padding: '8px 16px', 
+                      borderRadius: 8, 
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      transition: 'all 0.2s ease'
+                    }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--primary)'; e.currentTarget.style.color = 'var(--primary)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border-color)'; e.currentTarget.style.color = 'var(--text-main)'; }}
+                  >
+                    <Briefcase style={{ width: 14, height: 14 }} /> Ekspor Detail Produk (.csv)
                   </button>
 
                   <button 
