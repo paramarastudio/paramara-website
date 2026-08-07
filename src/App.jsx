@@ -4067,7 +4067,7 @@ export default function App() {
                 <li>Masuk ke tab <strong>Manajemen Admin</strong> di menu sidebar kiri.</li>
                 <li>Scroll ke kartu Backup lalu klik <strong>💾 Cadangkan Seluruh Data (.json)</strong>.</li>
                 <li>Kirim file <code>.json</code> tersebut ke HP baru ini (via WhatsApp / Email / Drive).</li>
-                <li>Di <strong>HP Baru ini</strong>, buka tab <strong>Manajemen Admin</strong> -> Klik <strong>📥 Pulihkan Data dari Backup (.json)</strong> dan pilih file tadi. Seluruh data akan langsung muncul 100%!</li>
+                <li>Di <strong>HP Baru ini</strong>, buka tab <strong>Manajemen Admin</strong> &rarr; Klik <strong>📥 Pulihkan Data dari Backup (.json)</strong> dan pilih file tadi. Seluruh data akan langsung muncul 100%!</li>
               </ol>
 
               <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '10px' }} onClick={() => setModalType(null)}>

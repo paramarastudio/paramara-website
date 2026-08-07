@@ -89,6 +89,8 @@ export async function fetchSessionsFromSupabase() {
     console.warn("Supabase DB Fetch Exception:", err.message);
     return null;
   }
+}
+
 /**
  * Save full studioData state to Supabase table 'studio_data'
  */
