@@ -12,6 +12,7 @@ import {
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
 import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots } from './services/geminiService';
 import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage, saveStudioDataToFirestore, loadStudioDataFromFirestore, subscribeToStudioData, isFirebaseConfigured } from './services/firebaseService';
+import { isSupabaseConfigured, loadStudioDataFromSupabase, saveStudioDataToSupabase, subscribeToStudioDataSupabase, uploadScreenshotToSupabase, saveSessionToSupabase } from './services/supabaseService';
 import { remoteLog } from './services/remoteLogger';
 
 // ====== PINTEREST CSV / EXCEL EXPORT PARSER ======
@@ -401,25 +402,28 @@ export default function App() {
   // Track when we last saved to prevent onSnapshot echo loop
   const lastSaveTimestamp = useRef(null);
 
-  // 1. On mount: Load from Firestore (if configured), then subscribe to real-time updates
+  // 1. On mount: Load from Supabase/Firestore (if configured), then subscribe to real-time updates
   useEffect(() => {
-    if (!isFirebaseConfigured) {
+    const isCloudConfigured = isSupabaseConfigured || isFirebaseConfigured;
+    if (!isCloudConfigured) {
       setCloudSyncStatus('offline');
       isInitialLoad.current = false;
-      remoteLog.warn('Firebase not configured — running in Local Only mode');
+      remoteLog.warn('No cloud provider configured — running in Local Only mode');
       return;
     }
 
     let unsubscribe = null;
     let isMounted = true;
 
-    async function initFirestoreSync() {
+    async function initCloudSync() {
       setCloudSyncStatus('syncing');
 
       try {
-        // Race between Firestore load and a 5-second timeout
+        const loadFn = isSupabaseConfigured ? loadStudioDataFromSupabase : loadStudioDataFromFirestore;
+        const saveFn = isSupabaseConfigured ? saveStudioDataToSupabase : saveStudioDataToFirestore;
+
         const cloudData = await Promise.race([
-          loadStudioDataFromFirestore(),
+          loadFn(),
           new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 5000))
         ]);
 
@@ -439,28 +443,27 @@ export default function App() {
             adminUsers: cloudData.adminUsers || prev.adminUsers || [],
           }));
           setCloudSyncStatus('synced');
-          remoteLog.info('Firestore initial sync: loaded cloud data', { sessions: (cloudData.shopeeSessions||[]).length, videos: (cloudData.shopeeVideoSessions||[]).length });
+          remoteLog.info('Cloud initial sync: loaded remote data');
         } else {
-          // No cloud data yet — push current localStorage data to Firestore
           const localData = JSON.parse(localStorage.getItem("paramara_studio_admin_data_v2") || "null");
           if (localData) {
             lastSaveTimestamp.current = Date.now();
-            await saveStudioDataToFirestore(localData);
+            await saveFn(localData);
           }
           if (isMounted) setCloudSyncStatus('synced');
         }
       } catch (err) {
-        remoteLog.error('Firestore init sync failed', { error: err.message });
+        remoteLog.error('Cloud init sync failed', { error: err.message });
         if (isMounted) setCloudSyncStatus('offline');
       }
 
       isInitialLoad.current = false;
 
       // Subscribe to real-time updates from other devices
-      unsubscribe = subscribeToStudioData((remoteData) => {
+      const subscribeFn = isSupabaseConfigured ? subscribeToStudioDataSupabase : subscribeToStudioData;
+      unsubscribe = subscribeFn((remoteData) => {
         if (!isMounted || !remoteData) return;
 
-        // Skip if this snapshot is an echo of our own save (within 3 seconds)
         if (lastSaveTimestamp.current && (Date.now() - lastSaveTimestamp.current) < 3000) {
           return;
         }
@@ -481,7 +484,7 @@ export default function App() {
       });
     }
 
-    initFirestoreSync();
+    initCloudSync();
 
     return () => {
       isMounted = false;
@@ -489,22 +492,19 @@ export default function App() {
     };
   }, []);
 
-  // 2. Save Studio Data to localStorage AND Firestore (debounced) on every change
+  // 2. Save Studio Data to localStorage AND Cloud (debounced) on every change
   useEffect(() => {
-    // Always save to localStorage instantly
     localStorage.setItem("paramara_studio_admin_data_v2", JSON.stringify(studioData));
 
-    // Skip Firestore save if this update came from a remote snapshot (prevents infinite loop)
     if (isRemoteUpdate.current) {
       isRemoteUpdate.current = false;
       return;
     }
 
-    // Skip Firestore save during initial load
     if (isInitialLoad.current) return;
 
-    // Debounced save to Firestore (1 second)
-    if (!isFirebaseConfigured) return;
+    const isCloudConfigured = isSupabaseConfigured || isFirebaseConfigured;
+    if (!isCloudConfigured) return;
 
     if (saveDebounceTimer.current) {
       clearTimeout(saveDebounceTimer.current);
@@ -513,9 +513,10 @@ export default function App() {
     setCloudSyncStatus('syncing');
     saveDebounceTimer.current = setTimeout(async () => {
       lastSaveTimestamp.current = Date.now();
-      const success = await saveStudioDataToFirestore(studioData);
+      const saveFn = isSupabaseConfigured ? saveStudioDataToSupabase : saveStudioDataToFirestore;
+      const success = await saveFn(studioData);
       setCloudSyncStatus(success ? 'synced' : 'offline');
-      if (!success) remoteLog.error('Firestore debounced save failed');
+      if (!success) remoteLog.error('Cloud debounced save failed');
     }, 1000);
 
     return () => {
