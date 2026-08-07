@@ -1620,11 +1620,17 @@ export default function App() {
 
           <div className="header-actions">
             {/* Cloud Sync Status Indicator */}
-            <div className="sync-pill" style={{
-              background: cloudSyncStatus === 'synced' ? 'rgba(5, 150, 105, 0.1)' : cloudSyncStatus === 'syncing' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(156, 163, 175, 0.1)',
-              color: cloudSyncStatus === 'synced' ? '#059669' : cloudSyncStatus === 'syncing' ? '#b45309' : '#6b7280',
-              borderColor: cloudSyncStatus === 'synced' ? 'rgba(5,150,105,0.25)' : cloudSyncStatus === 'syncing' ? 'rgba(234,179,8,0.25)' : 'rgba(156,163,175,0.2)'
-            }}>
+            <div 
+              className="sync-pill" 
+              onClick={() => setModalType('sync_info')}
+              title="Klik untuk petunjuk memindahkan data ke HP/Device baru"
+              style={{
+                background: cloudSyncStatus === 'synced' ? 'rgba(5, 150, 105, 0.1)' : cloudSyncStatus === 'syncing' ? 'rgba(234, 179, 8, 0.1)' : 'rgba(156, 163, 175, 0.1)',
+                color: cloudSyncStatus === 'synced' ? '#059669' : cloudSyncStatus === 'syncing' ? '#b45309' : '#6b7280',
+                borderColor: cloudSyncStatus === 'synced' ? 'rgba(5,150,105,0.25)' : cloudSyncStatus === 'syncing' ? 'rgba(234,179,8,0.25)' : 'rgba(156,163,175,0.2)',
+                cursor: 'pointer'
+              }}
+            >
               {cloudSyncStatus === 'synced' && <><Cloud style={{ width: 12, height: 12 }} /> Synced</>}
               {cloudSyncStatus === 'syncing' && <><Loader2 style={{ width: 12, height: 12, animation: 'spin 1s linear infinite' }} /> Syncing...</>}
               {cloudSyncStatus === 'offline' && <><CloudOff style={{ width: 12, height: 12 }} /> Offline</>}
@@ -4028,6 +4034,44 @@ export default function App() {
                   Ya, Hapus Semua
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: CLOUD SYNC & DEVICE TRANSFER INFO */}
+      {modalType === 'sync_info' && (
+        <div className="modal-overlay active" onClick={() => setModalType(null)}>
+          <div className="modal-card" style={{ maxWidth: 520, padding: '1.75rem' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ marginBottom: '1.25rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem' }}>
+                <CloudOff style={{ color: 'var(--accent-gold)' }} /> Informasi Sinkronisasi Cloud & Device Baru
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <div style={{ fontSize: '0.875rem', color: 'var(--text-main)', lineHeight: 1.6 }}>
+              <div style={{ background: 'rgba(234, 179, 8, 0.08)', border: '1px solid rgba(234, 179, 8, 0.25)', padding: '12px 14px', borderRadius: 10, marginBottom: '1.25rem' }}>
+                <strong style={{ color: '#b45309', display: 'block', marginBottom: 4 }}>Status Sinkronisasi Saat Ini: Offline / Lokal</strong>
+                <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  Data di perangkat ini aman tersimpan di browser lokal Anda. Karena proyek Google Cloud Firebase lama sedang mengalami pembatasan, sinkronisasi cloud otomatis belum terhubung ke database cloud aktif.
+                </span>
+              </div>
+
+              <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
+                📱 Cara Memindahkan Data ke Device / HP Baru Ini:
+              </h4>
+              <ol style={{ paddingLeft: '1.25rem', marginBottom: '1.5rem', fontSize: '0.825rem', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-muted)' }}>
+                <li>Buka website ini di <strong>HP / Laptop Lama Anda</strong> (tempat data disimpan sebelumnya).</li>
+                <li>Masuk ke tab <strong>Manajemen Admin</strong> di menu sidebar kiri.</li>
+                <li>Scroll ke kartu Backup lalu klik <strong>💾 Cadangkan Seluruh Data (.json)</strong>.</li>
+                <li>Kirim file <code>.json</code> tersebut ke HP baru ini (via WhatsApp / Email / Drive).</li>
+                <li>Di <strong>HP Baru ini</strong>, buka tab <strong>Manajemen Admin</strong> -> Klik <strong>📥 Pulihkan Data dari Backup (.json)</strong> dan pilih file tadi. Seluruh data akan langsung muncul 100%!</li>
+              </ol>
+
+              <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '10px' }} onClick={() => setModalType(null)}>
+                Saya Mengerti
+              </button>
             </div>
           </div>
         </div>
