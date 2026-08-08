@@ -983,6 +983,48 @@ export default function App() {
       };
     });
 
+  const handleOpenManualLiveInput = () => {
+    const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+    setScannedPreview({
+      id: "live_manual_" + Date.now(),
+      title: `Sesi Live ${todayStr}`,
+      startTime: `${todayStr} 20:00`,
+      dateFormatted: todayStr,
+      duration: "01:30:00",
+      revenue: 0,
+      grossCommission: 0,
+      totalOrders: 0,
+      totalViews: 0,
+      clickRatePercent: 0,
+      activeViewers: 0,
+      cartAdditions: 0,
+      likes: 0,
+      conversionRatePercent: 0,
+      products: [],
+      aiSummary: "Sesi live diinput secara manual.",
+      created_at: new Date().toISOString()
+    });
+    setModalType('manual_live');
+  };
+
+  const handleOpenManualVideoInput = () => {
+    const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+    setScannedVideoPreview({
+      id: "video_manual_" + Date.now(),
+      title: `Performa Video ${todayStr}`,
+      dateFormatted: todayStr,
+      revenue: 0,
+      grossCommission: 0,
+      totalOrders: 0,
+      totalViews: 0,
+      likes: 0,
+      conversionRatePercent: 0,
+      aiSummary: "Data performa Shopee Video diinput secara manual.",
+      created_at: new Date().toISOString()
+    });
+    setModalType('manual_video');
+  };
+
     setScannedVideoPreview(null);
     setVideoFileSlot1(null);
     setVideoFileSlot2(null);
@@ -1713,10 +1755,16 @@ export default function App() {
 
             {/* CONTEXTUAL ACTION BUTTONS */}
             {activeTab === 'tabShopeeTracker' && (
-              <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-                <ImagePlus style={{ width: 15, height: 15 }} />
-                <span className="btn-label">Input Live (2 Foto)</span>
-              </button>
+              <>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleOpenManualLiveInput}>
+                  <Edit3 style={{ width: 14, height: 14 }} />
+                  <span className="btn-label">Input Manual</span>
+                </button>
+                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
+                  <ImagePlus style={{ width: 15, height: 15 }} />
+                  <span className="btn-label">Scan AI (2 Foto)</span>
+                </button>
+              </>
             )}
 
             {activeTab === 'tabShopeeVideo' && (
@@ -1725,9 +1773,13 @@ export default function App() {
                   <FileText style={{ width: 14, height: 14, color: '#059669' }} />
                   <span className="btn-label">Ekspor Excel</span>
                 </button>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleOpenManualVideoInput}>
+                  <Edit3 style={{ width: 14, height: 14 }} />
+                  <span className="btn-label">Input Manual</span>
+                </button>
                 <button className="btn btn-primary" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }}>
                   <Film style={{ width: 15, height: 15 }} />
-                  <span className="btn-label">Input Video (2 Foto)</span>
+                  <span className="btn-label">Scan AI (2 Foto)</span>
                 </button>
               </>
             )}
@@ -3871,6 +3923,239 @@ export default function App() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: INPUT MANUAL SHOPEE VIDEO */}
+      {modalType === 'manual_video' && (
+        <div className="modal-overlay active" onClick={() => setModalType(null)}>
+          <div className="modal-card" style={{ maxWidth: 580 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Film style={{ color: 'var(--primary)' }} /> Input Manual Performa Shopee Video
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveScannedVideoSession(); }}>
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                Masukkan data performa Shopee Video secara manual tanpa mengunggah foto screenshot.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Judul Video / Periode Laporan</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="Contoh: Performa Video Harian 08-08-2026" 
+                    value={scannedVideoPreview?.title || ''} 
+                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, title: e.target.value })} 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tanggal</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="DD-MM-YYYY" 
+                    value={scannedVideoPreview?.dateFormatted || ''} 
+                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, dateFormatted: e.target.value })} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Penjualan GMV (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Nominal GMV Rp" 
+                    value={scannedVideoPreview?.revenue || ''} 
+                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, revenue: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Estimasi Komisi Kotor (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Komisi Rp" 
+                    value={scannedVideoPreview?.grossCommission || ''} 
+                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, grossCommission: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Penonton (Views)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Jumlah Views" 
+                    value={scannedVideoPreview?.totalViews || ''} 
+                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, totalViews: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Unit Terjual / Orders</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Jumlah Order" 
+                    value={scannedVideoPreview?.totalOrders || ''} 
+                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, totalOrders: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Total Suka (Likes)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Jumlah Likes" 
+                    value={scannedVideoPreview?.likes || ''} 
+                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, likes: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Catatan / Ringkasan Performansi</label>
+                <input 
+                  className="form-input" 
+                  placeholder="Contoh: Video promosi produk skincare harian" 
+                  value={scannedVideoPreview?.aiSummary || ''} 
+                  onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, aiSummary: e.target.value })} 
+                />
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px' }}>
+                <CheckCircle /> Simpan Data Shopee Video
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: INPUT MANUAL SHOPEE LIVE */}
+      {modalType === 'manual_live' && (
+        <div className="modal-overlay active" onClick={() => setModalType(null)}>
+          <div className="modal-card" style={{ maxWidth: 640 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Video style={{ color: 'var(--primary)' }} /> Input Manual Sesi Shopee Live
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveScannedSession(); }}>
+              <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
+                Masukkan rincian metrik Sesi Shopee Live secara manual.
+              </p>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Judul Sesi Live</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="Contoh: Special Live Disc Up To 50%" 
+                    value={scannedPreview?.title || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, title: e.target.value })} 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tanggal & Waktu Sesi</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="DD-MM-YYYY HH:MM" 
+                    value={scannedPreview?.startTime || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, startTime: e.target.value, dateFormatted: e.target.value.split(' ')[0] })} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Durasi Sesi</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="01:30:00" 
+                    value={scannedPreview?.duration || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Penjualan GMV (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Jumlah GMV Rp" 
+                    value={scannedPreview?.revenue || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, revenue: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Komisi Kotor (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Nominal Komisi Rp" 
+                    value={scannedPreview?.grossCommission || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, grossCommission: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Total Pesanan</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Order" 
+                    value={scannedPreview?.totalOrders || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Total Views</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Views" 
+                    value={scannedPreview?.totalViews || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, totalViews: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Penonton Aktif</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Orang" 
+                    value={scannedPreview?.activeViewers || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, activeViewers: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Masuk Keranjang</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Item" 
+                    value={scannedPreview?.cartAdditions || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, cartAdditions: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px' }}>
+                <CheckCircle /> Simpan Sesi Live Shopee
+              </button>
+            </form>
           </div>
         </div>
       )}
