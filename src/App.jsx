@@ -444,6 +444,7 @@ export default function App() {
               liveSchedules: (cloudData.liveSchedules && cloudData.liveSchedules.length > 0) ? cloudData.liveSchedules : (prev.liveSchedules || []),
               capexList: (cloudData.capexList && cloudData.capexList.length > 0) ? cloudData.capexList : (prev.capexList || []),
               opexList: (cloudData.opexList && cloudData.opexList.length > 0) ? cloudData.opexList : (prev.opexList || []),
+              personalList: (cloudData.personalList && cloudData.personalList.length > 0) ? cloudData.personalList : (prev.personalList || []),
               adminUsers: (cloudData.adminUsers && cloudData.adminUsers.length > 0) ? cloudData.adminUsers : (prev.adminUsers || []),
             };
 
@@ -490,6 +491,7 @@ export default function App() {
           liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
           capexList: remoteData.capexList || prev.capexList || [],
           opexList: remoteData.opexList || prev.opexList || [],
+          personalList: remoteData.personalList || prev.personalList || [],
           adminUsers: remoteData.adminUsers || prev.adminUsers || [],
         }));
         setCloudSyncStatus('synced');
@@ -632,6 +634,7 @@ export default function App() {
   const allVideoSessions = studioData.shopeeVideoSessions || [];
   const allCapexList = studioData.capexList || [];
   const allOpexList = studioData.opexList || [];
+  const allPersonalList = studioData.personalList || [];
   const allProjects = studioData.clientProjects || [];
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
   const allPinterestReports = studioData.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics;
@@ -641,6 +644,7 @@ export default function App() {
   const videoSessions = filterByDate(allVideoSessions);
   const capexList = filterByDate(allCapexList);
   const opexList = filterByDate(allOpexList);
+  const personalList = filterByDate(allPersonalList);
   const projects = allProjects; // Projects don't have date field yet
   const pinterestReports = allPinterestReports;
 
@@ -775,7 +779,9 @@ export default function App() {
   // Expenses
   const totalCapex = capexList.reduce((acc, c) => acc + (c.amount || 0), 0);
   const totalOpex = opexList.reduce((acc, o) => acc + (o.amount || 0), 0);
+  const totalPersonal = personalList.reduce((acc, p) => acc + (p.amount || 0), 0);
   const totalExpenses = totalCapex + totalOpex;
+  const totalCashOutflow = totalCapex + totalOpex + totalPersonal;
 
   // Profitability
   const netProfit = totalStudioGrossRevenue - totalExpenses;
@@ -1045,6 +1051,11 @@ export default function App() {
         ...prev,
         capexList: [...(prev.capexList || []), newItem]
       }));
+    } else if (financialType === 'personal') {
+      setStudioData(prev => ({
+        ...prev,
+        personalList: [...(prev.personalList || []), newItem]
+      }));
     } else {
       setStudioData(prev => ({
         ...prev,
@@ -1083,6 +1094,17 @@ export default function App() {
     setModalType('edit_finance');
   };
 
+  const handleStartEditPersonal = (item) => {
+    setEditingFinanceItem({ ...item, type: 'personal' });
+    setItemName(item.name);
+    setItemCategory(item.category || "Personal Purchase");
+    setItemAmount(item.amount.toString());
+    setItemDate(item.date || "");
+    setOpexFrequency("Once");
+    setFinancialType('personal');
+    setModalType('edit_finance');
+  };
+
   const handleSaveEditFinancialItem = (e) => {
     e.preventDefault();
     if (!itemName || !itemAmount) {
@@ -1103,6 +1125,11 @@ export default function App() {
       setStudioData(prev => ({
         ...prev,
         capexList: (prev.capexList || []).map(item => item.id === editingFinanceItem.id ? updatedItem : item)
+      }));
+    } else if (editingFinanceItem.type === 'personal') {
+      setStudioData(prev => ({
+        ...prev,
+        personalList: (prev.personalList || []).map(item => item.id === editingFinanceItem.id ? updatedItem : item)
       }));
     } else {
       setStudioData(prev => ({
@@ -1135,6 +1162,15 @@ export default function App() {
       setStudioData(prev => ({
         ...prev,
         opexList: (prev.opexList || []).filter(item => item.id !== id)
+      }));
+    }
+  };
+
+  const handleDeletePersonal = (id) => {
+    if (confirm("Hapus item Pembelian Pribadi ini?")) {
+      setStudioData(prev => ({
+        ...prev,
+        personalList: (prev.personalList || []).filter(item => item.id !== id)
       }));
     }
   };
@@ -1296,7 +1332,15 @@ export default function App() {
       "Siklus": o.frequency,
       "Nominal (Rp)": o.amount
     }));
-    const allFinance = [...capex, ...opex];
+    const personal = (studioData.personalList || []).map(p => ({
+      "Tipe Transaksi": "Personal Purchase (Pembelian Pribadi)",
+      "Nama Item": p.name,
+      "Kategori": p.category || "Personal Purchase",
+      "Tanggal": p.date || "-",
+      "Siklus": "-",
+      "Nominal (Rp)": p.amount
+    }));
+    const allFinance = [...capex, ...opex, ...personal];
     if (allFinance.length === 0) {
       showToast('Tidak ada data keuangan untuk diekspor!', 'error');
       return;
@@ -2611,10 +2655,30 @@ export default function App() {
                       </div>
                     </div>
 
+                    {/* Item 3: Personal Purchase */}
+                    <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                        <span style={{ fontWeight: 600 }}>Pembelian Pribadi (Personal Purchase)</span>
+                        <strong style={{ color: '#8B5CF6' }}>Rp {totalPersonal.toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                        <span>Belanja & Pengeluaran Personal</span>
+                        <span>{totalCashOutflow > 0 ? ((totalPersonal / totalCashOutflow) * 100).toFixed(0) : 0}% alokasi</span>
+                      </div>
+                      <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                        <div style={{ width: `${totalCashOutflow > 0 ? Math.min(100, (totalPersonal / totalCashOutflow) * 100) : 0}%`, height: '100%', background: '#8B5CF6', borderRadius: 2 }} />
+                      </div>
+                    </div>
+
                     {/* Expense Total Row */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px dashed var(--border-color)', fontSize: '0.85rem', marginTop: 12 }}>
-                      <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Total Pengeluaran Studio</span>
+                      <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Total Pengeluaran Studio (Operasional)</span>
                       <strong style={{ fontSize: '1rem', color: '#D32F2F' }}>Rp {totalExpenses.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-dim)', paddingTop: 4 }}>
+                      <span>Total Kas Keluar (Studio + Personal):</span>
+                      <strong style={{ color: 'var(--text-main)' }}>Rp {totalCashOutflow.toLocaleString('id-ID')}</strong>
                     </div>
 
                   </div>
@@ -2659,7 +2723,7 @@ export default function App() {
 
             </div>
 
-            {/* 3. CAPEX & OPEX TRANSACTION LEDGER TABLES */}
+            {/* 3. CAPEX, OPEX & PERSONAL PURCHASE LEDGER TABLES */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               
               {/* CAPEX Table */}
@@ -2755,6 +2819,56 @@ export default function App() {
                       ) : (
                         <tr>
                           <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran operasional (OPEX).</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Personal Purchase Table */}
+              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                    🛍️ Pembelian Pribadi (Personal Purchase)
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Pengeluaran Personal</span>
+                </div>
+
+                <div className="table-wrapper">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Tanggal</th>
+                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
+                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {personalList.length > 0 ? (
+                        personalList.map(p => (
+                          <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '8px' }}><strong>{p.name}</strong></td>
+                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}>{p.category || "Personal"}</span></td>
+                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{p.date}</td>
+                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#8B5CF6' }}>Rp {p.amount.toLocaleString('id-ID')}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditPersonal(p)}>
+                                  <Edit3 style={{ width: 13, height: 13 }} />
+                                </button>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeletePersonal(p.id)}>
+                                  <Trash2 style={{ width: 13, height: 13 }} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran/pembelian pribadi.</td>
                         </tr>
                       )}
                     </tbody>
@@ -3834,24 +3948,51 @@ export default function App() {
 
             <form onSubmit={handleAddFinancialItem}>
               
-              {/* Type Switcher Toggle (CAPEX vs OPEX) */}
-              <div style={{ display: 'flex', gap: '10px', marginBottom: '1.25rem' }}>
+              {/* Type Switcher Toggle (CAPEX vs OPEX vs PERSONAL) */}
+              <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 <button 
                   type="button" 
                   className={`btn ${financialType === 'capex' ? 'btn-primary' : 'btn-secondary'}`} 
-                  style={{ flex: 1, justifyContent: 'center' }}
+                  style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => setFinancialType('capex')}
                 >
-                  📦 CAPEX (Belanja Aset)
+                  📦 CAPEX (Aset)
                 </button>
                 <button 
                   type="button" 
                   className={`btn ${financialType === 'opex' ? 'btn-primary' : 'btn-secondary'}`} 
-                  style={{ flex: 1, justifyContent: 'center' }}
+                  style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => setFinancialType('opex')}
                 >
                   ⚙️ OPEX (Operasional)
                 </button>
+                <button 
+                  type="button" 
+                  className={`btn ${financialType === 'personal' ? 'btn-primary' : 'btn-secondary'}`} 
+                  style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                  onClick={() => { setFinancialType('personal'); if (!itemCategory) setItemCategory('Personal Purchase'); }}
+                >
+                  🛍️ Personal Purchase
+                </button>
+              </div>
+
+              {/* Quick Category Suggestions */}
+              <div style={{ marginBottom: '1rem' }}>
+                <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', display: 'block', marginBottom: 4 }}>Pilih Kategori Cepat:</span>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button type="button" onClick={() => { setFinancialType('personal'); setItemCategory('Personal Purchase'); }} style={{ background: financialType === 'personal' ? 'rgba(139, 92, 246, 0.2)' : 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
+                    🛍️ Personal Purchase
+                  </button>
+                  <button type="button" onClick={() => setItemCategory('Alat Studio')} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
+                    📦 Alat Studio
+                  </button>
+                  <button type="button" onClick={() => setItemCategory('Gaji Host')} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
+                    👥 Gaji Host
+                  </button>
+                  <button type="button" onClick={() => setItemCategory('Sewa & Operasional')} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
+                    ⚡ Sewa & Operasional
+                  </button>
+                </div>
               </div>
 
               <div className="form-group">
