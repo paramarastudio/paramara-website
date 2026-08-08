@@ -982,6 +982,33 @@ export default function App() {
         shopeeVideoSessions: deduplicateSessions(updatedList)
       };
     });
+    setScannedVideoPreview(null);
+    setVideoFileSlot1(null);
+    setVideoFileSlot2(null);
+    setVideoPreviewUrl1(null);
+    setVideoPreviewUrl2(null);
+    setModalType(null);
+
+    showToast('Metrik & Pendapatan Video Berhasil Disimpan!');
+
+    // Background upload if Firebase active
+    if (firebaseStorage) {
+      try {
+        if (videoFileSlot1) {
+          const url1 = await uploadScreenshotToFirebase(videoFileSlot1);
+          if (url1) videoToSave.screenshotUrlTop = url1;
+        }
+        if (videoFileSlot2) {
+          const url2 = await uploadScreenshotToFirebase(videoFileSlot2);
+          if (url2) videoToSave.screenshotUrlBottom = url2;
+        }
+        // Save to Firebase (video sessions can use similar format or be deferred)
+        await saveSessionToFirebase({ ...videoToSave, isVideo: true });
+      } catch (e) {
+        console.warn("Background Firebase upload finished with warning:", e.message);
+      }
+    }
+  };
 
   const handleOpenManualLiveInput = () => {
     const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
@@ -1023,34 +1050,6 @@ export default function App() {
       created_at: new Date().toISOString()
     });
     setModalType('manual_video');
-  };
-
-    setScannedVideoPreview(null);
-    setVideoFileSlot1(null);
-    setVideoFileSlot2(null);
-    setVideoPreviewUrl1(null);
-    setVideoPreviewUrl2(null);
-    setModalType(null);
-
-    showToast('Metrik & Pendapatan Video Berhasil Disimpan!');
-
-    // Background upload if Firebase active
-    if (firebaseStorage) {
-      try {
-        if (videoFileSlot1) {
-          const url1 = await uploadScreenshotToFirebase(videoFileSlot1);
-          if (url1) videoToSave.screenshotUrlTop = url1;
-        }
-        if (videoFileSlot2) {
-          const url2 = await uploadScreenshotToFirebase(videoFileSlot2);
-          if (url2) videoToSave.screenshotUrlBottom = url2;
-        }
-        // Save to Firebase (video sessions can use similar format or be deferred)
-        await saveSessionToFirebase({ ...videoToSave, isVideo: true });
-      } catch (e) {
-        console.warn("Background Firebase upload finished with warning:", e.message);
-      }
-    }
   };
 
   const handleSaveEditedVideoSession = () => {
