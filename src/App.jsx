@@ -2071,13 +2071,22 @@ export default function App() {
         {/* Tab 2: Shopee Live Tracker */}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content main-inner">
-            {sessions.length > 0 && (
-              <div style={{ marginBottom: '1.25rem' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  {sessions.length} sesi live terekam
-                </p>
+
+            {/* ACTION BANNER (MOBILE & DESKTOP ACCESSIBLE) */}
+            <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: 2 }}>Shopee Live Tracker</h3>
+                <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{sessions.length} sesi live terekam</span>
               </div>
-            )}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                </button>
+              </div>
+            </div>
 
             {/* EXPANDABLE EXECUTIVE SESSION CARDS OR CLEAN ZERO STATE */}
             {sessions.length > 0 ? (
@@ -2430,13 +2439,25 @@ export default function App() {
         {/* Tab 2b: Shopee Video Tracker */}
         {activeTab === 'tabShopeeVideo' && (
           <div className="tab-content main-inner">
-            {videoSessions.length > 0 && (
-              <div style={{ marginBottom: '1.25rem' }}>
-                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-                  {videoSessions.length} performa video terekam
-                </p>
+
+            {/* ACTION BANNER (MOBILE & DESKTOP ACCESSIBLE) */}
+            <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div>
+                <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: 2 }}>Shopee Video Tracker</h3>
+                <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{videoSessions.length} performa video terekam</span>
               </div>
-            )}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button className="btn btn-secondary btn-sm" onClick={handleExportVideoToExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <FileText style={{ width: 14, height: 14, color: '#059669' }} /> Ekspor Excel
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualVideoInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Film style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                </button>
+              </div>
+            </div>
 
             {/* EXPANDABLE VIDEO SESSION CARDS OR CLEAN ZERO STATE */}
             {videoSessions.length > 0 ? (

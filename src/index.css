@@ -798,18 +798,35 @@ html, body {
     display: none;
   }
 
-  /* Hide non-essential buttons in header on mobile to fit screen */
+  /* Mobile header action bar optimization */
   .top-header .sync-pill {
     display: none;
   }
 
-  .top-header .btn-secondary {
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100%;
+    scrollbar-width: none;
+  }
+  .header-actions::-webkit-scrollbar {
     display: none;
   }
 
-  /* Compact icon-only CTA on mobile */
-  .top-header .btn-primary span.btn-label {
-    display: none;
+  .top-header .btn-secondary,
+  .top-header .btn-primary {
+    display: inline-flex !important;
+    padding: 6px 10px !important;
+    font-size: 0.75rem !important;
+    white-space: nowrap !important;
+    flex-shrink: 0 !important;
+  }
+
+  .top-header .btn span.btn-label {
+    display: inline !important;
   }
 
   .kpi-grid {
