@@ -431,19 +431,31 @@ export default function App() {
 
         if (cloudData) {
           isRemoteUpdate.current = true;
-          setStudioData(prev => ({
-            ...prev,
-            ...cloudData,
-            shopeeSessions: deduplicateSessions(cloudData.shopeeSessions || prev.shopeeSessions || []),
-            shopeeVideoSessions: deduplicateSessions(cloudData.shopeeVideoSessions || prev.shopeeVideoSessions || []),
-            clientProjects: cloudData.clientProjects || prev.clientProjects || [],
-            liveSchedules: cloudData.liveSchedules || prev.liveSchedules || [],
-            capexList: cloudData.capexList || prev.capexList || [],
-            opexList: cloudData.opexList || prev.opexList || [],
-            adminUsers: cloudData.adminUsers || prev.adminUsers || [],
-          }));
+          setStudioData(prev => {
+            const mergedSessions = deduplicateSessions([...(prev.shopeeSessions || []), ...(cloudData.shopeeSessions || [])]);
+            const mergedVideoSessions = deduplicateSessions([...(prev.shopeeVideoSessions || []), ...(cloudData.shopeeVideoSessions || [])]);
+            
+            const mergedData = {
+              ...prev,
+              ...cloudData,
+              shopeeSessions: mergedSessions,
+              shopeeVideoSessions: mergedVideoSessions,
+              clientProjects: (cloudData.clientProjects && cloudData.clientProjects.length > 0) ? cloudData.clientProjects : (prev.clientProjects || []),
+              liveSchedules: (cloudData.liveSchedules && cloudData.liveSchedules.length > 0) ? cloudData.liveSchedules : (prev.liveSchedules || []),
+              capexList: (cloudData.capexList && cloudData.capexList.length > 0) ? cloudData.capexList : (prev.capexList || []),
+              opexList: (cloudData.opexList && cloudData.opexList.length > 0) ? cloudData.opexList : (prev.opexList || []),
+              adminUsers: (cloudData.adminUsers && cloudData.adminUsers.length > 0) ? cloudData.adminUsers : (prev.adminUsers || []),
+            };
+
+            // If local state had more sessions than cloud, push merged state back to cloud immediately
+            if ((prev.shopeeSessions || []).length > (cloudData.shopeeSessions || []).length) {
+              saveFn(mergedData);
+            }
+
+            return mergedData;
+          });
           setCloudSyncStatus('synced');
-          remoteLog.info('Cloud initial sync: loaded remote data');
+          remoteLog.info('Cloud initial sync: smart merged remote and local data');
         } else {
           const localData = JSON.parse(localStorage.getItem("paramara_studio_admin_data_v2") || "null");
           if (localData) {
@@ -472,8 +484,8 @@ export default function App() {
         setStudioData(prev => ({
           ...prev,
           ...remoteData,
-          shopeeSessions: deduplicateSessions(remoteData.shopeeSessions || prev.shopeeSessions || []),
-          shopeeVideoSessions: deduplicateSessions(remoteData.shopeeVideoSessions || prev.shopeeVideoSessions || []),
+          shopeeSessions: deduplicateSessions([...(prev.shopeeSessions || []), ...(remoteData.shopeeSessions || [])]),
+          shopeeVideoSessions: deduplicateSessions([...(prev.shopeeVideoSessions || []), ...(remoteData.shopeeVideoSessions || [])]),
           clientProjects: remoteData.clientProjects || prev.clientProjects || [],
           liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
           capexList: remoteData.capexList || prev.capexList || [],
