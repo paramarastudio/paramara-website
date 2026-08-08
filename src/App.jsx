@@ -1154,31 +1154,40 @@ export default function App() {
       return;
     }
 
+    const oldType = editingFinanceItem.type;
+    const newType = financialType;
+
     const updatedItem = {
       ...editingFinanceItem,
       name: itemName.trim(),
-      category: itemCategory.trim() || "Umum",
+      category: itemCategory.trim() || (newType === 'personal' ? "Personal Purchase" : "Umum"),
       amount: parseInt(itemAmount) || 0,
       date: itemDate || new Date().toISOString().split('T')[0],
       frequency: opexFrequency
     };
 
-    if (editingFinanceItem.type === 'capex') {
-      setStudioData(prev => ({
+    setStudioData(prev => {
+      let capex = [...(prev.capexList || [])];
+      let opex = [...(prev.opexList || [])];
+      let personal = [...(prev.personalList || [])];
+
+      // Remove from old list
+      if (oldType === 'capex') capex = capex.filter(i => i.id !== editingFinanceItem.id);
+      else if (oldType === 'opex') opex = opex.filter(i => i.id !== editingFinanceItem.id);
+      else if (oldType === 'personal') personal = personal.filter(i => i.id !== editingFinanceItem.id);
+
+      // Add to new list
+      if (newType === 'capex') capex.push(updatedItem);
+      else if (newType === 'opex') opex.push(updatedItem);
+      else if (newType === 'personal') personal.push(updatedItem);
+
+      return {
         ...prev,
-        capexList: (prev.capexList || []).map(item => item.id === editingFinanceItem.id ? updatedItem : item)
-      }));
-    } else if (editingFinanceItem.type === 'personal') {
-      setStudioData(prev => ({
-        ...prev,
-        personalList: (prev.personalList || []).map(item => item.id === editingFinanceItem.id ? updatedItem : item)
-      }));
-    } else {
-      setStudioData(prev => ({
-        ...prev,
-        opexList: (prev.opexList || []).map(item => item.id === editingFinanceItem.id ? updatedItem : item)
-      }));
-    }
+        capexList: capex,
+        opexList: opex,
+        personalList: personal
+      };
+    });
 
     setItemName("");
     setItemCategory("");
@@ -1187,7 +1196,7 @@ export default function App() {
     setOpexFrequency("Once");
     setEditingFinanceItem(null);
     setModalType(null);
-    showToast('Transaksi keuangan berhasil diperbarui!');
+    showToast(`Transaksi berhasil dipindahkan ke ${newType === 'capex' ? 'CAPEX' : newType === 'personal' ? 'Personal Purchase' : 'OPEX'}!`);
   };
 
   const handleDeleteCapex = (id) => {
@@ -4361,6 +4370,37 @@ export default function App() {
 
             <form onSubmit={handleSaveEditFinancialItem}>
               
+              {/* Type Switcher Toggle (CAPEX vs OPEX vs PERSONAL) */}
+              <div style={{ marginBottom: '1.25rem' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)', marginBottom: 6, display: 'block' }}>Pindahkan Tipe Transaksi Ke:</label>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                  <button 
+                    type="button" 
+                    className={`btn ${financialType === 'capex' ? 'btn-primary' : 'btn-secondary'}`} 
+                    style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                    onClick={() => setFinancialType('capex')}
+                  >
+                    📦 CAPEX (Aset)
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`btn ${financialType === 'opex' ? 'btn-primary' : 'btn-secondary'}`} 
+                    style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                    onClick={() => setFinancialType('opex')}
+                  >
+                    ⚙️ OPEX (Operasional)
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`btn ${financialType === 'personal' ? 'btn-primary' : 'btn-secondary'}`} 
+                    style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                    onClick={() => { setFinancialType('personal'); if (!itemCategory || itemCategory === "Umum") setItemCategory('Personal Purchase'); }}
+                  >
+                    🛍️ Personal Purchase
+                  </button>
+                </div>
+              </div>
+
               <div className="form-group">
                 <label className="form-label">Nama Transaksi / Item</label>
                 <input 
