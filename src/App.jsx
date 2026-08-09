@@ -1868,8 +1868,20 @@ METRIC TO WATCH
               <Menu />
             </button>
             <div className="header-title">
-              <h2>Paramara Executive Intelligence</h2>
-              <p>Real-Time Operations, Financial Matrix & Omnichannel Growth Hub</p>
+              <h2>
+                {activeTab === 'tabAnalytics' && "Paramara Executive Intelligence"}
+                {activeTab === 'tabFinIntel' && "Financial Intelligence"}
+                {activeTab === 'tabShopeeTracker' && "Shopee Live Tracker"}
+                {activeTab === 'tabShopeeVideo' && "Shopee Video Tracker"}
+                {activeTab === 'tabFinance' && "Keuangan & Transaksi Studio"}
+                {activeTab === 'tabPinterest' && "Pinterest Analytics (US)"}
+                {activeTab === 'tabProjects' && "Proyek & Klien Studio"}
+                {activeTab === 'tabSchedules' && "Jadwal Live & Host"}
+                {activeTab === 'tabAdminUsers' && "Manajemen Admin"}
+              </h2>
+              <p>
+                {activeTab === 'tabFinIntel' ? "CFO View — Profitability, Cash Flow, Investment & Business Decisions" : "Real-Time Operations, Financial Matrix & Omnichannel Growth Hub"}
+              </p>
             </div>
           </div>
 
@@ -2198,7 +2210,7 @@ METRIC TO WATCH
             hoursAgoText = `AI analysis updated ${aiData.generatedAt}`;
           }
 
-          // Smart Rule-Based Insights with Nuanced CAPEX Logic
+          // Smart Rule-Based Insights
           let ruleInsight = {
             summary: opProfit >= 0 && cashFlowAfterInv < 0
               ? "Operations are currently profitable, but cash flow is negative because studio investment (CAPEX) is higher than operating profit."
@@ -2206,10 +2218,10 @@ METRIC TO WATCH
               ? "Operating expenses currently exceed gross revenue. Focus on operating break-even before expansion."
               : "Business operations and cash flow are healthy and positive.",
             goingWell: livePct > 50
-              ? `Operating profit is positive (${opMargin.toFixed(1)}% margin) and Live Commerce is currently the primary revenue engine.`
+              ? `Operating profit is positive (${opMargin.toFixed(1)}% margin) and Live Commerce is the primary revenue engine.`
               : "Revenue streams are diversified across multiple channels.",
             biggestRisk: cashFlowAfterInv < 0
-              ? "CAPEX is currently larger than operating profit, placing short-term pressure on cash flow."
+              ? "CAPEX is currently larger than operating profit, placing short-term pressure on cash."
               : totalOpex > totalStudioGrossRevenue
               ? "Recurring OPEX is higher than gross revenue."
               : "Single platform concentration risk if affiliate fees fluctuate.",
@@ -2220,94 +2232,97 @@ METRIC TO WATCH
           };
 
           return (
-            <div className="tab-content main-inner" style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: '3rem' }}>
+            <div className="tab-content main-inner" style={{ maxWidth: 1200, margin: '0 auto', padding: '1.5rem 2.5rem 4rem' }}>
               
-              {/* TOP HEADER - CLEAN & MINIMALIST */}
-              <div style={{ marginBottom: '2rem' }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
-                    Financial Intelligence
-                  </h2>
-                  <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)', fontWeight: 500 }}>
-                    CFO View — Profitability, Cash Flow, Investment & Business Decisions
-                  </span>
-                </div>
-              </div>
-
               {/* 1. PRIMARY KPI SECTION (EXACTLY 4 CARDS) */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '1.25rem', marginBottom: '2rem' }}>
                 
                 {/* CARD 1: Gross Revenue */}
-                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-                    Gross Revenue
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Gross Revenue
+                    </span>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: 'var(--primary)' }} />
                   </div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.03em', marginBottom: 8 }}>
                     Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 500 }}>
                     Live + Video + Project + Other
                   </div>
                 </div>
 
-                {/* CARD 2: Operating Profit (Visually Positive / Green) */}
-                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-                    Operating Profit
+                {/* CARD 2: Operating Profit (Green Positive) */}
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Operating Profit
+                    </span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: opProfit >= 0 ? '#059669' : '#D32F2F', background: opProfit >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(211,47,47,0.1)', padding: '2px 8px', borderRadius: 10 }}>
+                      Margin {opMargin.toFixed(1)}%
+                    </span>
                   </div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: opProfit >= 0 ? '#059669' : '#D32F2F', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 800, color: opProfit >= 0 ? '#059669' : '#D32F2F', letterSpacing: '-0.03em', marginBottom: 8 }}>
                     Rp {opProfit.toLocaleString('id-ID')}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', gap: 8 }}>
-                    <span>Revenue − OPEX</span>
-                    <span>•</span>
-                    <strong style={{ color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>Margin {opMargin.toFixed(1)}%</strong>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 500 }}>
+                    Revenue − OPEX
                   </div>
                 </div>
 
                 {/* CARD 3: Studio Investment (Paramara Muted Gold) */}
-                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-                    Studio Investment
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Studio Investment
+                    </span>
+                    <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#B88E39', background: 'rgba(184,142,57,0.1)', padding: '2px 8px', borderRadius: 10 }}>
+                      Reinvestment {reinvestmentRate.toFixed(1)}%
+                    </span>
                   </div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#B88E39', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 800, color: '#B88E39', letterSpacing: '-0.03em', marginBottom: 8 }}>
                     Rp {totalCapex.toLocaleString('id-ID')}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', gap: 8 }}>
-                    <span>CAPEX</span>
-                    <span>•</span>
-                    <strong style={{ color: '#B88E39' }}>Reinvestment {reinvestmentRate.toFixed(1)}%</strong>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 500 }}>
+                    CAPEX (Assets & Hardware)
                   </div>
                 </div>
 
-                {/* CARD 4: Cash Flow After Investment (Red if negative) */}
-                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-                    Cash Flow After Investment
+                {/* CARD 4: Cash Flow After Investment (Red if Negative) */}
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)', boxShadow: '0 2px 12px rgba(0,0,0,0.03)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                    <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                      Cash Flow After Inv.
+                    </span>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: cashFlowAfterInv >= 0 ? '#059669' : '#D32F2F' }} />
                   </div>
-                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: cashFlowAfterInv >= 0 ? '#059669' : '#D32F2F', letterSpacing: '-0.02em', marginBottom: 6 }}>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 800, color: cashFlowAfterInv >= 0 ? '#059669' : '#D32F2F', letterSpacing: '-0.03em', marginBottom: 8 }}>
                     Rp {cashFlowAfterInv.toLocaleString('id-ID')}
                   </div>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 500 }}>
                     Operating Profit − CAPEX
                   </div>
                 </div>
 
               </div>
 
-              {/* 2. MAIN GRID: FINANCIAL FLOW & AI CFO BRIEF */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '2rem', marginBottom: '2.5rem' }}>
+              {/* 2. MAIN SECTION: FINANCIAL FLOW & AI CFO BRIEF */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.75rem', marginBottom: '2rem' }}>
                 
                 {/* FINANCIAL FLOW - CLEAN & UNCLUTTERED */}
-                <div className="glass-card" style={{ padding: '1.75rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1.5rem', letterSpacing: '-0.01em' }}>
-                    Financial Flow
-                  </h3>
+                <div className="glass-card" style={{ padding: '1.75rem', borderRadius: 18, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+                    <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
+                      Financial Flow
+                    </h3>
+                    <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 600 }}>Management Accounting</span>
+                  </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem', fontSize: '0.875rem' }}>
                     
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>GROSS REVENUE</span>
+                      <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>GROSS REVENUE</span>
                       <strong style={{ fontWeight: 700, color: 'var(--text-main)' }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
                     </div>
 
@@ -2316,34 +2331,34 @@ METRIC TO WATCH
                       <span style={{ fontWeight: 600, color: 'var(--text-dim)' }}>Rp {totalOpex.toLocaleString('id-ID')}</span>
                     </div>
 
-                    <div style={{ height: 1, background: 'var(--border-color)', margin: '4px 0' }} />
+                    <div style={{ height: 1, background: 'var(--border-color)', margin: '2px 0' }} />
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: 'rgba(5, 150, 105, 0.08)', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: 'rgba(5, 150, 105, 0.06)', borderRadius: 10 }}>
                       <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.825rem' }}>= OPERATING PROFIT</span>
                       <strong style={{ fontWeight: 800, color: opProfit >= 0 ? '#059669' : '#D32F2F', fontSize: '1rem' }}>Rp {opProfit.toLocaleString('id-ID')}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
                       <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>− CAPEX (Studio Investment)</span>
                       <span style={{ fontWeight: 600, color: '#B88E39' }}>Rp {totalCapex.toLocaleString('id-ID')}</span>
                     </div>
 
-                    <div style={{ height: 1, background: 'var(--border-color)', margin: '4px 0' }} />
+                    <div style={{ height: 1, background: 'var(--border-color)', margin: '2px 0' }} />
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: cashFlowAfterInv >= 0 ? 'rgba(5, 150, 105, 0.05)' : 'rgba(211, 47, 47, 0.05)', borderRadius: 8 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', background: cashFlowAfterInv >= 0 ? 'rgba(5, 150, 105, 0.06)' : 'rgba(211, 47, 47, 0.06)', borderRadius: 10 }}>
                       <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.825rem' }}>= CASH FLOW AFTER INVESTMENT</span>
                       <strong style={{ fontWeight: 800, color: cashFlowAfterInv >= 0 ? '#059669' : '#D32F2F', fontSize: '1rem' }}>Rp {cashFlowAfterInv.toLocaleString('id-ID')}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 }}>
                       <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>− OWNER WITHDRAWALS (Personal)</span>
                       <span style={{ fontWeight: 600, color: 'var(--text-dim)' }}>Rp {totalPersonal.toLocaleString('id-ID')}</span>
                     </div>
 
-                    <div style={{ height: 2, background: 'var(--text-main)', margin: '6px 0 2px' }} />
+                    <div style={{ height: 2, background: 'var(--text-main)', margin: '4px 0 2px' }} />
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 2 }}>
-                      <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 0' }}>
+                      <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                         NET CASH FLOW AFTER OWNER WITHDRAWAL
                       </span>
                       <strong style={{ fontWeight: 900, color: cashFlowAfterOwner >= 0 ? '#059669' : '#D32F2F', fontSize: '1.1rem' }}>
@@ -2355,19 +2370,19 @@ METRIC TO WATCH
                 </div>
 
                 {/* AI CFO BRIEF - SINGLE ELEGANT PANEL */}
-                <div className="glass-card" style={{ padding: '1.75rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div className="glass-card" style={{ padding: '1.75rem', borderRadius: 18, border: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
+                        <h3 style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)', margin: 0, letterSpacing: '-0.02em' }}>
                           AI CFO Brief
                         </h3>
-                        <span style={{ fontSize: '0.675rem', fontWeight: 700, background: 'var(--primary-glow)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 12 }}>
+                        <span style={{ fontSize: '0.65rem', fontWeight: 800, background: 'var(--primary-glow)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 12, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Decision Support
                         </span>
                       </div>
                       {hoursUntilRefreshText && (
-                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 500 }}>
                           {hoursUntilRefreshText}
                         </span>
                       )}
@@ -2375,46 +2390,46 @@ METRIC TO WATCH
 
                     {/* TYPOGRAPHY HIERARCHY CONTENT */}
                     <div style={{ fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-main)' }}>
-                      <div style={{ marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px dashed var(--border-color)' }}>
-                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                      <div style={{ marginBottom: '1.25rem', paddingBottom: '0.85rem', borderBottom: '1px dashed var(--border-color)' }}>
+                        <div style={{ fontSize: '0.675rem', fontWeight: 800, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 4 }}>
                           EXECUTIVE SUMMARY
                         </div>
-                        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>
+                        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)', fontSize: '0.875rem' }}>
                           "{ruleInsight.summary}"
                         </p>
                       </div>
 
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', marginBottom: '1.25rem' }}>
                         <div>
-                          <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                          <div style={{ fontSize: '0.675rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
                             WHAT'S GOING WELL
                           </div>
                           <div style={{ color: 'var(--text-main)', fontSize: '0.825rem' }}>
-                            "{ruleInsight.goingWell}"
+                            {ruleInsight.goingWell}
                           </div>
                         </div>
 
                         <div>
-                          <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#D32F2F', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                          <div style={{ fontSize: '0.675rem', fontWeight: 800, color: '#D32F2F', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
                             BIGGEST RISK
                           </div>
                           <div style={{ color: 'var(--text-main)', fontSize: '0.825rem' }}>
-                            "{ruleInsight.biggestRisk}"
+                            {ruleInsight.biggestRisk}
                           </div>
                         </div>
 
                         <div>
-                          <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#B88E39', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                          <div style={{ fontSize: '0.675rem', fontWeight: 800, color: '#B88E39', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 2 }}>
                             NEXT FOUNDER DECISION
                           </div>
                           <div style={{ color: 'var(--text-main)', fontSize: '0.825rem', fontWeight: 600 }}>
-                            "{ruleInsight.nextDecision}"
+                            {ruleInsight.nextDecision}
                           </div>
                         </div>
                       </div>
 
                       <div style={{ padding: '8px 12px', background: 'var(--bg-input)', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>METRIC TO WATCH:</span>
+                        <span style={{ fontSize: '0.675rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>METRIC TO WATCH:</span>
                         <strong style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>{ruleInsight.metricToWatch}</strong>
                       </div>
 
@@ -2444,66 +2459,81 @@ METRIC TO WATCH
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
                 
                 {/* REVENUE ENGINE MIX */}
-                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', letterSpacing: '-0.01em' }}>
                     Revenue Engine Mix
                   </h4>
 
                   {/* Stacked Horizontal Bar - Neutral Colors (No Red for Live) */}
-                  <div style={{ display: 'flex', height: 16, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-input)', marginBottom: '1rem' }}>
+                  <div style={{ display: 'flex', height: 14, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-input)', marginBottom: '1.25rem' }}>
                     <div style={{ width: `${livePct}%`, background: '#082F26' }} title="Live" />
                     <div style={{ width: `${videoPct}%`, background: '#B88E39' }} title="Video" />
                     <div style={{ width: `${projectPct}%`, background: '#2563EB' }} title="Project" />
                     <div style={{ width: `${otherPct}%`, background: '#6B7280' }} title="Other" />
                   </div>
 
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-dim)', flexWrap: 'wrap', gap: 8 }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#082F26' }} /> Live <strong>{livePct.toFixed(1)}%</strong>
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#B88E39' }} /> Video <strong>{videoPct.toFixed(1)}%</strong>
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#2563EB' }} /> Project <strong>{projectPct.toFixed(1)}%</strong>
-                    </span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6B7280' }} /> Other <strong>{otherPct.toFixed(1)}%</strong>
-                    </span>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.75rem' }}>
+                    <div style={{ padding: '8px 10px', background: 'var(--bg-input)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-dim)' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#082F26' }} /> Live
+                      </span>
+                      <strong style={{ color: 'var(--text-main)' }}>{livePct.toFixed(1)}%</strong>
+                    </div>
+
+                    <div style={{ padding: '8px 10px', background: 'var(--bg-input)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-dim)' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#B88E39' }} /> Video
+                      </span>
+                      <strong style={{ color: 'var(--text-main)' }}>{videoPct.toFixed(1)}%</strong>
+                    </div>
+
+                    <div style={{ padding: '8px 10px', background: 'var(--bg-input)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-dim)' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#2563EB' }} /> Project
+                      </span>
+                      <strong style={{ color: 'var(--text-main)' }}>{projectPct.toFixed(1)}%</strong>
+                    </div>
+
+                    <div style={{ padding: '8px 10px', background: 'var(--bg-input)', borderRadius: 8, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 6, color: 'var(--text-dim)' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6B7280' }} /> Other
+                      </span>
+                      <strong style={{ color: 'var(--text-main)' }}>{otherPct.toFixed(1)}%</strong>
+                    </div>
                   </div>
                 </div>
 
                 {/* CASH HEALTH */}
-                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', letterSpacing: '-0.01em' }}>
                     Cash Health
                   </h4>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.8rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6, borderBottom: '1px dashed var(--border-color)' }}>
                       <span style={{ color: 'var(--text-dim)' }}>Current Cash</span>
-                      <span style={{ color: 'var(--text-dim)', italic: 'true' }}>Requires actual cash balance</span>
+                      <span style={{ color: 'var(--text-dim)', fontStyle: 'italic' }}>Requires actual cash balance</span>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 6, borderBottom: '1px dashed var(--border-color)' }}>
                       <span style={{ color: 'var(--text-dim)' }}>Monthly OPEX</span>
                       <strong style={{ color: 'var(--text-main)' }}>Rp {totalOpex.toLocaleString('id-ID')}</strong>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: 'var(--text-dim)' }}>Cash Runway</span>
-                      <span style={{ color: 'var(--text-dim)', italic: 'true' }}>Requires actual cash balance</span>
+                      <span style={{ color: 'var(--text-dim)', fontStyle: 'italic' }}>Requires actual cash balance</span>
                     </div>
                   </div>
                 </div>
 
                 {/* OPERATING BREAK-EVEN */}
-                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
-                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <h4 style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: '1.25rem', letterSpacing: '-0.01em' }}>
                     Operating Break-even
                   </h4>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.8rem' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.8rem' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: 'var(--text-dim)' }}>Current Revenue</span>
                       <strong style={{ color: 'var(--text-main)' }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
@@ -2514,10 +2544,10 @@ METRIC TO WATCH
                       <strong style={{ color: 'var(--text-main)' }}>Rp {totalOpex.toLocaleString('id-ID')}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4, borderTop: '1px solid var(--border-color)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 6, borderTop: '1px solid var(--border-color)' }}>
                       <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Operating Break-even</span>
                       <span style={{
-                        fontSize: '0.7rem', fontWeight: 800,
+                        fontSize: '0.675rem', fontWeight: 800,
                         background: opProfit >= 0 ? 'rgba(5, 150, 105, 0.1)' : 'rgba(211, 47, 47, 0.1)',
                         color: opProfit >= 0 ? '#059669' : '#D32F2F',
                         padding: '3px 10px', borderRadius: 12
