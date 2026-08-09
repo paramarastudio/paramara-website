@@ -5,7 +5,7 @@ import {
   CheckCircle, Save, Menu, Lock, LogOut, Eye, EyeOff, Trash2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
   Leaf, Compass, Monitor, Cloud, CloudOff, Loader2, PanelLeftClose, Film, DollarSign, CheckCircle2, WifiOff,
-  Sun, Moon, ArrowUpRight, ArrowDownRight, Receipt, Wallet, Scale,
+  Sun, Moon, ArrowUpRight, ArrowDownRight, Receipt, Wallet, Scale, ShoppingBag,
   BarChart2, Users, Smartphone, Target, Pin, FileText, Clock
 } from 'lucide-react';
 
