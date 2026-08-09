@@ -578,55 +578,83 @@ export default function App() {
   const [customDateStart, setCustomDateStart] = useState('');
   const [customDateEnd, setCustomDateEnd] = useState('');
 
-  // Parse various date formats used in the app into a Date object
+  // Parse various date formats used in the app into a local Date object (00:00:00 local time)
   const parseItemDate = (item) => {
-    // Financial items use 'date' field: "2026-08-01"
-    if (item.date) return new Date(item.date);
-    // Shopee Live sessions use 'dateFormatted' or 'startTime': "01-08-2026 21:37" or "01-08-2026"
-    const raw = item.dateFormatted || item.startTime || '';
+    if (!item) return null;
+    const raw = item.date || item.dateFormatted || item.startTime || '';
     if (!raw) return null;
-    // Try DD-MM-YYYY HH:MM or DD-MM-YYYY
-    const match = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+
+    // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
+    let match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    if (match) {
+      return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
+    }
+
+    // DD-MM-YYYY or DD-MM-YYYY HH:mm
+    match = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
     if (match) {
       return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
     }
-    // Try ISO or other standard formats
+
     const d = new Date(raw);
-    return isNaN(d.getTime()) ? null : d;
+    return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
   };
 
-  // Calculate date range from preset
+  // Calculate precise date range boundaries from preset
   const getDateRange = () => {
     const now = new Date();
-    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+    const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
     
     switch (dateFilterPreset) {
       case 'today':
-        return { start: todayStart, end: new Date(todayStart.getTime() + 86400000) };
+        return { start: todayStart, end: todayEnd };
       case '7d':
-        return { start: new Date(todayStart.getTime() - 6 * 86400000), end: new Date(todayStart.getTime() + 86400000) };
-      case '30d':
-        return { start: new Date(todayStart.getTime() - 29 * 86400000), end: new Date(todayStart.getTime() + 86400000) };
-      case 'thisMonth':
-        return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: new Date(todayStart.getTime() + 86400000) };
-      case 'custom':
-        return {
-          start: customDateStart ? new Date(customDateStart) : new Date(0),
-          end: customDateEnd ? new Date(new Date(customDateEnd).getTime() + 86400000) : new Date(todayStart.getTime() + 86400000)
+        return { 
+          start: new Date(todayStart.getTime() - 6 * 86400000), 
+          end: todayEnd 
         };
+      case '30d':
+        return { 
+          start: new Date(todayStart.getTime() - 29 * 86400000), 
+          end: todayEnd 
+        };
+      case 'thisMonth':
+        return { 
+          start: new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0), 
+          end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999) 
+        };
+      case 'custom': {
+        let start = new Date(0);
+        let end = new Date(now.getFullYear() + 10, 11, 31, 23, 59, 59, 999);
+        
+        if (customDateStart) {
+          const parts = customDateStart.split('-');
+          if (parts.length === 3) {
+            start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 0, 0, 0, 0);
+          }
+        }
+        if (customDateEnd) {
+          const parts = customDateEnd.split('-');
+          if (parts.length === 3) {
+            end = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 23, 59, 59, 999);
+          }
+        }
+        return { start, end };
+      }
       default: // 'all'
         return null;
     }
   };
 
-  // Filter any array by date range
+  // Filter any array strictly by date range
   const filterByDate = (items) => {
     const range = getDateRange();
     if (!range) return items; // 'all' — no filter
     return items.filter(item => {
       const d = parseItemDate(item);
-      if (!d) return true; // If no date parseable, include it
-      return d >= range.start && d < range.end;
+      if (!d) return false; // Exclude items with missing/invalid dates when filtering
+      return d.getTime() >= range.start.getTime() && d.getTime() <= range.end.getTime();
     });
   };
 
