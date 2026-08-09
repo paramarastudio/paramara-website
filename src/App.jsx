@@ -790,6 +790,10 @@ export default function App() {
   const netProfit = totalStudioGrossRevenue - totalExpenses;
   const netProfitMarginPercent = totalStudioGrossRevenue > 0 ? (netProfit / totalStudioGrossRevenue) * 100 : 0;
 
+  // Profitability After Personal Purchase
+  const netProfitAfterPersonal = totalStudioGrossRevenue - totalCashOutflow;
+  const netProfitAfterPersonalMarginPercent = totalStudioGrossRevenue > 0 ? (netProfitAfterPersonal / totalStudioGrossRevenue) * 100 : 0;
+
   const totalCombinedIncome = totalShopeeRev + totalProjectRev; // fallback compatibility
   const activeProjectsCount = projects.filter(p => p.status === "Aktif").length;
 
@@ -2602,7 +2606,7 @@ export default function App() {
           <div className="tab-content main-inner">
             
             {/* 1. EXECUTIVE FINANCIAL KPI HEADERS */}
-            <div className="kpi-grid" style={{ marginBottom: '1.5rem' }}>
+            <div className="kpi-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
               <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--secondary-emerald)' }}>
                 <div className="kpi-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
                   <ArrowUpRight style={{ width: 18, height: 18 }} />
@@ -2631,6 +2635,19 @@ export default function App() {
                 </div>
                 <div className="kpi-subtext">
                   Margin: <strong>{netProfitMarginPercent.toFixed(1)}%</strong> {netProfit >= 0 ? "• SURPLUS 📈" : "• DEFISIT 📉"}
+                </div>
+              </div>
+
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>
+                <div className="kpi-icon" style={{ background: netProfitAfterPersonal >= 0 ? 'rgba(139,92,246,0.1)' : 'rgba(211,47,47,0.1)', color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>
+                  <ShoppingBag style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Laba Bersih After Personal</div>
+                <div className="kpi-value" style={{ color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>
+                  Rp {netProfitAfterPersonal.toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">
+                  Sisa Kas (Personal: <strong>Rp {totalPersonal.toLocaleString('id-ID')}</strong>)
                 </div>
               </div>
             </div>
@@ -2789,35 +2806,45 @@ export default function App() {
 
               {/* NET PROFIT HIGHLIGHT BANNER */}
               <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem',
                 padding: '1.25rem 1.5rem',
                 borderRadius: 12,
-                background: netProfit >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)',
-                border: `1.5px solid ${netProfit >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}`,
-                flexWrap: 'wrap', gap: 12
+                background: 'var(--bg-card)',
+                border: '1.5px solid var(--border-color)'
               }}>
-                <div>
-                  <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
-                    📈 Hasil Akhir Laba Bersih (Net Profit)
-                  </span>
-                  <div style={{ fontSize: '1.5rem', fontWeight: 900, color: netProfit >= 0 ? '#059669' : '#D32F2F', marginTop: 2 }}>
+                {/* Metric 1: Operational Net Profit */}
+                <div style={{ padding: '12px 16px', background: netProfit >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)', borderRadius: 10, border: `1px solid ${netProfit >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                      📈 Laba Bersih Operasional (Net Profit)
+                    </span>
+                    <span className="brand-badge" style={{ background: netProfit >= 0 ? '#059669' : '#D32F2F', color: '#fff', fontSize: '0.7rem' }}>
+                      Margin {netProfitMarginPercent.toFixed(1)}%
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: netProfit >= 0 ? '#059669' : '#D32F2F', marginTop: 4 }}>
                     Rp {netProfit.toLocaleString('id-ID')}
+                  </div>
+                  <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 4 }}>
+                    Pendapatan Kotor - (CAPEX + OPEX)
                   </div>
                 </div>
 
-                <div style={{ textAlign: 'right' }}>
-                  <span className="brand-badge" style={{
-                    background: netProfit >= 0 ? '#059669' : '#D32F2F',
-                    color: '#fff',
-                    padding: '6px 14px',
-                    fontSize: '0.8rem',
-                    fontWeight: 800,
-                    borderRadius: 20
-                  }}>
-                    Margin: {netProfitMarginPercent.toFixed(1)}% {netProfit >= 0 ? "• SURPLUS" : "• DEFISIT"}
-                  </span>
+                {/* Metric 2: Net Profit After Personal Purchase */}
+                <div style={{ padding: '12px 16px', background: netProfitAfterPersonal >= 0 ? 'rgba(139, 92, 246, 0.08)' : 'rgba(211, 47, 47, 0.08)', borderRadius: 10, border: `1px solid ${netProfitAfterPersonal >= 0 ? 'rgba(139, 92, 246, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>
+                      🛍️ Laba Bersih After Personal Purchase
+                    </span>
+                    <span className="brand-badge" style={{ background: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F', color: '#fff', fontSize: '0.7rem' }}>
+                      {netProfitAfterPersonal >= 0 ? 'SURPLUS' : 'DEFISIT'}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F', marginTop: 4 }}>
+                    Rp {netProfitAfterPersonal.toLocaleString('id-ID')}
+                  </div>
                   <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 4 }}>
-                    {netProfit >= 0 ? "✅ Performansi Keuangan Sangat Sehat" : "⚠️ Pengeluaran Melebihi Pendapatan"}
+                    Sisa Kas Bersih Setelah Pembelian Pribadi (Rp {totalPersonal.toLocaleString('id-ID')})
                   </div>
                 </div>
               </div>
