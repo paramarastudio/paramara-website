@@ -2833,9 +2833,13 @@ export default function App() {
                   <div style={{ fontSize: '1.4rem', fontWeight: 900, color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F', marginTop: 4 }}>
                     Rp {netProfitAfterPersonal.toLocaleString('id-ID')}
                   </div>
-                  <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 4 }}>
-                    Sisa Kas Bersih Setelah Pembelian Pribadi (Rp {totalPersonal.toLocaleString('id-ID')})
-                           {/* 3. SUB-TAB FILTER BAR & FULL-WIDTH LEDGER TABLES */}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* 3. SUB-TAB FILTER BAR & FULL-WIDTH LEDGER TABLES */}
             <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 4 }}>KATEGORI:</span>
