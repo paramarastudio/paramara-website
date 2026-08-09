@@ -6,7 +6,7 @@ import {
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
   Leaf, Compass, Monitor, Cloud, CloudOff, Loader2, PanelLeftClose, Film, DollarSign, CheckCircle2, WifiOff,
   Sun, Moon, ArrowUpRight, ArrowDownRight, Receipt, Wallet, Scale, ShoppingBag,
-  BarChart2, Users, Smartphone, Target, Pin, FileText, Clock
+  BarChart2, Users, Smartphone, Target, Pin, FileText, Clock, Activity
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
@@ -1326,6 +1326,89 @@ export default function App() {
     e.target.value = "";
   };
 
+  const handleGenerateFinIntelAI = async (totalStudioGrossRevenue, totalOpex, totalCapex, opProfit, opMargin, cashFlowAfterInv, totalPersonal, totalCombinedGMV, reinvestmentRate) => {
+    const snapshot = {
+      grossRevenue: totalStudioGrossRevenue,
+      opex: totalOpex,
+      capex: totalCapex,
+      operatingProfit: opProfit,
+      operatingMargin: opMargin,
+      cashFlowAfterInvestment: cashFlowAfterInv,
+      personalWithdrawals: totalPersonal,
+      totalGMV: totalCombinedGMV,
+      reinvestmentRate: reinvestmentRate
+    };
+
+    try {
+      showToast("Menghasilkan CFO Executive Insight (AI)...", "info", 5000);
+      const prompt = `Sebagai Paramara CFO & Strategy Analyst, berikan insight keuangan eksekutif berdasarkan data berikut:
+Pendapatan Kotor: Rp ${snapshot.grossRevenue}
+OPEX: Rp ${snapshot.opex}
+CAPEX (Investasi Aset): Rp ${snapshot.capex}
+Laba Operasional (Operating Profit): Rp ${snapshot.operatingProfit} (Margin: ${snapshot.operatingMargin.toFixed(1)}%)
+Cash Flow Setelah Investasi: Rp ${snapshot.cashFlowAfterInvestment}
+Penarikan Pribadi (Owner Withdrawal): Rp ${snapshot.personalWithdrawals}
+Total E-Commerce GMV: Rp ${snapshot.totalGMV}
+Tingkat Reinvestasi (Reinvestment Rate): ${snapshot.reinvestmentRate.toFixed(1)}%
+
+Berikan analisis dalam format teks ringkas (tanpa basa-basi). Gunakan format ini persis:
+
+EXECUTIVE SUMMARY
+[Ringkasan kondisi saat ini]
+
+WHAT IS GOING WELL
+[Kekuatan utama]
+
+BIGGEST RISK
+[Risiko terbesar]
+
+OPPORTUNITY
+[Peluang terbesar]
+
+NEXT 7 DAYS
+[Satu tindakan konkrit]
+
+METRIC TO WATCH
+[Metrik utama yang harus dipantau]`;
+
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
+      if (!apiKey) {
+        throw new Error("API Key Gemini tidak ditemukan. Harap masukkan di pengaturan.");
+      }
+
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error?.message || "Gagal menghubungi AI");
+      
+      const insightText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      
+      if (!insightText) throw new Error("Format respons AI tidak valid.");
+
+      const generatedAt = new Date().toLocaleString('id-ID');
+      const nextEligibleTime = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
+
+      setStudioData(prev => ({
+        ...prev,
+        finIntelAiInsight: {
+          insightText,
+          generatedAt,
+          nextEligibleGenerationTime: nextEligibleTime,
+          dataSnapshot: snapshot
+        }
+      }));
+
+      showToast("AI Insight berhasil diperbarui!");
+    } catch (err) {
+      console.error(err);
+      showToast("Gagal menghasilkan insight: " + err.message, "error");
+    }
+  };
+
   const handleExportLiveToExcel = () => {
     if (!sessions || sessions.length === 0) {
       showToast('Tidak ada data Shopee Live untuk diekspor!', 'error');
@@ -1730,6 +1813,9 @@ export default function App() {
             <button className={`tab-btn ${activeTab === 'tabAnalytics' ? 'active' : ''}`} onClick={() => { setActiveTab('tabAnalytics'); setSidebarOpen(false); }}>
               <LayoutDashboard /> Executive Dashboard
             </button>
+            <button className={`tab-btn ${activeTab === 'tabFinIntel' ? 'active' : ''}`} onClick={() => { setActiveTab('tabFinIntel'); setSidebarOpen(false); }}>
+              <Activity /> Financial Intelligence
+            </button>
             <button className={`tab-btn ${activeTab === 'tabShopeeTracker' ? 'active' : ''}`} onClick={() => { setActiveTab('tabShopeeTracker'); setSidebarOpen(false); }}>
               <Video /> Shopee Live Tracker
             </button>
@@ -2083,6 +2169,280 @@ export default function App() {
         )}
 
         {/* Tab 2: Shopee Live Tracker */}
+        {/* Tab 1b: Financial Intelligence (CFO View) */}
+        {activeTab === 'tabFinIntel' && (() => {
+          // Additional CFO Calculations
+          const opProfit = totalStudioGrossRevenue - totalOpex;
+          const opMargin = totalStudioGrossRevenue > 0 ? (opProfit / totalStudioGrossRevenue) * 100 : 0;
+          const cashFlowAfterInv = opProfit - totalCapex;
+          const cashFlowAfterOwner = cashFlowAfterInv - totalPersonal;
+          const reinvestmentRate = totalStudioGrossRevenue > 0 ? (totalCapex / totalStudioGrossRevenue) * 100 : 0;
+          const shopeeLiveDependency = totalStudioGrossRevenue > 0 ? (totalGrossCommission / totalStudioGrossRevenue) * 100 : 0;
+
+          // Rule-based Fallback AI Engine
+          let ruleBasedInsight = {
+            summary: "Operasi bisnis berjalan stabil.",
+            whatIsWell: "Semua indikator berada dalam batas normal.",
+            risk: "Belum ada risiko signifikan yang terdeteksi.",
+            opportunity: "Lanjutkan strategi saat ini dan identifikasi area efisiensi.",
+            action: "Pertahankan performa dan pantau margin operasional.",
+            metric: "Operating Profit Margin"
+          };
+
+          if (opProfit > 0 && cashFlowAfterInv < 0) {
+            ruleBasedInsight = {
+              summary: "Operasional sudah menghasilkan profit, tetapi cash flow negatif karena investasi CAPEX yang tinggi.",
+              whatIsWell: "Bisnis inti sudah profitable (Revenue melebihi OPEX).",
+              risk: "Cash flow terkuras secara agresif oleh pembelian aset/CAPEX.",
+              opportunity: "Skalakan operasional untuk memaksimalkan ROI dari aset yang baru dibeli.",
+              action: "Tunda pembelian aset (CAPEX) tambahan sementara sampai kas kembali stabil.",
+              metric: "Cash Flow After Investment"
+            };
+          } else if (totalOpex > totalStudioGrossRevenue) {
+            ruleBasedInsight = {
+              summary: "Pendapatan saat ini belum menutup biaya operasional rutin (OPEX).",
+              whatIsWell: "Eksperimen model bisnis masih berjalan (Burn Phase).",
+              risk: "Cash runway (sisa kas) berpotensi terkuras jika OPEX tidak ditekan.",
+              opportunity: "Fokus pada produk dengan margin/komisi paling tinggi.",
+              action: "Lakukan efisiensi OPEX dan tingkatkan frekuensi live streaming.",
+              metric: "Operating Profit"
+            };
+          } else if (totalCapex > totalStudioGrossRevenue && totalStudioGrossRevenue > 0) {
+             ruleBasedInsight = {
+              summary: "Investasi studio saat ini lebih besar dari total pendapatan kotor (Revenue).",
+              whatIsWell: "Infrastruktur fisik studio sedang dibangun secara signifikan.",
+              risk: "Resiko likuiditas jangka pendek jika break-even terlambat.",
+              opportunity: "Aset studio dapat disewakan atau digunakan untuk klien eksternal.",
+              action: "Pantau cash runway secara harian sebelum melakukan pembelian aset tambahan.",
+              metric: "Reinvestment Rate"
+            };
+          } else if (shopeeLiveDependency > 70) {
+            ruleBasedInsight = {
+              summary: "Revenue saat ini sangat bergantung pada Shopee Live.",
+              whatIsWell: "Shopee Live terbukti menjadi revenue engine utama yang sukses.",
+              risk: "Ketergantungan pada satu kanal (Single Point of Failure).",
+              opportunity: "Diversifikasi ke Video Commerce atau Client/Project Revenue sangat dianjurkan.",
+              action: "Alokasikan 20% waktu produksi untuk Video Commerce atau B2B/Client.",
+              metric: "Revenue Mix (Dependency)"
+            };
+          } else if (totalProjectRev === 0 && totalStudioGrossRevenue > 0) {
+            ruleBasedInsight = {
+              summary: "Studio saat ini 100% bergantung pada komisi affiliate B2C.",
+              whatIsWell: "Kinerja komisi affiliate berjalan dengan sangat baik.",
+              risk: "Fluktuasi komisi e-commerce sangat rentan terhadap perubahan algoritma/kebijakan.",
+              opportunity: "Revenue client (B2B/Jasa Studio) belum dioptimalkan sama sekali.",
+              action: "Akuisisi client eksternal pertama (Jasa Live/Konten) dapat menjadi prioritas.",
+              metric: "Client Revenue"
+            };
+          } else if (opProfit > 0 && cashFlowAfterInv > 0) {
+            ruleBasedInsight = {
+              summary: "Kondisi keuangan prima. Operasional profitable dan cash flow setelah investasi positif.",
+              whatIsWell: "Operating break-even telah tercapai dengan kas riil yang terus bertambah.",
+              risk: "Terlalu konservatif dalam reinvestasi bisa memperlambat pertumbuhan masa depan.",
+              opportunity: "Fokus dapat digeser dari validasi menuju ekspansi terkendali (controlled scaling).",
+              action: "Pertimbangkan perekrutan talent baru atau ekspansi peralatan baru (CAPEX).",
+              metric: "Operating Profit Margin"
+            };
+          }
+
+          // Use AI Insight if available and not expired, otherwise Fallback
+          const aiData = studioData.finIntelAiInsight || {};
+          const hasValidAiInsight = aiData.insightText && new Date(aiData.nextEligibleGenerationTime) > new Date();
+
+          return (
+            <div className="tab-content main-inner">
+              <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+                <div>
+                  <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <Activity style={{ width: 18, height: 18 }} /> Financial Intelligence
+                  </h3>
+                  <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>CFO View — Profitability, Cash Flow, Investment & Business Decisions</span>
+                </div>
+              </div>
+
+              {/* SECTION 1: EXECUTIVE FINANCIAL SNAPSHOT */}
+              <div className="kpi-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+                <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--secondary-emerald)' }}>
+                  <div className="kpi-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
+                    <DollarSign style={{ width: 16, height: 16 }} />
+                  </div>
+                  <div className="kpi-title">Gross Revenue</div>
+                  <div className="kpi-value text-success">
+                    Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}
+                  </div>
+                  <div className="kpi-subtext">Live + Video + Proyek + Lainnya</div>
+                </div>
+
+                <div className="glass-card kpi-card" style={{ '--kpi-accent': opProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                  <div className="kpi-icon" style={{ background: opProfit >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(211,47,47,0.1)', color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                    <TrendingUp style={{ width: 16, height: 16 }} />
+                  </div>
+                  <div className="kpi-title">Operating Profit</div>
+                  <div className="kpi-value" style={{ color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                    Rp {opProfit.toLocaleString('id-ID')}
+                  </div>
+                  <div className="kpi-subtext">Margin: {opMargin.toFixed(1)}% (Rev - OPEX)</div>
+                </div>
+
+                <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
+                  <div className="kpi-icon" style={{ background: 'rgba(184,142,57,0.1)', color: '#B88E39' }}>
+                    <Briefcase style={{ width: 16, height: 16 }} />
+                  </div>
+                  <div className="kpi-title">Studio Investment (CAPEX)</div>
+                  <div className="kpi-value text-warning">
+                    Rp {totalCapex.toLocaleString('id-ID')}
+                  </div>
+                  <div className="kpi-subtext">Reinvestment Rate: {reinvestmentRate.toFixed(1)}%</div>
+                </div>
+
+                <div className="glass-card kpi-card" style={{ '--kpi-accent': cashFlowAfterInv >= 0 ? 'var(--primary)' : '#D32F2F' }}>
+                  <div className="kpi-icon" style={{ background: cashFlowAfterInv >= 0 ? 'var(--primary-glow)' : 'rgba(211,47,47,0.1)', color: cashFlowAfterInv >= 0 ? 'var(--primary)' : '#D32F2F' }}>
+                    <Scale style={{ width: 16, height: 16 }} />
+                  </div>
+                  <div className="kpi-title">Cash Flow (After Inv.)</div>
+                  <div className="kpi-value" style={{ color: cashFlowAfterInv >= 0 ? 'var(--primary)' : '#D32F2F' }}>
+                    Rp {cashFlowAfterInv.toLocaleString('id-ID')}
+                  </div>
+                  <div className="kpi-subtext">Op. Profit - CAPEX</div>
+                </div>
+              </div>
+
+              {/* SECTIONS: P&L VIEW AND INSIGHT ENGINE */}
+              <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+                
+                {/* ACCOUNTING BREAKDOWN */}
+                <div className="glass-card chart-card">
+                  <div className="chart-header">
+                    <h3><FileText style={{ color: 'var(--primary)', width: 16, height: 16 }} /> Laporan Laba Rugi Komprehensif</h3>
+                  </div>
+                  <div className="chart-container" style={{ padding: '1.25rem', fontSize: '0.85rem' }}>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--border-color)', marginBottom: 8 }}>
+                      <span>Gross Revenue</span>
+                      <strong className="text-success">Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
+                    </div>
+                    
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 4 }}>
+                      <span style={{ color: 'var(--text-dim)' }}>(-) Operating Expenses (OPEX)</span>
+                      <strong className="text-warning">Rp {totalOpex.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--primary)', marginBottom: 8 }}>
+                      <span style={{ fontWeight: 700, color: 'var(--primary)' }}>= OPERATING PROFIT</span>
+                      <strong style={{ color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>Rp {opProfit.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 4 }}>
+                      <span style={{ color: 'var(--text-dim)' }}>(-) Capital Expenditures (CAPEX)</span>
+                      <strong className="text-warning">Rp {totalCapex.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--primary)', marginBottom: 8 }}>
+                      <span style={{ fontWeight: 700, color: 'var(--primary)' }}>= CASH FLOW AFTER INVESTMENT</span>
+                      <strong style={{ color: cashFlowAfterInv >= 0 ? '#8B5CF6' : '#D32F2F' }}>Rp {cashFlowAfterInv.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 4 }}>
+                      <span style={{ color: 'var(--text-dim)' }}>(-) Owner Withdrawals (Personal)</span>
+                      <strong style={{ color: '#D32F2F' }}>Rp {totalPersonal.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderTop: '2px double var(--primary)', paddingTop: 8, marginTop: 8 }}>
+                      <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.95rem' }}>NET CASH POSITION</span>
+                      <strong style={{ fontSize: '0.95rem', color: cashFlowAfterOwner >= 0 ? '#059669' : '#D32F2F' }}>Rp {cashFlowAfterOwner.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    {/* REVENUE MIX */}
+                    <div style={{ marginTop: '1.5rem' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: 8, textTransform: 'uppercase' }}>Revenue Engine Mix</div>
+                      <div style={{ display: 'flex', gap: 4, height: 24, borderRadius: 12, overflow: 'hidden', background: 'var(--bg-input)' }}>
+                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalGrossCommission/totalStudioGrossRevenue)*100 : 0}%`, background: '#EE4D2D', title: 'Shopee Live' }} />
+                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalGrossVideoCommission/totalStudioGrossRevenue)*100 : 0}%`, background: '#F97316', title: 'Shopee Video' }} />
+                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalProjectRev/totalStudioGrossRevenue)*100 : 0}%`, background: '#059669', title: 'Klien/Proyek' }} />
+                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalOtherIncome/totalStudioGrossRevenue)*100 : 0}%`, background: '#B88E39', title: 'Pendapatan Lain' }} />
+                      </div>
+                      <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.7rem', color: 'var(--text-dim)', flexWrap: 'wrap' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#EE4D2D' }}/> Live: {totalStudioGrossRevenue > 0 ? ((totalGrossCommission/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F97316' }}/> Video: {totalStudioGrossRevenue > 0 ? ((totalGrossVideoCommission/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669' }}/> Proyek: {totalStudioGrossRevenue > 0 ? ((totalProjectRev/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#B88E39' }}/> Lain: {totalStudioGrossRevenue > 0 ? ((totalOtherIncome/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+
+                {/* AI & RULE-BASED INSIGHT ENGINE */}
+                <div className="glass-card chart-card" style={{ border: '1px solid var(--primary)' }}>
+                  <div className="chart-header" style={{ background: 'var(--primary-glow)', borderBottom: '1px solid var(--border-color)' }}>
+                    <div>
+                      <h3 style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles style={{ width: 16, height: 16 }} /> AI CFO & Strategy Analyst</h3>
+                      <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                        {hasValidAiInsight ? `Analysis Generated: ${aiData.generatedAt}` : 'Real-time Rule-Based Strategy (AI Offline)'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="chart-container" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
+                    
+                    {hasValidAiInsight ? (
+                      <div className="ai-insight-content" style={{ fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-main)', whiteSpace: 'pre-line' }}>
+                        {aiData.insightText}
+                      </div>
+                    ) : (
+                      <div className="rule-based-insight" style={{ fontSize: '0.85rem' }}>
+                        <div style={{ marginBottom: 12 }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Executive Summary</span>
+                          <p style={{ fontWeight: 700, color: 'var(--primary)' }}>{ruleBasedInsight.summary}</p>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--secondary-emerald)', textTransform: 'uppercase' }}>Kekuatan (Going Well)</span>
+                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.whatIsWell}</p>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#D32F2F', textTransform: 'uppercase' }}>Risiko (Biggest Risk)</span>
+                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.risk}</p>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase' }}>Peluang (Opportunity)</span>
+                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.opportunity}</p>
+                          </div>
+                          <div>
+                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#B88E39', textTransform: 'uppercase' }}>Prioritas 7 Hari (Action)</span>
+                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.action}</p>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 12, padding: '8px 12px', background: 'var(--bg-input)', borderRadius: 6, border: '1px solid var(--border-color)', display: 'inline-block' }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Metric to Watch:</span>
+                          <strong style={{ marginLeft: 6, color: 'var(--primary)' }}>{ruleBasedInsight.metric}</strong>
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)', textAlign: 'center' }}>
+                      <button 
+                        className="btn btn-primary" 
+                        onClick={() => handleGenerateFinIntelAI(totalStudioGrossRevenue, totalOpex, totalCapex, opProfit, opMargin, cashFlowAfterInv, totalPersonal, totalCombinedGMV, reinvestmentRate)} 
+                        disabled={hasValidAiInsight}
+                        style={{ width: '100%', justifyContent: 'center', opacity: hasValidAiInsight ? 0.6 : 1, cursor: hasValidAiInsight ? 'not-allowed' : 'pointer' }}
+                      >
+                        <Sparkles style={{ width: 14, height: 14 }} /> 
+                        {hasValidAiInsight ? 'Generate New AI Insight' : 'Generate Full AI Analysis (Uses Credits)'}
+                      </button>
+                      {hasValidAiInsight && (
+                        <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 8 }}>
+                          AI Insight tersedia kembali pada: <strong>{new Date(aiData.nextEligibleGenerationTime).toLocaleString('id-ID')}</strong> (Cooldown 48 Jam)
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+          );
+        })()}
+
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content main-inner">
 

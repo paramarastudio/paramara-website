@@ -51,6 +51,9 @@ export const INITIAL_STUDIO_DATA = {
   personalList: [],
   otherIncomeList: [],
 
+  // 4b. AI Financial Insight Cache
+  finIntelAiInsight: null,
+
   // 5. Pinterest Analytics (US Affiliate Market)
   pinterestAnalytics: [
     {
