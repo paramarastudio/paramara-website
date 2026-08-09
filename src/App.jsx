@@ -1010,12 +1010,26 @@ export default function App() {
     }
   };
 
+  const parseDateToISO = (dateStr) => {
+    if (!dateStr) return new Date().toISOString().split('T')[0];
+    const clean = dateStr.trim().split(' ')[0];
+    const parts = clean.split(/[-/]/);
+    if (parts.length === 3) {
+      if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
+      if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    }
+    return new Date().toISOString().split('T')[0];
+  };
+
   const handleOpenManualLiveInput = () => {
-    const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+    const now = new Date();
+    const isoDate = now.toISOString().split('T')[0];
+    const todayStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
     setScannedPreview({
       id: "live_manual_" + Date.now(),
       title: `Sesi Live ${todayStr}`,
       startTime: `${todayStr} 20:00`,
+      dateISO: isoDate,
       dateFormatted: todayStr,
       duration: "01:30:00",
       revenue: 0,
@@ -1035,10 +1049,13 @@ export default function App() {
   };
 
   const handleOpenManualVideoInput = () => {
-    const todayStr = new Date().toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+    const now = new Date();
+    const isoDate = now.toISOString().split('T')[0];
+    const todayStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
     setScannedVideoPreview({
       id: "video_manual_" + Date.now(),
       title: `Performa Video ${todayStr}`,
+      dateISO: isoDate,
       dateFormatted: todayStr,
       revenue: 0,
       grossCommission: 0,
@@ -3912,8 +3929,25 @@ export default function App() {
                     <input className="form-input" value={scannedVideoPreview.title} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, title: e.target.value })} />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Tanggal</label>
-                    <input className="form-input" value={scannedVideoPreview.dateFormatted} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, dateFormatted: e.target.value })} />
+                    <label className="form-label">Tanggal (Pilih Kalender)</label>
+                    <input 
+                      className="form-input" 
+                      type="date" 
+                      value={parseDateToISO(scannedVideoPreview?.dateISO || scannedVideoPreview?.dateFormatted)} 
+                      onChange={e => {
+                        const newISO = e.target.value;
+                        if (newISO) {
+                          const [y, m, d] = newISO.split('-');
+                          const formatted = `${d}-${m}-${y}`;
+                          setScannedVideoPreview({ 
+                            ...scannedVideoPreview, 
+                            dateISO: newISO,
+                            dateFormatted: formatted,
+                            title: `Performa Video ${formatted}`
+                          });
+                        }
+                      }} 
+                    />
                   </div>
 
                   <div className="form-group">
@@ -3984,12 +4018,24 @@ export default function App() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Tanggal</label>
+                  <label className="form-label">Tanggal (Pilih Kalender)</label>
                   <input 
                     className="form-input" 
-                    placeholder="DD-MM-YYYY" 
-                    value={scannedVideoPreview?.dateFormatted || ''} 
-                    onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, dateFormatted: e.target.value })} 
+                    type="date" 
+                    value={parseDateToISO(scannedVideoPreview?.dateISO || scannedVideoPreview?.dateFormatted)} 
+                    onChange={e => {
+                      const newISO = e.target.value;
+                      if (newISO) {
+                        const [y, m, d] = newISO.split('-');
+                        const formatted = `${d}-${m}-${y}`;
+                        setScannedVideoPreview({ 
+                          ...scannedVideoPreview, 
+                          dateISO: newISO,
+                          dateFormatted: formatted,
+                          title: `Performa Video ${formatted}`
+                        });
+                      }
+                    }} 
                   />
                 </div>
               </div>
@@ -4096,12 +4142,26 @@ export default function App() {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Tanggal & Waktu Sesi</label>
+                  <label className="form-label">Tanggal Sesi Live (Kalender)</label>
                   <input 
                     className="form-input" 
-                    placeholder="DD-MM-YYYY HH:MM" 
-                    value={scannedPreview?.startTime || ''} 
-                    onChange={e => setScannedPreview({ ...scannedPreview, startTime: e.target.value, dateFormatted: e.target.value.split(' ')[0] })} 
+                    type="date" 
+                    value={parseDateToISO(scannedPreview?.dateISO || scannedPreview?.dateFormatted || scannedPreview?.startTime)} 
+                    onChange={e => {
+                      const newISO = e.target.value;
+                      if (newISO) {
+                        const [y, m, d] = newISO.split('-');
+                        const formatted = `${d}-${m}-${y}`;
+                        const timePart = scannedPreview?.startTime?.split(' ')[1] || '20:00';
+                        setScannedPreview({ 
+                          ...scannedPreview, 
+                          dateISO: newISO,
+                          dateFormatted: formatted,
+                          startTime: `${formatted} ${timePart}`,
+                          title: `Sesi Live ${formatted}`
+                        });
+                      }
+                    }} 
                   />
                 </div>
               </div>
@@ -4204,8 +4264,25 @@ export default function App() {
                 <input className="form-input" value={editingVideoSession.title} onChange={e => setEditingVideoSession({ ...editingVideoSession, title: e.target.value })} />
               </div>
               <div className="form-group">
-                <label className="form-label">Tanggal</label>
-                <input className="form-input" value={editingVideoSession.dateFormatted} onChange={e => setEditingVideoSession({ ...editingVideoSession, dateFormatted: e.target.value })} />
+                <label className="form-label">Tanggal (Pilih Kalender)</label>
+                <input 
+                  className="form-input" 
+                  type="date" 
+                  value={parseDateToISO(editingVideoSession?.dateISO || editingVideoSession?.dateFormatted)} 
+                  onChange={e => {
+                    const newISO = e.target.value;
+                    if (newISO) {
+                      const [y, m, d] = newISO.split('-');
+                      const formatted = `${d}-${m}-${y}`;
+                      setEditingVideoSession({ 
+                        ...editingVideoSession, 
+                        dateISO: newISO,
+                        dateFormatted: formatted,
+                        title: `Performa Video ${formatted}`
+                      });
+                    }
+                  }} 
+                />
               </div>
 
               <div className="form-group">
