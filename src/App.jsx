@@ -609,6 +609,11 @@ export default function App() {
     switch (dateFilterPreset) {
       case 'today':
         return { start: todayStart, end: todayEnd };
+      case 'yesterday': {
+        const yStart = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 0, 0, 0, 0);
+        const yEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1, 23, 59, 59, 999);
+        return { start: yStart, end: yEnd };
+      }
       case '7d':
         return { 
           start: new Date(todayStart.getTime() - 6 * 86400000), 
@@ -2000,6 +2005,7 @@ METRIC TO WATCH
           {[
             { key: 'all', label: 'Semua' },
             { key: 'today', label: 'Hari Ini' },
+            { key: 'yesterday', label: 'Kemarin' },
             { key: '7d', label: '7 Hari' },
             { key: '30d', label: '30 Hari' },
             { key: 'thisMonth', label: 'Bulan Ini' },
