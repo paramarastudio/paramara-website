@@ -630,22 +630,33 @@ export default function App() {
           end: new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999) 
         };
       case 'custom': {
-        let start = new Date(0);
-        let end = new Date(now.getFullYear() + 10, 11, 31, 23, 59, 59, 999);
+        let startObj = null;
+        let endObj = null;
         
         if (customDateStart) {
           const parts = customDateStart.split('-');
           if (parts.length === 3) {
-            start = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 0, 0, 0, 0);
+            startObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 0, 0, 0, 0);
           }
         }
         if (customDateEnd) {
           const parts = customDateEnd.split('-');
           if (parts.length === 3) {
-            end = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 23, 59, 59, 999);
+            endObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]), 23, 59, 59, 999);
           }
         }
-        return { start, end };
+
+        if (startObj && endObj) {
+          return { start: startObj, end: endObj };
+        } else if (startObj) {
+          const singleDayEnd = new Date(startObj.getFullYear(), startObj.getMonth(), startObj.getDate(), 23, 59, 59, 999);
+          return { start: startObj, end: singleDayEnd };
+        } else if (endObj) {
+          const singleDayStart = new Date(endObj.getFullYear(), endObj.getMonth(), endObj.getDate(), 0, 0, 0, 0);
+          return { start: singleDayStart, end: endObj };
+        } else {
+          return { start: todayStart, end: todayEnd };
+        }
       }
       default: // 'all'
         return null;
