@@ -2171,278 +2171,373 @@ METRIC TO WATCH
         {/* Tab 2: Shopee Live Tracker */}
         {/* Tab 1b: Financial Intelligence (CFO View) */}
         {activeTab === 'tabFinIntel' && (() => {
-          // Additional CFO Calculations
+          // CFO Calculations
           const opProfit = totalStudioGrossRevenue - totalOpex;
           const opMargin = totalStudioGrossRevenue > 0 ? (opProfit / totalStudioGrossRevenue) * 100 : 0;
           const cashFlowAfterInv = opProfit - totalCapex;
           const cashFlowAfterOwner = cashFlowAfterInv - totalPersonal;
           const reinvestmentRate = totalStudioGrossRevenue > 0 ? (totalCapex / totalStudioGrossRevenue) * 100 : 0;
-          const shopeeLiveDependency = totalStudioGrossRevenue > 0 ? (totalGrossCommission / totalStudioGrossRevenue) * 100 : 0;
+          
+          const livePct = totalStudioGrossRevenue > 0 ? (totalGrossCommission / totalStudioGrossRevenue) * 100 : 0;
+          const videoPct = totalStudioGrossRevenue > 0 ? (totalGrossVideoCommission / totalStudioGrossRevenue) * 100 : 0;
+          const projectPct = totalStudioGrossRevenue > 0 ? (totalProjectRev / totalStudioGrossRevenue) * 100 : 0;
+          const otherPct = totalStudioGrossRevenue > 0 ? (totalOtherIncome / totalStudioGrossRevenue) * 100 : 0;
 
-          // Rule-based Fallback AI Engine
-          let ruleBasedInsight = {
-            summary: "Operasi bisnis berjalan stabil.",
-            whatIsWell: "Semua indikator berada dalam batas normal.",
-            risk: "Belum ada risiko signifikan yang terdeteksi.",
-            opportunity: "Lanjutkan strategi saat ini dan identifikasi area efisiensi.",
-            action: "Pertahankan performa dan pantau margin operasional.",
-            metric: "Operating Profit Margin"
-          };
-
-          if (opProfit > 0 && cashFlowAfterInv < 0) {
-            ruleBasedInsight = {
-              summary: "Operasional sudah menghasilkan profit, tetapi cash flow negatif karena investasi CAPEX yang tinggi.",
-              whatIsWell: "Bisnis inti sudah profitable (Revenue melebihi OPEX).",
-              risk: "Cash flow terkuras secara agresif oleh pembelian aset/CAPEX.",
-              opportunity: "Skalakan operasional untuk memaksimalkan ROI dari aset yang baru dibeli.",
-              action: "Tunda pembelian aset (CAPEX) tambahan sementara sampai kas kembali stabil.",
-              metric: "Cash Flow After Investment"
-            };
-          } else if (totalOpex > totalStudioGrossRevenue) {
-            ruleBasedInsight = {
-              summary: "Pendapatan saat ini belum menutup biaya operasional rutin (OPEX).",
-              whatIsWell: "Eksperimen model bisnis masih berjalan (Burn Phase).",
-              risk: "Cash runway (sisa kas) berpotensi terkuras jika OPEX tidak ditekan.",
-              opportunity: "Fokus pada produk dengan margin/komisi paling tinggi.",
-              action: "Lakukan efisiensi OPEX dan tingkatkan frekuensi live streaming.",
-              metric: "Operating Profit"
-            };
-          } else if (totalCapex > totalStudioGrossRevenue && totalStudioGrossRevenue > 0) {
-             ruleBasedInsight = {
-              summary: "Investasi studio saat ini lebih besar dari total pendapatan kotor (Revenue).",
-              whatIsWell: "Infrastruktur fisik studio sedang dibangun secara signifikan.",
-              risk: "Resiko likuiditas jangka pendek jika break-even terlambat.",
-              opportunity: "Aset studio dapat disewakan atau digunakan untuk klien eksternal.",
-              action: "Pantau cash runway secara harian sebelum melakukan pembelian aset tambahan.",
-              metric: "Reinvestment Rate"
-            };
-          } else if (shopeeLiveDependency > 70) {
-            ruleBasedInsight = {
-              summary: "Revenue saat ini sangat bergantung pada Shopee Live.",
-              whatIsWell: "Shopee Live terbukti menjadi revenue engine utama yang sukses.",
-              risk: "Ketergantungan pada satu kanal (Single Point of Failure).",
-              opportunity: "Diversifikasi ke Video Commerce atau Client/Project Revenue sangat dianjurkan.",
-              action: "Alokasikan 20% waktu produksi untuk Video Commerce atau B2B/Client.",
-              metric: "Revenue Mix (Dependency)"
-            };
-          } else if (totalProjectRev === 0 && totalStudioGrossRevenue > 0) {
-            ruleBasedInsight = {
-              summary: "Studio saat ini 100% bergantung pada komisi affiliate B2C.",
-              whatIsWell: "Kinerja komisi affiliate berjalan dengan sangat baik.",
-              risk: "Fluktuasi komisi e-commerce sangat rentan terhadap perubahan algoritma/kebijakan.",
-              opportunity: "Revenue client (B2B/Jasa Studio) belum dioptimalkan sama sekali.",
-              action: "Akuisisi client eksternal pertama (Jasa Live/Konten) dapat menjadi prioritas.",
-              metric: "Client Revenue"
-            };
-          } else if (opProfit > 0 && cashFlowAfterInv > 0) {
-            ruleBasedInsight = {
-              summary: "Kondisi keuangan prima. Operasional profitable dan cash flow setelah investasi positif.",
-              whatIsWell: "Operating break-even telah tercapai dengan kas riil yang terus bertambah.",
-              risk: "Terlalu konservatif dalam reinvestasi bisa memperlambat pertumbuhan masa depan.",
-              opportunity: "Fokus dapat digeser dari validasi menuju ekspansi terkendali (controlled scaling).",
-              action: "Pertimbangkan perekrutan talent baru atau ekspansi peralatan baru (CAPEX).",
-              metric: "Operating Profit Margin"
-            };
+          // AI Cache Check (48h Cooldown)
+          const aiData = studioData.finIntelAiInsight || {};
+          const now = new Date();
+          const hasValidAiInsight = aiData.insightText && new Date(aiData.nextEligibleGenerationTime) > now;
+          
+          let hoursAgoText = null;
+          let hoursUntilRefreshText = null;
+          if (aiData.generatedAt) {
+            const nextTime = new Date(aiData.nextEligibleGenerationTime);
+            const diffMs = nextTime - now;
+            const hoursLeft = Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60)));
+            hoursUntilRefreshText = `AI refresh available in ${hoursLeft}h`;
+            hoursAgoText = `AI analysis updated ${aiData.generatedAt}`;
           }
 
-          // Use AI Insight if available and not expired, otherwise Fallback
-          const aiData = studioData.finIntelAiInsight || {};
-          const hasValidAiInsight = aiData.insightText && new Date(aiData.nextEligibleGenerationTime) > new Date();
+          // Smart Rule-Based Insights with Nuanced CAPEX Logic
+          let ruleInsight = {
+            summary: opProfit >= 0 && cashFlowAfterInv < 0
+              ? "Operations are currently profitable, but cash flow is negative because studio investment (CAPEX) is higher than operating profit."
+              : opProfit < 0
+              ? "Operating expenses currently exceed gross revenue. Focus on operating break-even before expansion."
+              : "Business operations and cash flow are healthy and positive.",
+            goingWell: livePct > 50
+              ? `Operating profit is positive (${opMargin.toFixed(1)}% margin) and Live Commerce is currently the primary revenue engine.`
+              : "Revenue streams are diversified across multiple channels.",
+            biggestRisk: cashFlowAfterInv < 0
+              ? "CAPEX is currently larger than operating profit, placing short-term pressure on cash flow."
+              : totalOpex > totalStudioGrossRevenue
+              ? "Recurring OPEX is higher than gross revenue."
+              : "Single platform concentration risk if affiliate fees fluctuate.",
+            nextDecision: cashFlowAfterInv < 0
+              ? "Prioritize revenue-generating CAPEX and delay non-essential discretionary purchases until cash inflows become more predictable."
+              : "Maintain momentum and consider scaling high-performing live sessions or client acquisition.",
+            metricToWatch: cashFlowAfterInv < 0 ? "Cash Flow After Investment" : "Operating Profit Margin"
+          };
 
           return (
-            <div className="tab-content main-inner">
-              <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-                <div>
-                  <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Activity style={{ width: 18, height: 18 }} /> Financial Intelligence
-                  </h3>
-                  <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>CFO View — Profitability, Cash Flow, Investment & Business Decisions</span>
+            <div className="tab-content main-inner" style={{ maxWidth: 1200, margin: '0 auto', paddingBottom: '3rem' }}>
+              
+              {/* TOP HEADER - CLEAN & MINIMALIST */}
+              <div style={{ marginBottom: '2rem' }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
+                  <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', margin: 0 }}>
+                    Financial Intelligence
+                  </h2>
+                  <span style={{ fontSize: '0.85rem', color: 'var(--text-dim)', fontWeight: 500 }}>
+                    CFO View — Profitability, Cash Flow, Investment & Business Decisions
+                  </span>
                 </div>
               </div>
 
-              {/* SECTION 1: EXECUTIVE FINANCIAL SNAPSHOT */}
-              <div className="kpi-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
-                <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--secondary-emerald)' }}>
-                  <div className="kpi-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
-                    <DollarSign style={{ width: 16, height: 16 }} />
+              {/* 1. PRIMARY KPI SECTION (EXACTLY 4 CARDS) */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.25rem', marginBottom: '2.5rem' }}>
+                
+                {/* CARD 1: Gross Revenue */}
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                    Gross Revenue
                   </div>
-                  <div className="kpi-title">Gross Revenue</div>
-                  <div className="kpi-value text-success">
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', marginBottom: 6 }}>
                     Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}
                   </div>
-                  <div className="kpi-subtext">Live + Video + Proyek + Lainnya</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                    Live + Video + Project + Other
+                  </div>
                 </div>
 
-                <div className="glass-card kpi-card" style={{ '--kpi-accent': opProfit >= 0 ? '#059669' : '#D32F2F' }}>
-                  <div className="kpi-icon" style={{ background: opProfit >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(211,47,47,0.1)', color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>
-                    <TrendingUp style={{ width: 16, height: 16 }} />
+                {/* CARD 2: Operating Profit (Visually Positive / Green) */}
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                    Operating Profit
                   </div>
-                  <div className="kpi-title">Operating Profit</div>
-                  <div className="kpi-value" style={{ color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: opProfit >= 0 ? '#059669' : '#D32F2F', letterSpacing: '-0.02em', marginBottom: 6 }}>
                     Rp {opProfit.toLocaleString('id-ID')}
                   </div>
-                  <div className="kpi-subtext">Margin: {opMargin.toFixed(1)}% (Rev - OPEX)</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', gap: 8 }}>
+                    <span>Revenue − OPEX</span>
+                    <span>•</span>
+                    <strong style={{ color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>Margin {opMargin.toFixed(1)}%</strong>
+                  </div>
                 </div>
 
-                <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
-                  <div className="kpi-icon" style={{ background: 'rgba(184,142,57,0.1)', color: '#B88E39' }}>
-                    <Briefcase style={{ width: 16, height: 16 }} />
+                {/* CARD 3: Studio Investment (Paramara Muted Gold) */}
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                    Studio Investment
                   </div>
-                  <div className="kpi-title">Studio Investment (CAPEX)</div>
-                  <div className="kpi-value text-warning">
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: '#B88E39', letterSpacing: '-0.02em', marginBottom: 6 }}>
                     Rp {totalCapex.toLocaleString('id-ID')}
                   </div>
-                  <div className="kpi-subtext">Reinvestment Rate: {reinvestmentRate.toFixed(1)}%</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', display: 'flex', gap: 8 }}>
+                    <span>CAPEX</span>
+                    <span>•</span>
+                    <strong style={{ color: '#B88E39' }}>Reinvestment {reinvestmentRate.toFixed(1)}%</strong>
+                  </div>
                 </div>
 
-                <div className="glass-card kpi-card" style={{ '--kpi-accent': cashFlowAfterInv >= 0 ? 'var(--primary)' : '#D32F2F' }}>
-                  <div className="kpi-icon" style={{ background: cashFlowAfterInv >= 0 ? 'var(--primary-glow)' : 'rgba(211,47,47,0.1)', color: cashFlowAfterInv >= 0 ? 'var(--primary)' : '#D32F2F' }}>
-                    <Scale style={{ width: 16, height: 16 }} />
+                {/* CARD 4: Cash Flow After Investment (Red if negative) */}
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                    Cash Flow After Investment
                   </div>
-                  <div className="kpi-title">Cash Flow (After Inv.)</div>
-                  <div className="kpi-value" style={{ color: cashFlowAfterInv >= 0 ? 'var(--primary)' : '#D32F2F' }}>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 800, color: cashFlowAfterInv >= 0 ? '#059669' : '#D32F2F', letterSpacing: '-0.02em', marginBottom: 6 }}>
                     Rp {cashFlowAfterInv.toLocaleString('id-ID')}
                   </div>
-                  <div className="kpi-subtext">Op. Profit - CAPEX</div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                    Operating Profit − CAPEX
+                  </div>
                 </div>
+
               </div>
 
-              {/* SECTIONS: P&L VIEW AND INSIGHT ENGINE */}
-              <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))' }}>
+              {/* 2. MAIN GRID: FINANCIAL FLOW & AI CFO BRIEF */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '2rem', marginBottom: '2.5rem' }}>
                 
-                {/* ACCOUNTING BREAKDOWN */}
-                <div className="glass-card chart-card">
-                  <div className="chart-header">
-                    <h3><FileText style={{ color: 'var(--primary)', width: 16, height: 16 }} /> Laporan Laba Rugi Komprehensif</h3>
-                  </div>
-                  <div className="chart-container" style={{ padding: '1.25rem', fontSize: '0.85rem' }}>
+                {/* FINANCIAL FLOW - CLEAN & UNCLUTTERED */}
+                <div className="glass-card" style={{ padding: '1.75rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1.5rem', letterSpacing: '-0.01em' }}>
+                    Financial Flow
+                  </h3>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem', fontSize: '0.875rem' }}>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--border-color)', marginBottom: 8 }}>
-                      <span>Gross Revenue</span>
-                      <strong className="text-success">Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
-                    </div>
-                    
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 4 }}>
-                      <span style={{ color: 'var(--text-dim)' }}>(-) Operating Expenses (OPEX)</span>
-                      <strong className="text-warning">Rp {totalOpex.toLocaleString('id-ID')}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>GROSS REVENUE</span>
+                      <strong style={{ fontWeight: 700, color: 'var(--text-main)' }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--primary)', marginBottom: 8 }}>
-                      <span style={{ fontWeight: 700, color: 'var(--primary)' }}>= OPERATING PROFIT</span>
-                      <strong style={{ color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>Rp {opProfit.toLocaleString('id-ID')}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>− OPEX (Operating Expenses)</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-dim)' }}>Rp {totalOpex.toLocaleString('id-ID')}</span>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 4 }}>
-                      <span style={{ color: 'var(--text-dim)' }}>(-) Capital Expenditures (CAPEX)</span>
-                      <strong className="text-warning">Rp {totalCapex.toLocaleString('id-ID')}</strong>
+                    <div style={{ height: 1, background: 'var(--border-color)', margin: '4px 0' }} />
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: 'rgba(5, 150, 105, 0.08)', borderRadius: 8 }}>
+                      <span style={{ fontWeight: 700, color: '#059669', fontSize: '0.825rem' }}>= OPERATING PROFIT</span>
+                      <strong style={{ fontWeight: 800, color: opProfit >= 0 ? '#059669' : '#D32F2F', fontSize: '1rem' }}>Rp {opProfit.toLocaleString('id-ID')}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderBottom: '1px solid var(--primary)', marginBottom: 8 }}>
-                      <span style={{ fontWeight: 700, color: 'var(--primary)' }}>= CASH FLOW AFTER INVESTMENT</span>
-                      <strong style={{ color: cashFlowAfterInv >= 0 ? '#8B5CF6' : '#D32F2F' }}>Rp {cashFlowAfterInv.toLocaleString('id-ID')}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                      <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>− CAPEX (Studio Investment)</span>
+                      <span style={{ fontWeight: 600, color: '#B88E39' }}>Rp {totalCapex.toLocaleString('id-ID')}</span>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 4 }}>
-                      <span style={{ color: 'var(--text-dim)' }}>(-) Owner Withdrawals (Personal)</span>
-                      <strong style={{ color: '#D32F2F' }}>Rp {totalPersonal.toLocaleString('id-ID')}</strong>
+                    <div style={{ height: 1, background: 'var(--border-color)', margin: '4px 0' }} />
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 12px', background: cashFlowAfterInv >= 0 ? 'rgba(5, 150, 105, 0.05)' : 'rgba(211, 47, 47, 0.05)', borderRadius: 8 }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.825rem' }}>= CASH FLOW AFTER INVESTMENT</span>
+                      <strong style={{ fontWeight: 800, color: cashFlowAfterInv >= 0 ? '#059669' : '#D32F2F', fontSize: '1rem' }}>Rp {cashFlowAfterInv.toLocaleString('id-ID')}</strong>
                     </div>
 
-                    <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: 8, borderTop: '2px double var(--primary)', paddingTop: 8, marginTop: 8 }}>
-                      <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.95rem' }}>NET CASH POSITION</span>
-                      <strong style={{ fontSize: '0.95rem', color: cashFlowAfterOwner >= 0 ? '#059669' : '#D32F2F' }}>Rp {cashFlowAfterOwner.toLocaleString('id-ID')}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                      <span style={{ color: 'var(--text-dim)', fontWeight: 500 }}>− OWNER WITHDRAWALS (Personal)</span>
+                      <span style={{ fontWeight: 600, color: 'var(--text-dim)' }}>Rp {totalPersonal.toLocaleString('id-ID')}</span>
                     </div>
 
-                    {/* REVENUE MIX */}
-                    <div style={{ marginTop: '1.5rem' }}>
-                      <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: 8, textTransform: 'uppercase' }}>Revenue Engine Mix</div>
-                      <div style={{ display: 'flex', gap: 4, height: 24, borderRadius: 12, overflow: 'hidden', background: 'var(--bg-input)' }}>
-                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalGrossCommission/totalStudioGrossRevenue)*100 : 0}%`, background: '#EE4D2D', title: 'Shopee Live' }} />
-                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalGrossVideoCommission/totalStudioGrossRevenue)*100 : 0}%`, background: '#F97316', title: 'Shopee Video' }} />
-                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalProjectRev/totalStudioGrossRevenue)*100 : 0}%`, background: '#059669', title: 'Klien/Proyek' }} />
-                        <div style={{ width: `${totalStudioGrossRevenue > 0 ? (totalOtherIncome/totalStudioGrossRevenue)*100 : 0}%`, background: '#B88E39', title: 'Pendapatan Lain' }} />
-                      </div>
-                      <div style={{ display: 'flex', gap: 12, marginTop: 8, fontSize: '0.7rem', color: 'var(--text-dim)', flexWrap: 'wrap' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#EE4D2D' }}/> Live: {totalStudioGrossRevenue > 0 ? ((totalGrossCommission/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#F97316' }}/> Video: {totalStudioGrossRevenue > 0 ? ((totalGrossVideoCommission/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#059669' }}/> Proyek: {totalStudioGrossRevenue > 0 ? ((totalProjectRev/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><span style={{ width: 8, height: 8, borderRadius: '50%', background: '#B88E39' }}/> Lain: {totalStudioGrossRevenue > 0 ? ((totalOtherIncome/totalStudioGrossRevenue)*100).toFixed(1) : 0}%</span>
-                      </div>
+                    <div style={{ height: 2, background: 'var(--text-main)', margin: '6px 0 2px' }} />
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 2 }}>
+                      <span style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                        NET CASH FLOW AFTER OWNER WITHDRAWAL
+                      </span>
+                      <strong style={{ fontWeight: 900, color: cashFlowAfterOwner >= 0 ? '#059669' : '#D32F2F', fontSize: '1.1rem' }}>
+                        Rp {cashFlowAfterOwner.toLocaleString('id-ID')}
+                      </strong>
                     </div>
 
                   </div>
                 </div>
 
-                {/* AI & RULE-BASED INSIGHT ENGINE */}
-                <div className="glass-card chart-card" style={{ border: '1px solid var(--primary)' }}>
-                  <div className="chart-header" style={{ background: 'var(--primary-glow)', borderBottom: '1px solid var(--border-color)' }}>
-                    <div>
-                      <h3 style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}><Sparkles style={{ width: 16, height: 16 }} /> AI CFO & Strategy Analyst</h3>
-                      <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                        {hasValidAiInsight ? `Analysis Generated: ${aiData.generatedAt}` : 'Real-time Rule-Based Strategy (AI Offline)'}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="chart-container" style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', overflowY: 'auto' }}>
-                    
-                    {hasValidAiInsight ? (
-                      <div className="ai-insight-content" style={{ fontSize: '0.875rem', lineHeight: '1.6', color: 'var(--text-main)', whiteSpace: 'pre-line' }}>
-                        {aiData.insightText}
+                {/* AI CFO BRIEF - SINGLE ELEGANT PANEL */}
+                <div className="glass-card" style={{ padding: '1.75rem', borderRadius: 16, border: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <h3 style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
+                          AI CFO Brief
+                        </h3>
+                        <span style={{ fontSize: '0.675rem', fontWeight: 700, background: 'var(--primary-glow)', color: 'var(--primary)', padding: '2px 8px', borderRadius: 12 }}>
+                          Decision Support
+                        </span>
                       </div>
-                    ) : (
-                      <div className="rule-based-insight" style={{ fontSize: '0.85rem' }}>
-                        <div style={{ marginBottom: 12 }}>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Executive Summary</span>
-                          <p style={{ fontWeight: 700, color: 'var(--primary)' }}>{ruleBasedInsight.summary}</p>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                          <div>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--secondary-emerald)', textTransform: 'uppercase' }}>Kekuatan (Going Well)</span>
-                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.whatIsWell}</p>
-                          </div>
-                          <div>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#D32F2F', textTransform: 'uppercase' }}>Risiko (Biggest Risk)</span>
-                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.risk}</p>
-                          </div>
-                          <div>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#8B5CF6', textTransform: 'uppercase' }}>Peluang (Opportunity)</span>
-                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.opportunity}</p>
-                          </div>
-                          <div>
-                            <span style={{ fontSize: '0.7rem', fontWeight: 700, color: '#B88E39', textTransform: 'uppercase' }}>Prioritas 7 Hari (Action)</span>
-                            <p style={{ color: 'var(--text-main)' }}>{ruleBasedInsight.action}</p>
-                          </div>
-                        </div>
-                        <div style={{ marginTop: 12, padding: '8px 12px', background: 'var(--bg-input)', borderRadius: 6, border: '1px solid var(--border-color)', display: 'inline-block' }}>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>Metric to Watch:</span>
-                          <strong style={{ marginLeft: 6, color: 'var(--primary)' }}>{ruleBasedInsight.metric}</strong>
-                        </div>
-                      </div>
-                    )}
-
-                    <div style={{ marginTop: 'auto', paddingTop: '1rem', borderTop: '1px dashed var(--border-color)', textAlign: 'center' }}>
-                      <button 
-                        className="btn btn-primary" 
-                        onClick={() => handleGenerateFinIntelAI(totalStudioGrossRevenue, totalOpex, totalCapex, opProfit, opMargin, cashFlowAfterInv, totalPersonal, totalCombinedGMV, reinvestmentRate)} 
-                        disabled={hasValidAiInsight}
-                        style={{ width: '100%', justifyContent: 'center', opacity: hasValidAiInsight ? 0.6 : 1, cursor: hasValidAiInsight ? 'not-allowed' : 'pointer' }}
-                      >
-                        <Sparkles style={{ width: 14, height: 14 }} /> 
-                        {hasValidAiInsight ? 'Generate New AI Insight' : 'Generate Full AI Analysis (Uses Credits)'}
-                      </button>
-                      {hasValidAiInsight && (
-                        <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 8 }}>
-                          AI Insight tersedia kembali pada: <strong>{new Date(aiData.nextEligibleGenerationTime).toLocaleString('id-ID')}</strong> (Cooldown 48 Jam)
-                        </div>
+                      {hoursUntilRefreshText && (
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                          {hoursUntilRefreshText}
+                        </span>
                       )}
                     </div>
+
+                    {/* TYPOGRAPHY HIERARCHY CONTENT */}
+                    <div style={{ fontSize: '0.85rem', lineHeight: '1.6', color: 'var(--text-main)' }}>
+                      <div style={{ marginBottom: '1rem', paddingBottom: '0.75rem', borderBottom: '1px dashed var(--border-color)' }}>
+                        <div style={{ fontSize: '0.7rem', fontWeight: 800, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 4 }}>
+                          EXECUTIVE SUMMARY
+                        </div>
+                        <p style={{ margin: 0, fontWeight: 600, color: 'var(--text-main)' }}>
+                          "{ruleInsight.summary}"
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '0.75rem', marginBottom: '1rem' }}>
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#059669', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                            WHAT'S GOING WELL
+                          </div>
+                          <div style={{ color: 'var(--text-main)', fontSize: '0.825rem' }}>
+                            "{ruleInsight.goingWell}"
+                          </div>
+                        </div>
+
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#D32F2F', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                            BIGGEST RISK
+                          </div>
+                          <div style={{ color: 'var(--text-main)', fontSize: '0.825rem' }}>
+                            "{ruleInsight.biggestRisk}"
+                          </div>
+                        </div>
+
+                        <div>
+                          <div style={{ fontSize: '0.7rem', fontWeight: 800, color: '#B88E39', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 2 }}>
+                            NEXT FOUNDER DECISION
+                          </div>
+                          <div style={{ color: 'var(--text-main)', fontSize: '0.825rem', fontWeight: 600 }}>
+                            "{ruleInsight.nextDecision}"
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '8px 12px', background: 'var(--bg-input)', borderRadius: 8, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                        <span style={{ fontSize: '0.7rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase' }}>METRIC TO WATCH:</span>
+                        <strong style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 800 }}>{ruleInsight.metricToWatch}</strong>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* BOTTOM ACTION BUTTON */}
+                  <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid var(--border-color)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                      {hoursAgoText || "Rule-based analysis active"}
+                    </span>
+                    <button
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => handleGenerateFinIntelAI(totalStudioGrossRevenue, totalOpex, totalCapex, opProfit, opMargin, cashFlowAfterInv, totalPersonal, totalCombinedGMV, reinvestmentRate)}
+                      disabled={hasValidAiInsight}
+                      style={{ fontSize: '0.75rem', fontWeight: 700, opacity: hasValidAiInsight ? 0.5 : 1, cursor: hasValidAiInsight ? 'not-allowed' : 'pointer' }}
+                    >
+                      {hasValidAiInsight ? 'AI Cached (48h)' : 'Refresh AI Analysis →'}
+                    </button>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* 3. LOWER SECTION: REVENUE MIX, CASH HEALTH & BREAK-EVEN */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem' }}>
+                
+                {/* REVENUE ENGINE MIX */}
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
+                    Revenue Engine Mix
+                  </h4>
+
+                  {/* Stacked Horizontal Bar - Neutral Colors (No Red for Live) */}
+                  <div style={{ display: 'flex', height: 16, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-input)', marginBottom: '1rem' }}>
+                    <div style={{ width: `${livePct}%`, background: '#082F26' }} title="Live" />
+                    <div style={{ width: `${videoPct}%`, background: '#B88E39' }} title="Video" />
+                    <div style={{ width: `${projectPct}%`, background: '#2563EB' }} title="Project" />
+                    <div style={{ width: `${otherPct}%`, background: '#6B7280' }} title="Other" />
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-dim)', flexWrap: 'wrap', gap: 8 }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#082F26' }} /> Live <strong>{livePct.toFixed(1)}%</strong>
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#B88E39' }} /> Video <strong>{videoPct.toFixed(1)}%</strong>
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#2563EB' }} /> Project <strong>{projectPct.toFixed(1)}%</strong>
+                    </span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#6B7280' }} /> Other <strong>{otherPct.toFixed(1)}%</strong>
+                    </span>
+                  </div>
+                </div>
+
+                {/* CASH HEALTH */}
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
+                    Cash Health
+                  </h4>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>Current Cash</span>
+                      <span style={{ color: 'var(--text-dim)', italic: 'true' }}>Requires actual cash balance</span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>Monthly OPEX</span>
+                      <strong style={{ color: 'var(--text-main)' }}>Rp {totalOpex.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>Cash Runway</span>
+                      <span style={{ color: 'var(--text-dim)', italic: 'true' }}>Requires actual cash balance</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* OPERATING BREAK-EVEN */}
+                <div className="glass-card" style={{ padding: '1.5rem', borderRadius: 14, border: '1px solid var(--border-color)', background: 'var(--bg-card)' }}>
+                  <h4 style={{ fontSize: '0.875rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '1rem' }}>
+                    Operating Break-even
+                  </h4>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', fontSize: '0.8rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>Current Revenue</span>
+                      <strong style={{ color: 'var(--text-main)' }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                      <span style={{ color: 'var(--text-dim)' }}>Operating Expenses</span>
+                      <strong style={{ color: 'var(--text-main)' }}>Rp {totalOpex.toLocaleString('id-ID')}</strong>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 4, borderTop: '1px solid var(--border-color)' }}>
+                      <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Operating Break-even</span>
+                      <span style={{
+                        fontSize: '0.7rem', fontWeight: 800,
+                        background: opProfit >= 0 ? 'rgba(5, 150, 105, 0.1)' : 'rgba(211, 47, 47, 0.1)',
+                        color: opProfit >= 0 ? '#059669' : '#D32F2F',
+                        padding: '3px 10px', borderRadius: 12
+                      }}>
+                        {opProfit >= 0 ? 'ACHIEVED' : 'NOT ACHIEVED'}
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                      <span>Operating Margin</span>
+                      <strong style={{ color: opProfit >= 0 ? '#059669' : '#D32F2F' }}>{opMargin.toFixed(1)}%</strong>
+                    </div>
                   </div>
                 </div>
 
               </div>
+
             </div>
           );
         })()}
-
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content main-inner">
 
