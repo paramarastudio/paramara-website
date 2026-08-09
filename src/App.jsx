@@ -635,6 +635,7 @@ export default function App() {
   const allCapexList = studioData.capexList || [];
   const allOpexList = studioData.opexList || [];
   const allPersonalList = studioData.personalList || [];
+  const allOtherIncomeList = studioData.otherIncomeList || [];
   const allProjects = studioData.clientProjects || [];
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
   const allPinterestReports = studioData.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics;
@@ -645,6 +646,7 @@ export default function App() {
   const capexList = filterByDate(allCapexList);
   const opexList = filterByDate(allOpexList);
   const personalList = filterByDate(allPersonalList);
+  const otherIncomeList = filterByDate(allOtherIncomeList);
   const projects = allProjects; // Projects don't have date field yet
   const pinterestReports = allPinterestReports;
 
@@ -769,12 +771,13 @@ export default function App() {
   const totalGrossVideoCommission = videoSessions.reduce((acc, v) => acc + (v.grossCommission || 0), 0);
 
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
+  const totalOtherIncome = otherIncomeList.reduce((acc, i) => acc + (i.amount || 0), 0);
 
   // Total GMV / Transaction Volume (Shopee Live + Shopee Video)
   const totalCombinedGMV = totalShopeeRev + totalVideoRev;
 
-  // Actual Studio Gross Revenue (Live Comm + Video Comm + Project Income)
-  const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalProjectRev;
+  // Actual Studio Gross Revenue (Live Comm + Video Comm + Project Income + Other Income/Bonus)
+  const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalProjectRev + totalOtherIncome;
 
   // Expenses
   const totalCapex = capexList.reduce((acc, c) => acc + (c.amount || 0), 0);
