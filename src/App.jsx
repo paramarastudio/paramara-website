@@ -1816,36 +1816,6 @@ export default function App() {
             </button>
 
             {/* CONTEXTUAL ACTION BUTTONS */}
-            {activeTab === 'tabShopeeTracker' && (
-              <>
-                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleOpenManualLiveInput}>
-                  <Edit3 style={{ width: 14, height: 14 }} />
-                  <span className="btn-label">Input Manual</span>
-                </button>
-                <button className="btn btn-primary" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-                  <ImagePlus style={{ width: 15, height: 15 }} />
-                  <span className="btn-label">Scan AI (2 Foto)</span>
-                </button>
-              </>
-            )}
-
-            {activeTab === 'tabShopeeVideo' && (
-              <>
-                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportVideoToExcel}>
-                  <FileText style={{ width: 14, height: 14, color: '#059669' }} />
-                  <span className="btn-label">Ekspor Excel</span>
-                </button>
-                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleOpenManualVideoInput}>
-                  <Edit3 style={{ width: 14, height: 14 }} />
-                  <span className="btn-label">Input Manual</span>
-                </button>
-                <button className="btn btn-primary" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }}>
-                  <Film style={{ width: 15, height: 15 }} />
-                  <span className="btn-label">Scan AI (2 Foto)</span>
-                </button>
-              </>
-            )}
-
             {activeTab === 'tabFinance' && (
               <>
                 <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportFinanceToExcel}>
