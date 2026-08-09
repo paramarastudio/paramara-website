@@ -3110,10 +3110,6 @@ export default function App() {
                 </div>
               )}
 
-            </div>                  </table>
-                </div>
-              </div>
-
             </div>
           </div>
         )}
