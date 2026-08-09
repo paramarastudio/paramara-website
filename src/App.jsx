@@ -259,6 +259,7 @@ export default function App() {
   // Portal Navigation State
   const [activeTab, setActiveTab] = useState('tabAnalytics');
   const [expandedSessionId, setExpandedSessionId] = useState(null);
+  const [financeSubTab, setFinanceSubTab] = useState('all'); // 'all' | 'capex' | 'opex' | 'personal' | 'other_income'
   
   // Light/Dark Theme state
   const [theme, setTheme] = useState(() => {
@@ -2845,212 +2846,282 @@ export default function App() {
                   </div>
                   <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 4 }}>
                     Sisa Kas Bersih Setelah Pembelian Pribadi (Rp {totalPersonal.toLocaleString('id-ID')})
-                  </div>
-                </div>
+                           {/* 3. SUB-TAB FILTER BAR & FULL-WIDTH LEDGER TABLES */}
+            <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 4 }}>KATEGORI:</span>
+                <button 
+                  className={`btn btn-sm ${financeSubTab === 'all' ? 'btn-primary' : 'btn-secondary'}`} 
+                  onClick={() => setFinanceSubTab('all')}
+                  style={{ borderRadius: 20 }}
+                >
+                  📑 Semua ({capexList.length + opexList.length + personalList.length + otherIncomeList.length})
+                </button>
+                <button 
+                  className={`btn btn-sm ${financeSubTab === 'capex' ? 'btn-primary' : 'btn-secondary'}`} 
+                  onClick={() => setFinanceSubTab('capex')}
+                  style={{ borderRadius: 20 }}
+                >
+                  📦 CAPEX ({capexList.length})
+                </button>
+                <button 
+                  className={`btn btn-sm ${financeSubTab === 'opex' ? 'btn-primary' : 'btn-secondary'}`} 
+                  onClick={() => setFinanceSubTab('opex')}
+                  style={{ borderRadius: 20 }}
+                >
+                  ⚙️ OPEX ({opexList.length})
+                </button>
+                <button 
+                  className={`btn btn-sm ${financeSubTab === 'personal' ? 'btn-primary' : 'btn-secondary'}`} 
+                  onClick={() => setFinanceSubTab('personal')}
+                  style={{ borderRadius: 20 }}
+                >
+                  🛍️ Personal ({personalList.length})
+                </button>
+                <button 
+                  className={`btn btn-sm ${financeSubTab === 'other_income' ? 'btn-primary' : 'btn-secondary'}`} 
+                  onClick={() => setFinanceSubTab('other_income')}
+                  style={{ borderRadius: 20 }}
+                >
+                  🎁 Bonus ({otherIncomeList.length})
+                </button>
               </div>
-
             </div>
 
-            {/* 3. CAPEX, OPEX, PERSONAL PURCHASE & OTHER INCOME LEDGER TABLES */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
+            {/* FULL-WIDTH STACKED LEDGER CARDS */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
               
               {/* CAPEX Table */}
-              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
-                    📦 Pengeluaran Aset (CAPEX)
-                  </h3>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Investasi Jangka Panjang</span>
-                </div>
+              {(financeSubTab === 'all' || financeSubTab === 'capex') && (
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
+                        📦 Pengeluaran Aset (CAPEX)
+                      </h3>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Investasi Jangka Panjang & Pembelian Alat Studio</span>
+                    </div>
+                    <span className="brand-badge" style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 800, background: 'rgba(184, 142, 57, 0.1)', color: '#B88E39' }}>
+                      Total CAPEX: Rp {totalCapex.toLocaleString('id-ID')}
+                    </span>
+                  </div>
 
-                <div className="table-wrapper">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Tanggal</th>
-                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
-                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {capexList.length > 0 ? (
-                        capexList.map(c => (
-                          <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <td style={{ padding: '8px' }}><strong>{c.name}</strong></td>
-                            <td style={{ padding: '8px' }}><span className="brand-badge">{c.category}</span></td>
-                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{c.date}</td>
-                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>Rp {c.amount.toLocaleString('id-ID')}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditCapex(c)}>
-                                  <Edit3 style={{ width: 13, height: 13 }} />
-                                </button>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteCapex(c.id)}>
-                                  <Trash2 style={{ width: 13, height: 13 }} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran modal (CAPEX).</td>
+                  <div className="table-wrapper">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Nama Item / Peralatan</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Kategori</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Tanggal Pembelian</th>
+                          <th style={{ textAlign: 'right', padding: '10px 12px' }}>Jumlah Nominal (Rp)</th>
+                          <th style={{ textAlign: 'center', padding: '10px 12px' }}>Aksi</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {capexList.length > 0 ? (
+                          capexList.map(c => (
+                            <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '10px 12px' }}><strong>{c.name}</strong></td>
+                              <td style={{ padding: '10px 12px' }}><span className="brand-badge">{c.category}</span></td>
+                              <td style={{ padding: '10px 12px', color: 'var(--text-dim)' }}>{c.date}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: 'var(--text-main)' }}>Rp {c.amount.toLocaleString('id-ID')}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: 'var(--primary)' }} onClick={() => handleStartEditCapex(c)}>
+                                    <Edit3 style={{ width: 14, height: 14 }} /> Edit
+                                  </button>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: '#D32F2F' }} onClick={() => handleDeleteCapex(c.id)}>
+                                    <Trash2 style={{ width: 14, height: 14 }} /> Hapus
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran modal (CAPEX).</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* OPEX Table */}
-              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
-                    ⚙️ Operasional Bulanan (OPEX)
-                  </h3>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Biaya Rutin / Berulang</span>
-                </div>
+              {(financeSubTab === 'all' || financeSubTab === 'opex') && (
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
+                        ⚙️ Operasional Bulanan (OPEX)
+                      </h3>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Biaya Rutin Berulang (Gaji Host, Internet, Rent, Ads)</span>
+                    </div>
+                    <span className="brand-badge" style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 800, background: 'rgba(211, 47, 47, 0.1)', color: '#D32F2F' }}>
+                      Total OPEX: Rp {totalOpex.toLocaleString('id-ID')}
+                    </span>
+                  </div>
 
-                <div className="table-wrapper">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Siklus</th>
-                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
-                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {opexList.length > 0 ? (
-                        opexList.map(o => (
-                          <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <td style={{ padding: '8px' }}><strong>{o.name}</strong></td>
-                            <td style={{ padding: '8px' }}><span className="brand-badge">{o.category}</span></td>
-                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{o.frequency}</td>
-                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#D32F2F' }}>Rp {o.amount.toLocaleString('id-ID')}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditOpex(o)}>
-                                  <Edit3 style={{ width: 13, height: 13 }} />
-                                </button>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOpex(o.id)}>
-                                  <Trash2 style={{ width: 13, height: 13 }} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran operasional (OPEX).</td>
+                  <div className="table-wrapper">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Nama Item Transaksi</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Kategori</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Frekuensi / Siklus</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Tanggal</th>
+                          <th style={{ textAlign: 'right', padding: '10px 12px' }}>Jumlah Nominal (Rp)</th>
+                          <th style={{ textAlign: 'center', padding: '10px 12px' }}>Aksi</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {opexList.length > 0 ? (
+                          opexList.map(o => (
+                            <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '10px 12px' }}><strong>{o.name}</strong></td>
+                              <td style={{ padding: '10px 12px' }}><span className="brand-badge">{o.category}</span></td>
+                              <td style={{ padding: '10px 12px', color: 'var(--text-dim)' }}>{o.frequency || 'Bulanan'}</td>
+                              <td style={{ padding: '10px 12px', color: 'var(--text-dim)' }}>{o.date || '-'}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#D32F2F' }}>Rp {o.amount.toLocaleString('id-ID')}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: 'var(--primary)' }} onClick={() => handleStartEditOpex(o)}>
+                                    <Edit3 style={{ width: 14, height: 14 }} /> Edit
+                                  </button>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: '#D32F2F' }} onClick={() => handleDeleteOpex(o.id)}>
+                                    <Trash2 style={{ width: 14, height: 14 }} /> Hapus
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="6" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran operasional (OPEX).</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Personal Purchase Table */}
-              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
-                    🛍️ Pembelian Pribadi (Personal Purchase)
-                  </h3>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>Pengeluaran Personal</span>
-                </div>
+              {(financeSubTab === 'all' || financeSubTab === 'personal') && (
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
+                        🛍️ Pembelian Pribadi (Personal Purchase)
+                      </h3>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Pengeluaran Personal Ditanggung Rekening Studio</span>
+                    </div>
+                    <span className="brand-badge" style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 800, background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}>
+                      Total Personal: Rp {totalPersonal.toLocaleString('id-ID')}
+                    </span>
+                  </div>
 
-                <div className="table-wrapper">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Tanggal</th>
-                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
-                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {personalList.length > 0 ? (
-                        personalList.map(p => (
-                          <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <td style={{ padding: '8px' }}><strong>{p.name}</strong></td>
-                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}>{p.category || "Personal"}</span></td>
-                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{p.date}</td>
-                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#8B5CF6' }}>Rp {p.amount.toLocaleString('id-ID')}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditPersonal(p)}>
-                                  <Edit3 style={{ width: 13, height: 13 }} />
-                                </button>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeletePersonal(p.id)}>
-                                  <Trash2 style={{ width: 13, height: 13 }} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran/pembelian pribadi.</td>
+                  <div className="table-wrapper">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Nama Item / Barang</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Kategori</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Tanggal Pembelian</th>
+                          <th style={{ textAlign: 'right', padding: '10px 12px' }}>Jumlah Nominal (Rp)</th>
+                          <th style={{ textAlign: 'center', padding: '10px 12px' }}>Aksi</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {personalList.length > 0 ? (
+                          personalList.map(p => (
+                            <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '10px 12px' }}><strong>{p.name}</strong></td>
+                              <td style={{ padding: '10px 12px' }}><span className="brand-badge" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}>{p.category || "Personal"}</span></td>
+                              <td style={{ padding: '10px 12px', color: 'var(--text-dim)' }}>{p.date}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#8B5CF6' }}>Rp {p.amount.toLocaleString('id-ID')}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: 'var(--primary)' }} onClick={() => handleStartEditPersonal(p)}>
+                                    <Edit3 style={{ width: 14, height: 14 }} /> Edit
+                                  </button>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: '#D32F2F' }} onClick={() => handleDeletePersonal(p.id)}>
+                                    <Trash2 style={{ width: 14, height: 14 }} /> Hapus
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran/pembelian pribadi.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Bonus & Other Income Table */}
-              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
-                    🎁 Bonus & Pendapatan Lain-lain
-                  </h3>
-                  <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>Pemasukan Ekstra</span>
-                </div>
+              {(financeSubTab === 'all' || financeSubTab === 'other_income') && (
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', width: '100%' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
+                        🎁 Bonus & Pendapatan Lain-lain
+                      </h3>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Bonus Performance Target, Cashback Affiliate, Tip & Pemasukan Ekstra</span>
+                    </div>
+                    <span className="brand-badge" style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 800, background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>
+                      Total Bonus: Rp {totalOtherIncome.toLocaleString('id-ID')}
+                    </span>
+                  </div>
 
-                <div className="table-wrapper">
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
-                    <thead>
-                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item / Sumber</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
-                        <th style={{ textAlign: 'left', padding: '8px' }}>Tanggal</th>
-                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
-                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {otherIncomeList.length > 0 ? (
-                        otherIncomeList.map(item => (
-                          <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
-                            <td style={{ padding: '8px' }}><strong>{item.name}</strong></td>
-                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>{item.category || "Bonus"}</span></td>
-                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{item.date}</td>
-                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>Rp {item.amount.toLocaleString('id-ID')}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>
-                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditOtherIncome(item)}>
-                                  <Edit3 style={{ width: 13, height: 13 }} />
-                                </button>
-                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOtherIncome(item.id)}>
-                                  <Trash2 style={{ width: 13, height: 13 }} />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      ) : (
-                        <tr>
-                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data bonus atau pendapatan lain-lain.</td>
+                  <div className="table-wrapper">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Nama Item / Sumber Bonus</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Kategori</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Tanggal Pemasukan</th>
+                          <th style={{ textAlign: 'right', padding: '10px 12px' }}>Jumlah Nominal (Rp)</th>
+                          <th style={{ textAlign: 'center', padding: '10px 12px' }}>Aksi</th>
                         </tr>
-                      )}
-                    </tbody>
-                  </table>
+                      </thead>
+                      <tbody>
+                        {otherIncomeList.length > 0 ? (
+                          otherIncomeList.map(item => (
+                            <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '10px 12px' }}><strong>{item.name}</strong></td>
+                              <td style={{ padding: '10px 12px' }}><span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>{item.category || "Bonus"}</span></td>
+                              <td style={{ padding: '10px 12px', color: 'var(--text-dim)' }}>{item.date}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>Rp {item.amount.toLocaleString('id-ID')}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: 'var(--primary)' }} onClick={() => handleStartEditOtherIncome(item)}>
+                                    <Edit3 style={{ width: 14, height: 14 }} /> Edit
+                                  </button>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '5px 10px', color: '#D32F2F' }} onClick={() => handleDeleteOtherIncome(item.id)}>
+                                    <Trash2 style={{ width: 14, height: 14 }} /> Hapus
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data bonus atau pendapatan lain-lain.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+            </div>                  </table>
                 </div>
               </div>
 
