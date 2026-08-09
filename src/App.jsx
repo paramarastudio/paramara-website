@@ -2837,8 +2837,6 @@ export default function App() {
                 </div>
               </div>
 
-            </div>
-
             {/* 3. SUB-TAB FILTER BAR & FULL-WIDTH LEDGER TABLES */}
             <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
