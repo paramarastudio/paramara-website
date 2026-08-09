@@ -577,7 +577,13 @@ export default function App() {
   const [dateFilterPreset, setDateFilterPreset] = useState('all'); // 'all' | 'today' | '7d' | '30d' | 'thisMonth' | 'custom'
   const [customDateStart, setCustomDateStart] = useState('');
   const [customDateEnd, setCustomDateEnd] = useState('');
-  const [sortBy, setSortBy] = useState('date_desc'); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
+  const [sortBy, setSortBy] = useState('date_desc');
+  const [capexPage, setCapexPage] = useState(1);
+  const [opexPage, setOpexPage] = useState(1);
+  const [personalPage, setPersonalPage] = useState(1);
+  const [otherIncomePage, setOtherIncomePage] = useState(1);
+  const [livePage, setLivePage] = useState(1);
+  const [videoPage, setVideoPage] = useState(1); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
 
   // Parse various date formats used in the app into a local Date object (00:00:00 local time)
   const parseItemDate = (item) => {
@@ -685,6 +691,43 @@ export default function App() {
   const allProjects = studioData.clientProjects || [];
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
   const allPinterestReports = studioData.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics;
+
+  // Helper to render pagination controls
+  const renderPaginationControls = (currentPage, setCurrentPage, totalItems, pageSize = 10) => {
+    const totalPages = Math.ceil(totalItems / pageSize);
+    if (totalPages <= 1) return null;
+    const startItem = (currentPage - 1) * pageSize + 1;
+    const endItem = Math.min(currentPage * pageSize, totalItems);
+
+    return (
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 14px', background: 'var(--bg-table-header)', borderTop: '1px solid var(--border-color)', fontSize: '0.75rem' }}>
+        <span style={{ color: 'var(--text-dim)' }}>
+          Menampilkan {startItem}–{endItem} dari {totalItems} data
+        </span>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+          <button 
+            disabled={currentPage === 1} 
+            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+            className="btn btn-sm btn-secondary"
+            style={{ padding: '3px 10px', fontSize: '0.725rem', opacity: currentPage === 1 ? 0.4 : 1, cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+          >
+            ‹ Sebelumnya
+          </button>
+          <span style={{ fontWeight: 700, padding: '0 6px', color: 'var(--text-main)' }}>
+            Halaman {currentPage} / {totalPages}
+          </span>
+          <button 
+            disabled={currentPage >= totalPages} 
+            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+            className="btn btn-sm btn-secondary"
+            style={{ padding: '3px 10px', fontSize: '0.725rem', opacity: currentPage >= totalPages ? 0.4 : 1, cursor: currentPage >= totalPages ? 'not-allowed' : 'pointer' }}
+          >
+            Selanjutnya ›
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // Helper to sort any data array by GMV, Gross Commission, or Date
   const sortItems = (items) => {
@@ -2682,7 +2725,7 @@ METRIC TO WATCH
             {sessions.length > 0 ? (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {sessions.map(s => {
+                  {sessions.slice((livePage - 1) * 10, livePage * 10).map(s => {
                     const isExpanded = expandedSessionId === s.id;
                     return (
                       <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
@@ -3053,7 +3096,7 @@ METRIC TO WATCH
             {videoSessions.length > 0 ? (
               <>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                  {videoSessions.map(v => {
+                  {videoSessions.slice((videoPage - 1) * 10, videoPage * 10).map(v => {
                     const isExpanded = expandedVideoId === v.id;
                     return (
                       <div key={v.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
@@ -3486,7 +3529,7 @@ METRIC TO WATCH
                       </thead>
                       <tbody>
                         {capexList.length > 0 ? (
-                          capexList.map(c => (
+                          capexList.slice((capexPage - 1) * 10, capexPage * 10).map(c => (
                             <tr key={c.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                               <td style={{ padding: '10px 12px' }}><strong>{c.name}</strong></td>
                               <td style={{ padding: '10px 12px' }}><span className="brand-badge">{c.category}</span></td>
@@ -3512,6 +3555,7 @@ METRIC TO WATCH
                       </tbody>
                     </table>
                   </div>
+                  {renderPaginationControls(personalPage, setPersonalPage, personalList.length, 10)}
                 </div>
               )}
 
@@ -3544,7 +3588,7 @@ METRIC TO WATCH
                       </thead>
                       <tbody>
                         {opexList.length > 0 ? (
-                          opexList.map(o => (
+                          opexList.slice((opexPage - 1) * 10, opexPage * 10).map(o => (
                             <tr key={o.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                               <td style={{ padding: '10px 12px' }}><strong>{o.name}</strong></td>
                               <td style={{ padding: '10px 12px' }}><span className="brand-badge">{o.category}</span></td>
@@ -3571,6 +3615,7 @@ METRIC TO WATCH
                       </tbody>
                     </table>
                   </div>
+                  {renderPaginationControls(personalPage, setPersonalPage, personalList.length, 10)}
                 </div>
               )}
 
@@ -3602,7 +3647,7 @@ METRIC TO WATCH
                       </thead>
                       <tbody>
                         {personalList.length > 0 ? (
-                          personalList.map(p => (
+                          personalList.slice((personalPage - 1) * 10, personalPage * 10).map(p => (
                             <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                               <td style={{ padding: '10px 12px' }}><strong>{p.name}</strong></td>
                               <td style={{ padding: '10px 12px' }}><span className="brand-badge" style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}>{p.category || "Personal"}</span></td>
@@ -3628,6 +3673,7 @@ METRIC TO WATCH
                       </tbody>
                     </table>
                   </div>
+                  {renderPaginationControls(personalPage, setPersonalPage, personalList.length, 10)}
                 </div>
               )}
 
@@ -3659,7 +3705,7 @@ METRIC TO WATCH
                       </thead>
                       <tbody>
                         {otherIncomeList.length > 0 ? (
-                          otherIncomeList.map(item => (
+                          otherIncomeList.slice((otherIncomePage - 1) * 10, otherIncomePage * 10).map(item => (
                             <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                               <td style={{ padding: '10px 12px' }}><strong>{item.name}</strong></td>
                               <td style={{ padding: '10px 12px' }}><span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>{item.category || "Bonus"}</span></td>
@@ -3685,6 +3731,7 @@ METRIC TO WATCH
                       </tbody>
                     </table>
                   </div>
+                  {renderPaginationControls(personalPage, setPersonalPage, personalList.length, 10)}
                 </div>
               )}
 
