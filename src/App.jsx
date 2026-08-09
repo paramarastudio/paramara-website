@@ -1631,7 +1631,7 @@ METRIC TO WATCH
                 </p>
                 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', fontSize: '0.8rem' }}>
-                  <strong>⭐ Key Capabilities & Focus:</strong><br/>
+                  <strong>Key Capabilities & Focus:</strong><br/>
                   <span style={{ color: 'var(--secondary-emerald)', fontWeight: 700 }}>• Live Studio Equipment & Technical Broadcasting</span><br/>
                   <span>• Shopee Video Content Production & Editing</span><br/>
                   <span>• GMV Sales Analytics & Conversion Optimization</span>
@@ -1654,7 +1654,7 @@ METRIC TO WATCH
                 </p>
 
                 <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)', marginBottom: '1.5rem', fontSize: '0.8rem' }}>
-                  <strong>💃 Features & Platform:</strong><br/>
+                  <strong>Features & Platform:</strong><br/>
                   <span style={{ color: 'var(--primary)', fontWeight: 700 }}>• Structured Nusantara Dance Curricula</span><br/>
                   <span>• Expert Instructor Guidance & Feedback</span><br/>
                   <span>• Live Web Application: <strong>lestari-app.vercel.app</strong></span>
@@ -2033,7 +2033,7 @@ METRIC TO WATCH
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                   <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', background: 'var(--bg-input)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-color)' }}>
-                    ⏱️ Di-update Otomatis 24 Jam Sekali (Hemat Kredit AI)
+                    Di-update Otomatis 24 Jam Sekali (Hemat Kredit AI)
                   </span>
                 </div>
               </div>
@@ -2045,7 +2045,7 @@ METRIC TO WATCH
                       <TrendingUp style={{ width: 14, height: 14 }} /> Performansi Keuangan Studio
                     </strong>
                     <span>
-                      Studio mencatatkan Pendapatan Kotor <strong>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong> dengan Total Pengeluaran Operasional <strong>Rp {totalExpenses.toLocaleString('id-ID')}</strong> (CAPEX Rp {totalCapex.toLocaleString('id-ID')}, OPEX Rp {totalOpex.toLocaleString('id-ID')}). Hasil Laba Bersih berada pada posisi <strong style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>{netProfit >= 0 ? "Surplus 📈" : "Defisit 📉"} Rp {netProfit.toLocaleString('id-ID')}</strong> (Margin {netProfitMarginPercent.toFixed(1)}%).
+                      Studio mencatatkan Pendapatan Kotor <strong>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong> dengan Total Pengeluaran Operasional <strong>Rp {totalExpenses.toLocaleString('id-ID')}</strong> (CAPEX Rp {totalCapex.toLocaleString('id-ID')}, OPEX Rp {totalOpex.toLocaleString('id-ID')}). Hasil Laba Bersih berada pada posisi <strong style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>{netProfit >= 0 ? "Surplus" : "Defisit"} Rp {netProfit.toLocaleString('id-ID')}</strong> (Margin {netProfitMarginPercent.toFixed(1)}%).
                     </span>
                   </div>
 
@@ -2060,7 +2060,7 @@ METRIC TO WATCH
                 </div>
 
                 <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border-color)', color: 'var(--text-main)', fontSize: '0.825rem' }}>
-                  <strong>💡 Rekomendasi Eksekutif AI:</strong>{' '}
+                  <strong>Rekomendasi Eksekutif AI:</strong>{' '}
                   {netProfit >= 0 ? (
                     <span>Performansi keuangan studio dalam posisi surplus yang baik. Disarankan untuk menambah alokasi budget pada video berkonversi tinggi dan mempertahankan host utama pada jam puncak.</span>
                   ) : (
@@ -2135,7 +2135,7 @@ METRIC TO WATCH
                         <div>
                           <strong style={{ fontSize: '0.85rem' }}>{s.title}</strong>
                           <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                            ⏱️ {s.duration} | 💵 Komisi: <strong className="text-warning">Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
+                             {s.duration} | Komisi: <strong className="text-warning">Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</strong>
                           </div>
                         </div>
                         <span className="text-success" style={{ fontWeight: 800 }}>Rp {(s.revenue || 0).toLocaleString('id-ID')}</span>
@@ -2162,7 +2162,7 @@ METRIC TO WATCH
                         <div>
                           <strong style={{ fontSize: '0.85rem' }}>{v.title}</strong>
                           <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                            📈 {v.productsSold} Produk Terjual | 💵 Komisi: <strong className="text-warning">Rp {(v.grossCommission || 0).toLocaleString('id-ID')}</strong>
+                             {v.productsSold} Produk Terjual | Komisi: <strong className="text-warning">Rp {(v.grossCommission || 0).toLocaleString('id-ID')}</strong>
                           </div>
                         </div>
                         <span className="text-success" style={{ fontWeight: 800 }}>Rp {(v.revenue || 0).toLocaleString('id-ID')}</span>
@@ -2601,8 +2601,8 @@ METRIC TO WATCH
                           <div>
                             <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{s.title}</h3>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                              <span>🕒 Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
-                              <span>⏱️ Durasi: <strong>{s.duration}</strong></span>
+                              <span>Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
+                              <span>Durasi: <strong>{s.duration}</strong></span>
                             </div>
                           </div>
 
@@ -2634,7 +2634,7 @@ METRIC TO WATCH
                           </div>
 
                           <div style={{ background: 'rgba(184, 142, 57, 0.08)', padding: '4px 8px', borderRadius: 6, border: '1px solid var(--accent-gold-border)' }}>
-                            <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>💵 Komisi Kotor</span>
+                            <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>Komisi Kotor</span>
                             <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-gold)' }}>Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</div>
                           </div>
 
@@ -3109,7 +3109,7 @@ METRIC TO WATCH
                   Rp {netProfit.toLocaleString('id-ID')}
                 </div>
                 <div className="kpi-subtext">
-                  Margin: <strong>{netProfitMarginPercent.toFixed(1)}%</strong> {netProfit >= 0 ? "• SURPLUS 📈" : "• DEFISIT 📉"}
+                  Margin: <strong>{netProfitMarginPercent.toFixed(1)}%</strong> {netProfit >= 0 ? "• SURPLUS" : "• DEFISIT"}
                 </div>
               </div>
 
@@ -3291,7 +3291,7 @@ METRIC TO WATCH
                 <div style={{ padding: '12px 16px', background: netProfit >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)', borderRadius: 10, border: `1px solid ${netProfit >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
-                      📈 Laba Bersih Operasional (Net Profit)
+                      Laba Bersih Operasional (Net Profit)
                     </span>
                     <span className="brand-badge" style={{ background: netProfit >= 0 ? '#059669' : '#D32F2F', color: '#fff', fontSize: '0.7rem' }}>
                       Margin {netProfitMarginPercent.toFixed(1)}%
@@ -3309,7 +3309,7 @@ METRIC TO WATCH
                 <div style={{ padding: '12px 16px', background: netProfitAfterPersonal >= 0 ? 'rgba(139, 92, 246, 0.08)' : 'rgba(211, 47, 47, 0.08)', borderRadius: 10, border: `1px solid ${netProfitAfterPersonal >= 0 ? 'rgba(139, 92, 246, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                     <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>
-                      🛍️ Laba Bersih After Personal Purchase
+                      Laba Bersih After Personal Purchase
                     </span>
                     <span className="brand-badge" style={{ background: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F', color: '#fff', fontSize: '0.7rem' }}>
                       {netProfitAfterPersonal >= 0 ? 'SURPLUS' : 'DEFISIT'}
@@ -3331,35 +3331,35 @@ METRIC TO WATCH
                   onClick={() => setFinanceSubTab('all')}
                   style={{ borderRadius: 20 }}
                 >
-                  📑 Semua ({capexList.length + opexList.length + personalList.length + otherIncomeList.length})
+                  Semua ({capexList.length + opexList.length + personalList.length + otherIncomeList.length})
                 </button>
                 <button 
                   className={`btn btn-sm ${financeSubTab === 'capex' ? 'btn-primary' : 'btn-secondary'}`} 
                   onClick={() => setFinanceSubTab('capex')}
                   style={{ borderRadius: 20 }}
                 >
-                  📦 CAPEX ({capexList.length})
+                  CAPEX ({capexList.length})
                 </button>
                 <button 
                   className={`btn btn-sm ${financeSubTab === 'opex' ? 'btn-primary' : 'btn-secondary'}`} 
                   onClick={() => setFinanceSubTab('opex')}
                   style={{ borderRadius: 20 }}
                 >
-                  ⚙️ OPEX ({opexList.length})
+                  OPEX ({opexList.length})
                 </button>
                 <button 
                   className={`btn btn-sm ${financeSubTab === 'personal' ? 'btn-primary' : 'btn-secondary'}`} 
                   onClick={() => setFinanceSubTab('personal')}
                   style={{ borderRadius: 20 }}
                 >
-                  🛍️ Personal ({personalList.length})
+                  Personal ({personalList.length})
                 </button>
                 <button 
                   className={`btn btn-sm ${financeSubTab === 'other_income' ? 'btn-primary' : 'btn-secondary'}`} 
                   onClick={() => setFinanceSubTab('other_income')}
                   style={{ borderRadius: 20 }}
                 >
-                  🎁 Bonus ({otherIncomeList.length})
+                  Bonus ({otherIncomeList.length})
                 </button>
               </div>
             </div>
@@ -3373,7 +3373,7 @@ METRIC TO WATCH
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
-                        📦 Pengeluaran Aset (CAPEX)
+                        Pengeluaran Aset (CAPEX)
                       </h3>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Investasi Jangka Panjang & Pembelian Alat Studio</span>
                     </div>
@@ -3430,7 +3430,7 @@ METRIC TO WATCH
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
-                        ⚙️ Operasional Bulanan (OPEX)
+                        Operasional Bulanan (OPEX)
                       </h3>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Biaya Rutin Berulang (Gaji Host, Internet, Rent, Ads)</span>
                     </div>
@@ -3489,7 +3489,7 @@ METRIC TO WATCH
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
-                        🛍️ Pembelian Pribadi (Personal Purchase)
+                        Pembelian Pribadi (Personal Purchase)
                       </h3>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Pengeluaran Personal Ditanggung Rekening Studio</span>
                     </div>
@@ -3546,7 +3546,7 @@ METRIC TO WATCH
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
                     <div>
                       <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
-                        🎁 Bonus & Pendapatan Lain-lain
+                        Bonus & Pendapatan Lain-lain
                       </h3>
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Bonus Performance Target, Cashback Affiliate, Tip & Pemasukan Ekstra</span>
                     </div>
@@ -4198,7 +4198,7 @@ METRIC TO WATCH
                 <button 
                   className="btn btn-secondary" 
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', margin: '0 auto' }}
-                  onClick={() => { setModalType(null); showToast('⚡ Pemindaian AI berjalan di latar belakang...', 'info'); }}
+                  onClick={() => { setModalType(null); showToast('Pemindaian AI berjalan di latar belakang...', 'info'); }}
                 >
                   <PanelLeftClose style={{ width: 15, height: 15 }} /> Lanjutkan di Latar Belakang
                 </button>
@@ -4233,7 +4233,7 @@ METRIC TO WATCH
 
                   {/* GROSS COMMISSION INPUT */}
                   <div className="form-group">
-                    <label className="form-label" style={{ color: 'var(--accent-gold)' }}>💵 Komisi Kotor Studio (Rp)</label>
+                    <label className="form-label" style={{ color: 'var(--accent-gold)' }}>Komisi Kotor Studio (Rp)</label>
                     <input className="form-input" type="number" placeholder="Kosong (Silakan isi nominal komisi)" value={scannedPreview.grossCommission ?? ''} onChange={e => setScannedPreview({ ...scannedPreview, grossCommission: e.target.value })} />
                   </div>
 
@@ -4277,7 +4277,7 @@ METRIC TO WATCH
               </div>
 
               <div className="form-group">
-                <label className="form-label" style={{ color: 'var(--accent-gold)' }}>💵 Komisi Kotor Studio (Rp)</label>
+                <label className="form-label" style={{ color: 'var(--accent-gold)' }}>Komisi Kotor Studio (Rp)</label>
                 <input className="form-input" type="number" value={editingSession.grossCommission || 0} onChange={e => setEditingSession({ ...editingSession, grossCommission: parseInt(e.target.value) || 0 })} />
               </div>
 
@@ -4528,7 +4528,7 @@ METRIC TO WATCH
                 <button 
                   className="btn btn-secondary" 
                   style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 18px', margin: '0 auto' }}
-                  onClick={() => { setModalType(null); showToast('⚡ Pemindaian AI Video berjalan di latar belakang...', 'info'); }}
+                  onClick={() => { setModalType(null); showToast('Pemindaian AI Video berjalan di latar belakang...', 'info'); }}
                 >
                   <PanelLeftClose style={{ width: 15, height: 15 }} /> Lanjutkan di Latar Belakang
                 </button>
@@ -4579,7 +4579,7 @@ METRIC TO WATCH
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">💵 Estimasi Komisi (Rp)</label>
+                    <label className="form-label">Estimasi Komisi (Rp)</label>
                     <input className="form-input" type="number" placeholder="Kosong (Silakan isi nominal komisi)" value={scannedVideoPreview.grossCommission ?? ''} onChange={e => setScannedVideoPreview({ ...scannedVideoPreview, grossCommission: e.target.value })} />
                   </div>
 
@@ -4914,7 +4914,7 @@ METRIC TO WATCH
               </div>
 
               <div className="form-group">
-                <label className="form-label" style={{ color: 'var(--accent-gold)' }}>💵 Estimasi Komisi (Rp)</label>
+                <label className="form-label" style={{ color: 'var(--accent-gold)' }}>Estimasi Komisi (Rp)</label>
                 <input className="form-input" type="number" value={editingVideoSession.grossCommission || 0} onChange={e => setEditingVideoSession({ ...editingVideoSession, grossCommission: parseInt(e.target.value) || 0 })} />
               </div>
 
@@ -4970,7 +4970,7 @@ METRIC TO WATCH
                   style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => setFinancialType('capex')}
                 >
-                  📦 CAPEX (Aset)
+                  CAPEX (Aset)
                 </button>
                 <button 
                   type="button" 
@@ -4978,7 +4978,7 @@ METRIC TO WATCH
                   style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => setFinancialType('opex')}
                 >
-                  ⚙️ OPEX (Operasional)
+                  OPEX (Operasional)
                 </button>
                 <button 
                   type="button" 
@@ -4986,7 +4986,7 @@ METRIC TO WATCH
                   style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => { setFinancialType('personal'); if (!itemCategory) setItemCategory('Personal Purchase'); }}
                 >
-                  🛍️ Personal Purchase
+                  Personal Purchase
                 </button>
                 <button 
                   type="button" 
@@ -4994,7 +4994,7 @@ METRIC TO WATCH
                   style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => { setFinancialType('other_income'); if (!itemCategory) setItemCategory('Bonus Target'); }}
                 >
-                  🎁 Bonus & Pendapatan Lain
+                  Bonus & Pendapatan Lain
                 </button>
               </div>
 
@@ -5003,19 +5003,19 @@ METRIC TO WATCH
                 <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', display: 'block', marginBottom: 4 }}>Pilih Kategori Cepat:</span>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   <button type="button" onClick={() => { setFinancialType('other_income'); setItemCategory('Bonus Target'); }} style={{ background: financialType === 'other_income' ? 'rgba(5, 150, 105, 0.2)' : 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
-                    🎁 Bonus Target
+                    Bonus Target
                   </button>
                   <button type="button" onClick={() => { setFinancialType('other_income'); setItemCategory('Cashback Affiliate'); }} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
-                    💵 Cashback Affiliate
+                     Cashback Affiliate
                   </button>
                   <button type="button" onClick={() => { setFinancialType('personal'); setItemCategory('Personal Purchase'); }} style={{ background: financialType === 'personal' ? 'rgba(139, 92, 246, 0.2)' : 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
-                    🛍️ Personal Purchase
+                    Personal Purchase
                   </button>
                   <button type="button" onClick={() => setItemCategory('Alat Studio')} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
-                    📦 Alat Studio
+                    Alat Studio
                   </button>
                   <button type="button" onClick={() => setItemCategory('Gaji Host')} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
-                    👥 Gaji Host
+                    Gaji Host
                   </button>
                 </div>
               </div>
@@ -5111,7 +5111,7 @@ METRIC TO WATCH
                     style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                     onClick={() => setFinancialType('capex')}
                   >
-                    📦 CAPEX (Aset)
+                    CAPEX (Aset)
                   </button>
                   <button 
                     type="button" 
@@ -5119,7 +5119,7 @@ METRIC TO WATCH
                     style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                     onClick={() => setFinancialType('opex')}
                   >
-                    ⚙️ OPEX (Operasional)
+                    OPEX (Operasional)
                   </button>
                   <button 
                     type="button" 
@@ -5127,7 +5127,7 @@ METRIC TO WATCH
                     style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                     onClick={() => { setFinancialType('personal'); if (!itemCategory || itemCategory === "Umum") setItemCategory('Personal Purchase'); }}
                   >
-                    🛍️ Personal Purchase
+                    Personal Purchase
                   </button>
                   <button 
                     type="button" 
@@ -5135,7 +5135,7 @@ METRIC TO WATCH
                     style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                     onClick={() => { setFinancialType('other_income'); if (!itemCategory || itemCategory === "Umum") setItemCategory('Bonus Target'); }}
                   >
-                    🎁 Bonus & Pendapatan Lain
+                    Bonus & Pendapatan Lain
                   </button>
                 </div>
               </div>
@@ -5277,14 +5277,14 @@ METRIC TO WATCH
               </div>
 
               <h4 style={{ fontSize: '0.9rem', color: 'var(--primary)', marginBottom: 8, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>
-                📱 Cara Memindahkan Data ke Device / HP Baru Ini:
+                 Cara Memindahkan Data ke Device / HP Baru Ini:
               </h4>
               <ol style={{ paddingLeft: '1.25rem', marginBottom: '1.5rem', fontSize: '0.825rem', display: 'flex', flexDirection: 'column', gap: '8px', color: 'var(--text-muted)' }}>
                 <li>Buka website ini di <strong>HP / Laptop Lama Anda</strong> (tempat data disimpan sebelumnya).</li>
                 <li>Masuk ke tab <strong>Manajemen Admin</strong> di menu sidebar kiri.</li>
-                <li>Scroll ke kartu Backup lalu klik <strong>💾 Cadangkan Seluruh Data (.json)</strong>.</li>
+                <li>Scroll ke kartu Backup lalu klik <strong> Cadangkan Seluruh Data (.json)</strong>.</li>
                 <li>Kirim file <code>.json</code> tersebut ke HP baru ini (via WhatsApp / Email / Drive).</li>
-                <li>Di <strong>HP Baru ini</strong>, buka tab <strong>Manajemen Admin</strong> &rarr; Klik <strong>📥 Pulihkan Data dari Backup (.json)</strong> dan pilih file tadi. Seluruh data akan langsung muncul 100%!</li>
+                <li>Di <strong>HP Baru ini</strong>, buka tab <strong>Manajemen Admin</strong> &rarr; Klik <strong> Pulihkan Data dari Backup (.json)</strong> dan pilih file tadi. Seluruh data akan langsung muncul 100%!</li>
               </ol>
 
               <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', padding: '10px' }} onClick={() => setModalType(null)}>
