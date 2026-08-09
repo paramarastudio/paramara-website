@@ -577,6 +577,7 @@ export default function App() {
   const [dateFilterPreset, setDateFilterPreset] = useState('all'); // 'all' | 'today' | '7d' | '30d' | 'thisMonth' | 'custom'
   const [customDateStart, setCustomDateStart] = useState('');
   const [customDateEnd, setCustomDateEnd] = useState('');
+  const [sortBy, setSortBy] = useState('date_desc'); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
 
   // Parse various date formats used in the app into a local Date object (00:00:00 local time)
   const parseItemDate = (item) => {
@@ -685,13 +686,37 @@ export default function App() {
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
   const allPinterestReports = studioData.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics;
 
-  // Filtered data arrays used everywhere
-  const sessions = filterByDate(allSessions);
-  const videoSessions = filterByDate(allVideoSessions);
-  const capexList = filterByDate(allCapexList);
-  const opexList = filterByDate(allOpexList);
-  const personalList = filterByDate(allPersonalList);
-  const otherIncomeList = filterByDate(allOtherIncomeList);
+  // Helper to sort any data array by GMV, Gross Commission, or Date
+  const sortItems = (items) => {
+    return [...items].sort((a, b) => {
+      const gmvA = a.revenue || a.amount || a.budget || 0;
+      const gmvB = b.revenue || b.amount || b.budget || 0;
+      const commA = a.grossCommission || a.amount || a.budget || 0;
+      const commB = b.grossCommission || b.amount || b.budget || 0;
+
+      if (sortBy === 'gmv_desc') return gmvB - gmvA;
+      if (sortBy === 'gmv_asc') return gmvA - gmvB;
+      if (sortBy === 'comm_desc') return commB - commA;
+      if (sortBy === 'comm_asc') return commA - commB;
+      
+      const dA = parseItemDate(a);
+      const dB = parseItemDate(b);
+      if (!dA && !dB) return 0;
+      if (!dA) return 1;
+      if (!dB) return -1;
+
+      if (sortBy === 'date_asc') return dA.getTime() - dB.getTime();
+      return dB.getTime() - dA.getTime(); // default: date_desc
+    });
+  };
+
+  // Filtered & Sorted data arrays used everywhere
+  const sessions = sortItems(filterByDate(allSessions));
+  const videoSessions = sortItems(filterByDate(allVideoSessions));
+  const capexList = sortItems(filterByDate(allCapexList));
+  const opexList = sortItems(filterByDate(allOpexList));
+  const personalList = sortItems(filterByDate(allPersonalList));
+  const otherIncomeList = sortItems(filterByDate(allOtherIncomeList));
   const projects = allProjects; // Projects don't have date field yet
   const pinterestReports = allPinterestReports;
 
@@ -2059,11 +2084,32 @@ METRIC TO WATCH
             </div>
           )}
 
-          {dateFilterPreset !== 'all' && (
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginLeft: 'auto', fontStyle: 'italic' }}>
-              Menampilkan {sessions.length} live, {videoSessions.length} video, {capexList.length + opexList.length} transaksi
-            </span>
-          )}
+          {/* SORT BY DROPDOWN */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
+            <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>URUTKAN:</span>
+            <select
+              value={sortBy}
+              onChange={e => setSortBy(e.target.value)}
+              style={{
+                padding: '4px 10px',
+                fontSize: '0.75rem',
+                fontWeight: 600,
+                borderRadius: 20,
+                border: '1.5px solid var(--border-color)',
+                background: 'var(--bg-input)',
+                color: 'var(--text-main)',
+                cursor: 'pointer',
+                outline: 'none'
+              }}
+            >
+              <option value="date_desc">Terbaru (Tanggal)</option>
+              <option value="date_asc">Terlama (Tanggal)</option>
+              <option value="gmv_desc">GMV / Penjualan Terbesar</option>
+              <option value="gmv_asc">GMV / Penjualan Terkecil</option>
+              <option value="comm_desc">Komisi Kotor Terbesar</option>
+              <option value="comm_asc">Komisi Kotor Terkecil</option>
+            </select>
+          </div>
         </div>
 
         {/* Tab 1: Executive Dashboard */}
