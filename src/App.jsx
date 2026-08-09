@@ -2805,6 +2805,61 @@ METRIC TO WATCH
                           </div>
                         </div>
 
+                        {/* STREAMER NOTES & LEARNINGS BANNER */}
+                        {s.streamerNotes ? (
+                          <div style={{
+                            marginTop: '0.875rem',
+                            padding: '10px 14px',
+                            background: theme === 'dark' ? 'rgba(184, 142, 57, 0.12)' : 'rgba(8, 47, 38, 0.04)',
+                            borderRadius: '8px',
+                            borderLeft: '4px solid var(--accent-gold)',
+                            fontSize: '0.825rem',
+                            color: 'var(--text-main)',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '10px'
+                          }}>
+                            <FileText style={{ width: 16, height: 16, color: 'var(--accent-gold)', flexShrink: 0, marginTop: 2 }} />
+                            <div style={{ flex: 1 }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 2 }}>
+                                <strong style={{ fontSize: '0.725rem', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                  Catatan & Evaluasi Streamer
+                                </strong>
+                                <button 
+                                  className="btn btn-secondary btn-sm" 
+                                  style={{ padding: '2px 8px', fontSize: '0.675rem', height: 'auto' }} 
+                                  onClick={() => { setEditingSession({ ...s }); setModalType('editSession'); }}
+                                >
+                                  Edit Catatan
+                                </button>
+                              </div>
+                              <p style={{ margin: 0, whiteSpace: 'pre-line', lineHeight: 1.5, fontSize: '0.825rem' }}>
+                                {s.streamerNotes}
+                              </p>
+                            </div>
+                          </div>
+                        ) : (
+                          <div style={{ marginTop: '0.75rem', display: 'flex', justifyContent: 'flex-end' }}>
+                            <button 
+                              onClick={() => { setEditingSession({ ...s }); setModalType('editSession'); }} 
+                              style={{ 
+                                background: 'none', 
+                                border: '1px dashed var(--border-color)', 
+                                borderRadius: 6, 
+                                padding: '4px 10px', 
+                                fontSize: '0.75rem', 
+                                color: 'var(--text-dim)', 
+                                cursor: 'pointer', 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: 6 
+                              }}
+                            >
+                              <FileText style={{ width: 13, height: 13 }} /> + Tambah Catatan Evaluasi Streamer
+                            </button>
+                          </div>
+                        )}
+
                         {/* DETAILED EXPANDED INSIGHTS */}
                         {isExpanded && (
                           <div style={{ marginTop: '1.25rem', paddingTop: '1.25rem', borderTop: '1px dashed var(--border-color)', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -4448,6 +4503,20 @@ METRIC TO WATCH
                 <label className="form-label">Tingkat Konversi (%)</label>
                 <input className="form-input" type="number" step="0.1" value={editingSession.ordersPerClickPercent ?? editingSession.conversionRatePercent ?? 0} onChange={e => setEditingSession({ ...editingSession, ordersPerClickPercent: parseFloat(e.target.value) || 0, conversionRatePercent: parseFloat(e.target.value) || 0 })} />
               </div>
+
+              <div className="form-group" style={{ gridColumn: 'span 3', marginTop: '6px' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <FileText style={{ width: 14, height: 14 }} /> Catatan & Evaluasi Streamer (Learning Notes)
+                </label>
+                <textarea 
+                  className="form-input" 
+                  rows="3" 
+                  placeholder="Tuliskan pembelajaran dari sesi live ini (misal: 'Penonton rame saat bahasan diskon 50%', 'Mic sempat mati di menit 20', 'CTR naik saat pin produk X')..." 
+                  value={editingSession.streamerNotes || ''} 
+                  onChange={e => setEditingSession({ ...editingSession, streamerNotes: e.target.value })} 
+                  style={{ fontFamily: 'inherit', resize: 'vertical', fontSize: '0.825rem', lineHeight: '1.5' }} 
+                />
+              </div>
             </div>
 
             {/* EDITABLE PRODUCTS LIST SECTION */}
@@ -5000,6 +5069,20 @@ METRIC TO WATCH
                     onChange={e => setScannedPreview({ ...scannedPreview, cartAdditions: parseInt(e.target.value) || 0 })} 
                   />
                 </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '10px' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <FileText style={{ width: 14, height: 14 }} /> Catatan & Evaluasi Streamer (Learning Notes)
+                </label>
+                <textarea 
+                  className="form-input" 
+                  rows="3" 
+                  placeholder="Tuliskan pembelajaran dari sesi live ini (misal: 'Penonton rame saat bahasan diskon 50%', 'Hal janggal yang terjadi')..." 
+                  value={scannedPreview?.streamerNotes || ''} 
+                  onChange={e => setScannedPreview({ ...scannedPreview, streamerNotes: e.target.value })} 
+                  style={{ fontFamily: 'inherit', resize: 'vertical', fontSize: '0.825rem', lineHeight: '1.5' }} 
+                />
               </div>
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px' }}>
