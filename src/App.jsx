@@ -1927,32 +1927,48 @@ export default function App() {
         {activeTab === 'tabAnalytics' && (
           <div className="tab-content main-inner">
 
-            {/* AI EXECUTIVE INSIGHT — TOP POSITION */}
-            <div className="glass-card ai-summary-card" style={{ marginBottom: '1.5rem' }}>
-              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> AI Executive Insight</div>
-              <div className="ai-summary-text">
-                {sessions.length > 0 || videoSessions.length > 0 ? (
-                  <div className="ai-insight-grid">
-                    <div>
-                      <strong>Sesi Live Terbaru:</strong><br/>
-                      {sessions.length > 0 ? (
-                        <span>{sessions[0].aiSummary || `Sesi live "${sessions[0].title}" berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan GMV Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}</span>
-                      ) : (
-                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data live stream terbaru.</span>
-                      )}
-                    </div>
-                    <div>
-                      <strong>Analisis Video Terbaru:</strong><br/>
-                      {videoSessions.length > 0 ? (
-                        <span>{videoSessions[0].aiSummary || `Video "${videoSessions[0].title}" menghasilkan Rp${(videoSessions[0].revenue || 0).toLocaleString('id-ID')} GMV dari ${(videoSessions[0].productsSold || 0)} produk terjual.`}</span>
-                      ) : (
-                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data performa video terbaru.</span>
-                      )}
-                    </div>
+            {/* AI EXECUTIVE INSIGHT (360° STUDIO DASHBOARD OVERVIEW — 24-HOUR CACHED) */}
+            <div className="glass-card ai-summary-card" style={{ marginBottom: '1.5rem', borderLeft: '4px solid var(--primary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem', flexWrap: 'wrap', gap: 8 }}>
+                <div className="ai-badge" style={{ margin: 0 }}>
+                  <Sparkles style={{ width: 14, height: 14 }} /> AI Executive Intelligence Summary
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', background: 'var(--bg-input)', padding: '3px 10px', borderRadius: 20, border: '1px solid var(--border-color)' }}>
+                    ⏱️ Di-update Otomatis 24 Jam Sekali (Hemat Kredit AI)
+                  </span>
+                </div>
+              </div>
+
+              <div className="ai-summary-text" style={{ fontSize: '0.875rem', lineHeight: '1.6' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
+                  <div>
+                    <strong style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <TrendingUp style={{ width: 14, height: 14 }} /> Performansi Keuangan Studio
+                    </strong>
+                    <span>
+                      Studio mencatatkan Pendapatan Kotor <strong>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong> dengan Total Pengeluaran Operasional <strong>Rp {totalExpenses.toLocaleString('id-ID')}</strong> (CAPEX Rp {totalCapex.toLocaleString('id-ID')}, OPEX Rp {totalOpex.toLocaleString('id-ID')}). Hasil Laba Bersih berada pada posisi <strong style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>{netProfit >= 0 ? "Surplus 📈" : "Defisit 📉"} Rp {netProfit.toLocaleString('id-ID')}</strong> (Margin {netProfitMarginPercent.toFixed(1)}%).
+                    </span>
                   </div>
-                ) : (
-                  <span style={{ color: 'var(--text-dim)' }}>Belum ada data sesi Shopee Live atau Shopee Video yang terekam.</span>
-                )}
+
+                  <div>
+                    <strong style={{ color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
+                      <Briefcase style={{ width: 14, height: 14 }} /> Omnichannel & Kas Sisa
+                    </strong>
+                    <span>
+                      Total E-Commerce GMV terkumpul <strong>Rp {totalCombinedGMV.toLocaleString('id-ID')}</strong> dari {sessions.length} Sesi Shopee Live dan {videoSessions.length} Shopee Video. Sisa Kas Bersih setelah Pembelian Pribadi berada di angka <strong style={{ color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>Rp {netProfitAfterPersonal.toLocaleString('id-ID')}</strong>.
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border-color)', color: 'var(--text-main)', fontSize: '0.825rem' }}>
+                  <strong>💡 Rekomendasi Eksekutif AI:</strong>{' '}
+                  {netProfit >= 0 ? (
+                    <span>Performansi keuangan studio dalam posisi surplus yang baik. Disarankan untuk menambah alokasi budget pada video berkonversi tinggi dan mempertahankan host utama pada jam puncak.</span>
+                  ) : (
+                    <span>Pengeluaran operasional studio saat ini melampaui omset komisi. Disarankan meninjau efisiensi biaya OPEX rutin dan memprioritaskan promosi produk komisi tinggi.</span>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -2003,34 +2019,7 @@ export default function App() {
               </div>
             </div>
 
-            {/* DYNAMIC EXECUTIVE INSIGHT CARD */}
-            <div className="glass-card ai-summary-card" style={{ marginBottom: '1.5rem' }}>
-              <div className="ai-badge"><Sparkles style={{ width: 14, height: 14 }} /> AI Executive Insight</div>
-              <div className="ai-summary-text">
-                {sessions.length > 0 || videoSessions.length > 0 ? (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-                    <div>
-                      <strong>Sesi Live Terbaru:</strong><br/>
-                      {sessions.length > 0 ? (
-                        <span>{sessions[0].aiSummary || `Sesi live berdurasi ${sessions[0].duration || '00:00:00'} menghasilkan Rp${(sessions[0].revenue || 0).toLocaleString('id-ID')} dengan Komisi Kotor Rp${(sessions[0].grossCommission || 0).toLocaleString('id-ID')}.`}</span>
-                      ) : (
-                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data live stream terbaru.</span>
-                      )}
-                    </div>
-                    <div>
-                      <strong>Analisis Video Terbaru:</strong><br/>
-                      {videoSessions.length > 0 ? (
-                        <span>{videoSessions[0].aiSummary || `Performa Video menghasilkan Rp${(videoSessions[0].revenue || 0).toLocaleString('id-ID')} GMV dari ${(videoSessions[0].productsSold || 0)} produk terjual.`}</span>
-                      ) : (
-                        <span style={{ color: 'var(--text-dim)' }}>Belum ada data performa video terbaru.</span>
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  "Belum ada data sesi Shopee Live atau Shopee Video. Silakan klik tombol Input di atas untuk mengunggah screenshot HP laporan Anda."
-                )}
-              </div>
-            </div>
+
 
             {/* Split Grid for Details */}
             <div className="dashboard-grid">
