@@ -48,6 +48,8 @@ export const INITIAL_STUDIO_DATA = {
   // 4. Financial Lists
   capexList: [],
   opexList: [],
+  personalList: [],
+  otherIncomeList: [],
 
   // 5. Pinterest Analytics (US Affiliate Market)
   pinterestAnalytics: [

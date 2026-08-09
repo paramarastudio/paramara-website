@@ -1114,6 +1114,11 @@ export default function App() {
         ...prev,
         personalList: [...(prev.personalList || []), newItem]
       }));
+    } else if (financialType === 'other_income') {
+      setStudioData(prev => ({
+        ...prev,
+        otherIncomeList: [...(prev.otherIncomeList || []), newItem]
+      }));
     } else {
       setStudioData(prev => ({
         ...prev,
@@ -1163,6 +1168,17 @@ export default function App() {
     setModalType('edit_finance');
   };
 
+  const handleStartEditOtherIncome = (item) => {
+    setEditingFinanceItem({ ...item, type: 'other_income' });
+    setItemName(item.name);
+    setItemCategory(item.category || "Bonus Target");
+    setItemAmount(item.amount.toString());
+    setItemDate(item.date || "");
+    setOpexFrequency("Once");
+    setFinancialType('other_income');
+    setModalType('edit_finance');
+  };
+
   const handleSaveEditFinancialItem = (e) => {
     e.preventDefault();
     if (!itemName || !itemAmount) {
@@ -1176,7 +1192,7 @@ export default function App() {
     const updatedItem = {
       ...editingFinanceItem,
       name: itemName.trim(),
-      category: itemCategory.trim() || (newType === 'personal' ? "Personal Purchase" : "Umum"),
+      category: itemCategory.trim() || (newType === 'personal' ? "Personal Purchase" : newType === 'other_income' ? "Bonus Target" : "Umum"),
       amount: parseInt(itemAmount) || 0,
       date: itemDate || new Date().toISOString().split('T')[0],
       frequency: opexFrequency
@@ -1186,22 +1202,26 @@ export default function App() {
       let capex = [...(prev.capexList || [])];
       let opex = [...(prev.opexList || [])];
       let personal = [...(prev.personalList || [])];
+      let otherIncome = [...(prev.otherIncomeList || [])];
 
       // Remove from old list
       if (oldType === 'capex') capex = capex.filter(i => i.id !== editingFinanceItem.id);
       else if (oldType === 'opex') opex = opex.filter(i => i.id !== editingFinanceItem.id);
       else if (oldType === 'personal') personal = personal.filter(i => i.id !== editingFinanceItem.id);
+      else if (oldType === 'other_income') otherIncome = otherIncome.filter(i => i.id !== editingFinanceItem.id);
 
       // Add to new list
       if (newType === 'capex') capex.push(updatedItem);
       else if (newType === 'opex') opex.push(updatedItem);
       else if (newType === 'personal') personal.push(updatedItem);
+      else if (newType === 'other_income') otherIncome.push(updatedItem);
 
       return {
         ...prev,
         capexList: capex,
         opexList: opex,
-        personalList: personal
+        personalList: personal,
+        otherIncomeList: otherIncome
       };
     });
 
@@ -1212,7 +1232,7 @@ export default function App() {
     setOpexFrequency("Once");
     setEditingFinanceItem(null);
     setModalType(null);
-    showToast(`Transaksi berhasil dipindahkan ke ${newType === 'capex' ? 'CAPEX' : newType === 'personal' ? 'Personal Purchase' : 'OPEX'}!`);
+    showToast(`Transaksi berhasil dipindahkan ke ${newType === 'capex' ? 'CAPEX' : newType === 'personal' ? 'Personal Purchase' : newType === 'other_income' ? 'Bonus & Pendapatan Lain' : 'OPEX'}!`);
   };
 
   const handleDeleteCapex = (id) => {
@@ -1238,6 +1258,15 @@ export default function App() {
       setStudioData(prev => ({
         ...prev,
         personalList: (prev.personalList || []).filter(item => item.id !== id)
+      }));
+    }
+  };
+
+  const handleDeleteOtherIncome = (id) => {
+    if (confirm("Hapus item Bonus / Pendapatan ini?")) {
+      setStudioData(prev => ({
+        ...prev,
+        otherIncomeList: (prev.otherIncomeList || []).filter(item => item.id !== id)
       }));
     }
   };
@@ -1407,13 +1436,21 @@ export default function App() {
       "Siklus": "-",
       "Nominal (Rp)": p.amount
     }));
-    const allFinance = [...capex, ...opex, ...personal];
+    const otherIncome = (studioData.otherIncomeList || []).map(i => ({
+      "Tipe Transaksi": "Pendapatan Lain / Bonus",
+      "Nama Item": i.name,
+      "Kategori": i.category || "Bonus",
+      "Tanggal": i.date || "-",
+      "Siklus": "-",
+      "Nominal (Rp)": i.amount
+    }));
+    const allFinance = [...capex, ...opex, ...personal, ...otherIncome];
     if (allFinance.length === 0) {
       showToast('Tidak ada data keuangan untuk diekspor!', 'error');
       return;
     }
     downloadCsv(`Laporan_Keuangan_Paramara_${new Date().toISOString().slice(0, 10)}.csv`, allFinance);
-    showToast('Laporan Keuangan berhasil diekspor ke Excel!');
+    showToast('Laporan Keuangan (CAPEX, OPEX, Personal & Bonus) berhasil diekspor ke Excel!');
   };
 
   // =========================================================================
@@ -1848,13 +1885,6 @@ export default function App() {
               <button className="btn btn-primary" onClick={() => setModalType('addAdmin')}>
                 <UserPlus style={{ width: 15, height: 15 }} />
                 <span className="btn-label">Tambah Admin</span>
-              </button>
-            )}
-
-            {activeTab === 'tabAnalytics' && (
-              <button className="btn btn-primary" onClick={() => { setActiveTab('tabShopeeTracker'); setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}>
-                <Camera style={{ width: 15, height: 15 }} />
-                <span className="btn-label">Input Live</span>
               </button>
             )}
           </div>
@@ -2821,7 +2851,7 @@ export default function App() {
 
             </div>
 
-            {/* 3. CAPEX, OPEX & PERSONAL PURCHASE LEDGER TABLES */}
+            {/* 3. CAPEX, OPEX, PERSONAL PURCHASE & OTHER INCOME LEDGER TABLES */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
               
               {/* CAPEX Table */}
@@ -2967,6 +2997,56 @@ export default function App() {
                       ) : (
                         <tr>
                           <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data pengeluaran/pembelian pribadi.</td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Bonus & Other Income Table */}
+              <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                  <h3 style={{ fontSize: '0.95rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700 }}>
+                    🎁 Bonus & Pendapatan Lain-lain
+                  </h3>
+                  <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>Pemasukan Ekstra</span>
+                </div>
+
+                <div className="table-wrapper">
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Nama Item / Sumber</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Kategori</th>
+                        <th style={{ textAlign: 'left', padding: '8px' }}>Tanggal</th>
+                        <th style={{ textAlign: 'right', padding: '8px' }}>Jumlah (Rp)</th>
+                        <th style={{ textAlign: 'center', padding: '8px' }}>Aksi</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {otherIncomeList.length > 0 ? (
+                        otherIncomeList.map(item => (
+                          <tr key={item.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '8px' }}><strong>{item.name}</strong></td>
+                            <td style={{ padding: '8px' }}><span className="brand-badge" style={{ background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>{item.category || "Bonus"}</span></td>
+                            <td style={{ padding: '8px', color: 'var(--text-dim)' }}>{item.date}</td>
+                            <td style={{ padding: '8px', textAlign: 'right', fontWeight: 700, color: '#059669' }}>Rp {item.amount.toLocaleString('id-ID')}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>
+                              <div style={{ display: 'flex', gap: '4px', justifyContent: 'center' }}>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: 'var(--primary)' }} onClick={() => handleStartEditOtherIncome(item)}>
+                                  <Edit3 style={{ width: 13, height: 13 }} />
+                                </button>
+                                <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', color: '#D32F2F' }} onClick={() => handleDeleteOtherIncome(item.id)}>
+                                  <Trash2 style={{ width: 13, height: 13 }} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan="5" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data bonus atau pendapatan lain-lain.</td>
                         </tr>
                       )}
                     </tbody>
@@ -4339,12 +4419,12 @@ export default function App() {
 
             <form onSubmit={handleAddFinancialItem}>
               
-              {/* Type Switcher Toggle (CAPEX vs OPEX vs PERSONAL) */}
+              {/* Type Switcher Toggle (CAPEX vs OPEX vs PERSONAL vs OTHER INCOME) */}
               <div style={{ display: 'flex', gap: '8px', marginBottom: '1rem', flexWrap: 'wrap' }}>
                 <button 
                   type="button" 
                   className={`btn ${financialType === 'capex' ? 'btn-primary' : 'btn-secondary'}`} 
-                  style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                  style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => setFinancialType('capex')}
                 >
                   📦 CAPEX (Aset)
@@ -4352,7 +4432,7 @@ export default function App() {
                 <button 
                   type="button" 
                   className={`btn ${financialType === 'opex' ? 'btn-primary' : 'btn-secondary'}`} 
-                  style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                  style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => setFinancialType('opex')}
                 >
                   ⚙️ OPEX (Operasional)
@@ -4360,10 +4440,18 @@ export default function App() {
                 <button 
                   type="button" 
                   className={`btn ${financialType === 'personal' ? 'btn-primary' : 'btn-secondary'}`} 
-                  style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                  style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                   onClick={() => { setFinancialType('personal'); if (!itemCategory) setItemCategory('Personal Purchase'); }}
                 >
                   🛍️ Personal Purchase
+                </button>
+                <button 
+                  type="button" 
+                  className={`btn ${financialType === 'other_income' ? 'btn-primary' : 'btn-secondary'}`} 
+                  style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
+                  onClick={() => { setFinancialType('other_income'); if (!itemCategory) setItemCategory('Bonus Target'); }}
+                >
+                  🎁 Bonus & Pendapatan Lain
                 </button>
               </div>
 
@@ -4371,6 +4459,12 @@ export default function App() {
               <div style={{ marginBottom: '1rem' }}>
                 <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', display: 'block', marginBottom: 4 }}>Pilih Kategori Cepat:</span>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <button type="button" onClick={() => { setFinancialType('other_income'); setItemCategory('Bonus Target'); }} style={{ background: financialType === 'other_income' ? 'rgba(5, 150, 105, 0.2)' : 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
+                    🎁 Bonus Target
+                  </button>
+                  <button type="button" onClick={() => { setFinancialType('other_income'); setItemCategory('Cashback Affiliate'); }} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
+                    💵 Cashback Affiliate
+                  </button>
                   <button type="button" onClick={() => { setFinancialType('personal'); setItemCategory('Personal Purchase'); }} style={{ background: financialType === 'personal' ? 'rgba(139, 92, 246, 0.2)' : 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
                     🛍️ Personal Purchase
                   </button>
@@ -4379,9 +4473,6 @@ export default function App() {
                   </button>
                   <button type="button" onClick={() => setItemCategory('Gaji Host')} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
                     👥 Gaji Host
-                  </button>
-                  <button type="button" onClick={() => setItemCategory('Sewa & Operasional')} style={{ background: 'var(--bg-input)', border: '1px solid var(--border-color)', color: 'var(--text-main)', padding: '4px 10px', borderRadius: 20, fontSize: '0.75rem', cursor: 'pointer' }}>
-                    ⚡ Sewa & Operasional
                   </button>
                 </div>
               </div>
@@ -4467,14 +4558,14 @@ export default function App() {
 
             <form onSubmit={handleSaveEditFinancialItem}>
               
-              {/* Type Switcher Toggle (CAPEX vs OPEX vs PERSONAL) */}
+              {/* Type Switcher Toggle (CAPEX vs OPEX vs PERSONAL vs OTHER INCOME) */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <label className="form-label" style={{ fontWeight: 700, color: 'var(--primary)', marginBottom: 6, display: 'block' }}>Pindahkan Tipe Transaksi Ke:</label>
                 <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                   <button 
                     type="button" 
                     className={`btn ${financialType === 'capex' ? 'btn-primary' : 'btn-secondary'}`} 
-                    style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                    style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                     onClick={() => setFinancialType('capex')}
                   >
                     📦 CAPEX (Aset)
@@ -4482,7 +4573,7 @@ export default function App() {
                   <button 
                     type="button" 
                     className={`btn ${financialType === 'opex' ? 'btn-primary' : 'btn-secondary'}`} 
-                    style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                    style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                     onClick={() => setFinancialType('opex')}
                   >
                     ⚙️ OPEX (Operasional)
@@ -4490,10 +4581,18 @@ export default function App() {
                   <button 
                     type="button" 
                     className={`btn ${financialType === 'personal' ? 'btn-primary' : 'btn-secondary'}`} 
-                    style={{ flex: 1, minWidth: 120, justifyContent: 'center', fontSize: '0.8rem' }}
+                    style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
                     onClick={() => { setFinancialType('personal'); if (!itemCategory || itemCategory === "Umum") setItemCategory('Personal Purchase'); }}
                   >
                     🛍️ Personal Purchase
+                  </button>
+                  <button 
+                    type="button" 
+                    className={`btn ${financialType === 'other_income' ? 'btn-primary' : 'btn-secondary'}`} 
+                    style={{ flex: 1, minWidth: 100, justifyContent: 'center', fontSize: '0.8rem' }}
+                    onClick={() => { setFinancialType('other_income'); if (!itemCategory || itemCategory === "Umum") setItemCategory('Bonus Target'); }}
+                  >
+                    🎁 Bonus & Pendapatan Lain
                   </button>
                 </div>
               </div>
