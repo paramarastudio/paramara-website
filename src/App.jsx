@@ -5979,7 +5979,7 @@ METRIC TO WATCH
               </div>
 
               <div className="form-group" style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
                   Catatan / Note (Opsional):
                 </label>
                 <textarea
