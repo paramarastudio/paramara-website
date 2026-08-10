@@ -3405,21 +3405,22 @@ METRIC TO WATCH
               </div>
             </div>
 
+
             {/* 2. EXECUTIVE FINANCIAL MATRIX (P&L BREAKDOWN CARDS) */}
             <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: 10 }}>
                 <div>
                   <h3 style={{ fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
-                    <Receipt style={{ width: 18, height: 18, color: 'var(--primary)' }} /> Ringkasan Laba Rugi & Arus Kas Studio
+                    <Receipt style={{ width: 18, height: 18, color: 'var(--primary)' }} /> Ringkasan Laba Rugi &amp; Arus Kas Studio
                   </h3>
                   <p style={{ fontSize: '0.775rem', color: 'var(--text-muted)', marginTop: 2 }}>Breakdown real-time aliran pendapatan vs pengeluaran operasional</p>
                 </div>
-                <span className="brand-badge" style={{ padding: '4px 12px', fontSize: '0.725rem' }}>P&L Statement</span>
+                <span className="brand-badge" style={{ padding: '4px 12px', fontSize: '0.725rem' }}>P&amp;L Statement</span>
               </div>
 
               {/* DUAL FLOW GRID */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.25rem', marginBottom: '1.25rem' }}>
-                
+
                 {/* REVENUE STREAMS COLUMN */}
                 <div style={{ background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid var(--border-color)', paddingBottom: 8 }}>
@@ -3428,10 +3429,7 @@ METRIC TO WATCH
                     </h4>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Arus Masuk</span>
                   </div>
-
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    
-                    {/* Item 1 */}
                     <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
                         <span style={{ fontWeight: 600 }}>Komisi Shopee Live</span>
@@ -3445,8 +3443,6 @@ METRIC TO WATCH
                         <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalGrossCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
                       </div>
                     </div>
-
-                    {/* Item 2 */}
                     <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
                         <span style={{ fontWeight: 600 }}>Komisi Shopee Video</span>
@@ -3460,11 +3456,9 @@ METRIC TO WATCH
                         <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalGrossVideoCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
                       </div>
                     </div>
-
-                    {/* Item 3 */}
                     <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
-                        <span style={{ fontWeight: 600 }}>Kontrak Proyek & Klien</span>
+                        <span style={{ fontWeight: 600 }}>Kontrak Proyek &amp; Klien</span>
                         <strong style={{ color: '#059669' }}>Rp {totalProjectRev.toLocaleString('id-ID')}</strong>
                       </div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
@@ -3475,13 +3469,10 @@ METRIC TO WATCH
                         <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalProjectRev / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
                       </div>
                     </div>
-
-                    {/* Revenue Total Row */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px dashed var(--border-color)', fontSize: '0.85rem' }}>
                       <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Total Pendapatan Kotor</span>
                       <strong style={{ fontSize: '1rem', color: '#059669' }}>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong>
                     </div>
-
                   </div>
                 </div>
 
@@ -3493,25 +3484,20 @@ METRIC TO WATCH
                     </h4>
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Arus Keluar</span>
                   </div>
-
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                    
-                    {/* Item 1: CAPEX */}
                     <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
                         <span style={{ fontWeight: 600 }}>Belanja Modal (CAPEX)</span>
                         <strong style={{ color: '#B88E39' }}>Rp {totalCapex.toLocaleString('id-ID')}</strong>
                       </div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Aset Fisik & Alat Studio</span>
+                        <span>Aset Fisik &amp; Alat Studio</span>
                         <span>{totalExpenses > 0 ? ((totalCapex / totalExpenses) * 100).toFixed(0) : 0}% alokasi</span>
                       </div>
                       <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
                         <div style={{ width: `${totalExpenses > 0 ? Math.min(100, (totalCapex / totalExpenses) * 100) : 0}%`, height: '100%', background: '#B88E39', borderRadius: 2 }} />
                       </div>
                     </div>
-
-                    {/* Item 2: OPEX */}
                     <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
                         <span style={{ fontWeight: 600 }}>Operasional (OPEX)</span>
@@ -3525,46 +3511,33 @@ METRIC TO WATCH
                         <div style={{ width: `${totalExpenses > 0 ? Math.min(100, (totalOpex / totalExpenses) * 100) : 0}%`, height: '100%', background: '#D32F2F', borderRadius: 2 }} />
                       </div>
                     </div>
-
-                    {/* Item 3: Personal Purchase */}
                     <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
                         <span style={{ fontWeight: 600 }}>Pembelian Pribadi (Personal Purchase)</span>
                         <strong style={{ color: '#8B5CF6' }}>Rp {totalPersonal.toLocaleString('id-ID')}</strong>
                       </div>
                       <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
-                        <span>Belanja & Pengeluaran Personal</span>
+                        <span>Belanja &amp; Pengeluaran Personal</span>
                         <span>{totalCashOutflow > 0 ? ((totalPersonal / totalCashOutflow) * 100).toFixed(0) : 0}% alokasi</span>
                       </div>
                       <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
                         <div style={{ width: `${totalCashOutflow > 0 ? Math.min(100, (totalPersonal / totalCashOutflow) * 100) : 0}%`, height: '100%', background: '#8B5CF6', borderRadius: 2 }} />
                       </div>
                     </div>
-
-                    {/* Expense Total Row */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 8, borderTop: '1px dashed var(--border-color)', fontSize: '0.85rem', marginTop: 12 }}>
                       <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>Total Pengeluaran Studio (Operasional)</span>
                       <strong style={{ fontSize: '1rem', color: '#D32F2F' }}>Rp {totalExpenses.toLocaleString('id-ID')}</strong>
                     </div>
-
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', color: 'var(--text-dim)', paddingTop: 4 }}>
                       <span>Total Kas Keluar (Studio + Personal):</span>
                       <strong style={{ color: 'var(--text-main)' }}>Rp {totalCashOutflow.toLocaleString('id-ID')}</strong>
                     </div>
-
                   </div>
                 </div>
 
               </div>
-
             </div>
 
-            </div>
-            </div>
-            </div>
-            </div>
-            </div>
-            </div>
 
             {/* METRICS PLANNING EXPENSE & BUDGET PERFORMANCE */}
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid #2563EB' }}>
