@@ -3671,7 +3671,6 @@ METRIC TO WATCH
                   </div>
                 </div>
               </div>
-            </div>
 
             {/* 3. SUB-TAB FILTER BAR & FULL-WIDTH LEDGER TABLES */}
             <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
