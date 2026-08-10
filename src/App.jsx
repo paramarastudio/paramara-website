@@ -3557,8 +3557,10 @@ METRIC TO WATCH
 
               </div>
 
-              {/* METRICS PLANNING EXPENSE & BUDGET PERFORMANCE */}
-              <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid #2563EB' }}>
+            </div>
+
+            {/* METRICS PLANNING EXPENSE & BUDGET PERFORMANCE */}
+            <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid #2563EB' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 10 }}>
                   <div>
                     <h3 style={{ fontSize: '1.05rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, margin: 0 }}>
@@ -3646,16 +3648,16 @@ METRIC TO WATCH
                     <div style={{ width: `${Math.min(100, budgetUtilizationPercent)}%`, height: '100%', background: budgetUtilizationPercent > 100 ? '#D32F2F' : budgetUtilizationPercent > 80 ? '#B88E39' : '#059669', transition: 'width 0.3s ease', borderRadius: 4 }} />
                   </div>
                 </div>
-              </div>
+            </div>
 
-              {/* NET PROFIT HIGHLIGHT BANNER */}
-              <div style={{
-                display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem',
-                padding: '1.25rem 1.5rem',
-                borderRadius: 12,
-                background: 'var(--bg-card)',
-                border: '1.5px solid var(--border-color)'
-              }}>
+            {/* NET PROFIT HIGHLIGHT BANNER */}
+            <div style={{
+              display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem',
+              padding: '1.25rem 1.5rem',
+              borderRadius: 12,
+              background: 'var(--bg-card)',
+              border: '1.5px solid var(--border-color)'
+            }}>
                 {/* Metric 1: Operational Net Profit */}
                 <div style={{ padding: '12px 16px', background: netProfit >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)', borderRadius: 10, border: `1px solid ${netProfit >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3687,9 +3689,9 @@ METRIC TO WATCH
                   <div style={{ fontSize: '1.4rem', fontWeight: 900, color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F', marginTop: 4 }}>
                     Rp {netProfitAfterPersonal.toLocaleString('id-ID')}
                   </div>
-                  </div>
                 </div>
               </div>
+            </div>
 
             {/* 3. SUB-TAB FILTER BAR & FULL-WIDTH LEDGER TABLES */}
             <div style={{ marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
