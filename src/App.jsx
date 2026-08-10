@@ -774,11 +774,7 @@ export default function App() {
   const opexList = sortItems(filterByDate(allOpexList));
   const personalList = sortItems(filterByDate(allPersonalList));
   const otherIncomeList = sortItems(filterByDate(allOtherIncomeList));
-  const plannedExpenses = sortItems(filterByDate(allPlannedExpenses));
-  const totalPlannedExpenses = plannedExpenses.reduce((acc, p) => acc + (p.amount || 0), 0);
-  const monthlyBudgetLimit = studioData.monthlyBudgetLimit || 2500000;
-  const budgetUtilizationPercent = monthlyBudgetLimit > 0 ? (totalExpenses / monthlyBudgetLimit) * 100 : 0;
-  const remainingBudget = monthlyBudgetLimit - totalExpenses;
+
   const projects = allProjects; // Projects don't have date field yet
   const pinterestReports = allPinterestReports;
 
@@ -917,6 +913,13 @@ export default function App() {
   const totalPersonal = personalList.reduce((acc, p) => acc + (p.amount || 0), 0);
   const totalExpenses = totalCapex + totalOpex;
   const totalCashOutflow = totalCapex + totalOpex + totalPersonal;
+
+  // Planning Expense Calculations (placed after totalExpenses declaration)
+  const plannedExpenses = sortItems(filterByDate(allPlannedExpenses));
+  const totalPlannedExpenses = plannedExpenses.reduce((acc, p) => acc + (p.amount || 0), 0);
+  const monthlyBudgetLimit = studioData.monthlyBudgetLimit || 2500000;
+  const budgetUtilizationPercent = monthlyBudgetLimit > 0 ? (totalExpenses / monthlyBudgetLimit) * 100 : 0;
+  const remainingBudget = monthlyBudgetLimit - totalExpenses;
 
   // Profitability
   const netProfit = totalStudioGrossRevenue - totalExpenses;
