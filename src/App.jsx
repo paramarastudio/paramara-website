@@ -3559,6 +3559,13 @@ METRIC TO WATCH
 
             </div>
 
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+            </div>
+
             {/* METRICS PLANNING EXPENSE & BUDGET PERFORMANCE */}
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid #2563EB' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 10 }}>
