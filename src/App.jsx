@@ -2226,6 +2226,41 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             {/* CONTEXTUAL ACTION BUTTONS */}
             {activeTab === 'tabFinance' && (
               <>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                  <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
+                  <select 
+                    value={dateFilterPreset}
+                    onChange={e => setDateFilterPreset(e.target.value)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+                  >
+                    <option value="all">Semua Waktu</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="yesterday">Kemarin</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="thisMonth">Bulan Ini</option>
+                    <option value="custom">Custom Tanggal...</option>
+                  </select>
+                </div>
+
+                {dateFilterPreset === 'custom' && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                    <input
+                      type="date"
+                      value={customDateStart}
+                      onChange={e => setCustomDateStart(e.target.value)}
+                      style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
+                    <input
+                      type="date"
+                      value={customDateEnd}
+                      onChange={e => setCustomDateEnd(e.target.value)}
+                      style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    />
+                  </div>
+                )}
+
                 <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportFinanceToExcel}>
                   <FileText style={{ width: 14, height: 14, color: '#059669' }} />
                   <span className="btn-label">Ekspor Excel</span>
@@ -2268,82 +2303,6 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
           </div>
         </div>
 
-        {/* ====== TIMEFRAME FILTER BAR ====== */}
-        <div className="filter-bar" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 2.5rem', background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginRight: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>FILTER:</span>
-          {[
-            { key: 'all', label: 'Semua' },
-            { key: 'today', label: 'Hari Ini' },
-            { key: 'yesterday', label: 'Kemarin' },
-            { key: '7d', label: '7 Hari' },
-            { key: '30d', label: '30 Hari' },
-            { key: 'thisMonth', label: 'Bulan Ini' },
-            { key: 'custom', label: 'Custom' },
-          ].map(opt => (
-            <button
-              key={opt.key}
-              onClick={() => setDateFilterPreset(opt.key)}
-              style={{
-                padding: '5px 14px',
-                fontSize: '0.75rem',
-                fontWeight: dateFilterPreset === opt.key ? 700 : 500,
-                borderRadius: 20,
-                border: `1.5px solid ${dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--border-color)'}`,
-                background: dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--bg-input)',
-                color: dateFilterPreset === opt.key ? (theme === 'dark' ? '#09110F' : 'white') : 'var(--text-main)',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
-
-          {dateFilterPreset === 'custom' && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 4 }}>
-              <input
-                type="date"
-                value={customDateStart}
-                onChange={e => setCustomDateStart(e.target.value)}
-                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
-              />
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
-              <input
-                type="date"
-                value={customDateEnd}
-                onChange={e => setCustomDateEnd(e.target.value)}
-                style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
-              />
-            </div>
-          )}
-
-          {/* SORT BY DROPDOWN */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginLeft: 'auto' }}>
-            <span style={{ fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>URUTKAN:</span>
-            <select
-              value={sortBy}
-              onChange={e => setSortBy(e.target.value)}
-              style={{
-                padding: '4px 10px',
-                fontSize: '0.75rem',
-                fontWeight: 600,
-                borderRadius: 20,
-                border: '1.5px solid var(--border-color)',
-                background: 'var(--bg-input)',
-                color: 'var(--text-main)',
-                cursor: 'pointer',
-                outline: 'none'
-              }}
-            >
-              <option value="date_desc">Terbaru (Tanggal)</option>
-              <option value="date_asc">Terlama (Tanggal)</option>
-              <option value="gmv_desc">GMV / Penjualan Terbesar</option>
-              <option value="gmv_asc">GMV / Penjualan Terkecil</option>
-              <option value="comm_desc">Komisi Kotor Terbesar</option>
-              <option value="comm_asc">Komisi Kotor Terkecil</option>
-            </select>
-          </div>
-        </div>
 
         {/* Tab 1: Executive Dashboard */}
         {activeTab === 'tabAnalytics' && (
@@ -3513,67 +3472,84 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         {activeTab === 'tabFinance' && (
           <div className="tab-content main-inner">
             
-            {/* SUB-NAVIGASI HALAMAN KEUANGAN */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.25rem', flexWrap: 'wrap', gap: 12 }}>
-              <div style={{ display: 'flex', background: 'var(--bg-input)', padding: 4, borderRadius: 14, border: '1px solid var(--border-color)', gap: 4 }}>
-                <button 
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => setFinanceMainView('overview')}
-                  style={{ 
-                    padding: '8px 18px', 
-                    borderRadius: 10, 
-                    fontSize: '0.825rem', 
-                    fontWeight: 700, 
-                    border: 'none', 
-                    background: financeMainView === 'overview' ? 'var(--primary)' : 'transparent', 
-                    color: financeMainView === 'overview' ? '#ffffff' : 'var(--text-dim)',
-                    boxShadow: financeMainView === 'overview' ? '0 2px 8px rgba(8, 47, 38, 0.2)' : 'none',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <PieChart style={{ width: 15, height: 15, marginRight: 6 }} /> Overview &amp; P&amp;L
-                </button>
-                <button 
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => setFinanceMainView('planning')}
-                  style={{ 
-                    padding: '8px 18px', 
-                    borderRadius: 10, 
-                    fontSize: '0.825rem', 
-                    fontWeight: 700, 
-                    border: 'none', 
-                    background: financeMainView === 'planning' ? '#2563EB' : 'transparent', 
-                    color: financeMainView === 'planning' ? '#ffffff' : 'var(--text-dim)',
-                    boxShadow: financeMainView === 'planning' ? '0 2px 8px rgba(37, 99, 235, 0.3)' : 'none',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Target style={{ width: 15, height: 15, marginRight: 6 }} /> Anggaran &amp; Rencana ({activePlannedExpenses.length})
-                </button>
-                <button 
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => setFinanceMainView('ledger')}
-                  style={{ 
-                    padding: '8px 18px', 
-                    borderRadius: 10, 
-                    fontSize: '0.825rem', 
-                    fontWeight: 700, 
-                    border: 'none', 
-                    background: financeMainView === 'ledger' ? 'var(--primary)' : 'transparent', 
-                    color: financeMainView === 'ledger' ? '#ffffff' : 'var(--text-dim)',
-                    boxShadow: financeMainView === 'ledger' ? '0 2px 8px rgba(8, 47, 38, 0.2)' : 'none',
-                    transition: 'all 0.2s ease',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <Receipt style={{ width: 15, height: 15, marginRight: 6 }} /> Buku Kas &amp; Transaksi ({capexList.length + opexList.length + personalList.length + otherIncomeList.length})
-                </button>
-              </div>
+            {/* SUB-NAVIGASI HALAMAN KEUANGAN (SEGMENTED CONTROL) */}
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(3, 1fr)', 
+              background: 'var(--bg-card)', 
+              padding: '6px', 
+              borderRadius: 14, 
+              border: '1.5px solid var(--border-color)', 
+              marginBottom: '1.5rem',
+              gap: 6,
+              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)'
+            }}>
+              <button 
+                type="button"
+                onClick={() => setFinanceMainView('overview')}
+                style={{ 
+                  padding: '10px 16px', 
+                  borderRadius: 10, 
+                  fontSize: '0.85rem', 
+                  fontWeight: 700, 
+                  border: 'none', 
+                  background: financeMainView === 'overview' ? 'var(--primary)' : 'transparent', 
+                  color: financeMainView === 'overview' ? '#ffffff' : 'var(--text-dim)',
+                  boxShadow: financeMainView === 'overview' ? '0 2px 8px rgba(8, 47, 38, 0.25)' : 'none',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 8
+                }}
+              >
+                <PieChart style={{ width: 16, height: 16 }} /> Overview &amp; P&amp;L
+              </button>
+              <button 
+                type="button"
+                onClick={() => setFinanceMainView('planning')}
+                style={{ 
+                  padding: '10px 16px', 
+                  borderRadius: 10, 
+                  fontSize: '0.85rem', 
+                  fontWeight: 700, 
+                  border: 'none', 
+                  background: financeMainView === 'planning' ? '#2563EB' : 'transparent', 
+                  color: financeMainView === 'planning' ? '#ffffff' : 'var(--text-dim)',
+                  boxShadow: financeMainView === 'planning' ? '0 2px 8px rgba(37, 99, 235, 0.3)' : 'none',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'center',
+                  gap: 8
+                }}
+              >
+                <Target style={{ width: 16, height: 16 }} /> Anggaran &amp; Rencana ({activePlannedExpenses.length})
+              </button>
+              <button 
+                type="button"
+                onClick={() => setFinanceMainView('ledger')}
+                style={{ 
+                  padding: '10px 16px', 
+                  borderRadius: 10, 
+                  fontSize: '0.85rem', 
+                  fontWeight: 700, 
+                  border: 'none', 
+                  background: financeMainView === 'ledger' ? 'var(--primary)' : 'transparent', 
+                  color: financeMainView === 'ledger' ? '#ffffff' : 'var(--text-dim)',
+                  boxShadow: financeMainView === 'ledger' ? '0 2px 8px rgba(8, 47, 38, 0.25)' : 'none',
+                  transition: 'all 0.2s ease',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justify: 'center',
+                  gap: 8
+                }}
+              >
+                <Receipt style={{ width: 16, height: 16 }} /> Buku Kas &amp; Transaksi ({capexList.length + opexList.length + personalList.length + otherIncomeList.length})
+              </button>
             </div>
 
             {/* SUB-VIEW 1: OVERVIEW & P&L STATEMENT */}
@@ -3596,7 +3572,9 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     </div>
                     <div className="kpi-title">Total Pengeluaran Studio</div>
                     <div className="kpi-value text-warning">Rp {totalExpenses.toLocaleString('id-ID')}</div>
-                    <div className="kpi-subtext">CAPEX Rp {totalCapex.toLocaleString('id-ID')} | OPEX Rp {totalOpex.toLocaleString('id-ID')}</div>
+                    <div className="kpi-subtext" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      CAPEX Rp {totalCapex.toLocaleString('id-ID')} • OPEX Rp {totalOpex.toLocaleString('id-ID')}
+                    </div>
                   </div>
 
                   <div className="glass-card kpi-card" style={{ '--kpi-accent': netProfit >= 0 ? '#059669' : '#D32F2F' }}>
