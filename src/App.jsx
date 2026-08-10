@@ -355,6 +355,9 @@ export default function App() {
 
   // Branding Settings State
   const [domainNameInput, setDomainNameInput] = useState("paramarastudio.com");
+  const [claudeApiKeyInput, setClaudeApiKeyInput] = useState(() => {
+    try { return localStorage.getItem('claude_api_key') || ''; } catch(e) { return ''; }
+  });
 
   // Dual Screenshot Files State
   const [fileSlot1, setFileSlot1] = useState(null);
@@ -1399,6 +1402,22 @@ export default function App() {
     }
   };
 
+  const handleSaveClaudeApiKey = (key) => {
+    const trimmed = (key || '').trim();
+    try {
+      if (trimmed) {
+        localStorage.setItem('claude_api_key', trimmed);
+        localStorage.setItem('ai_provider_mode', 'claude');
+        showToast('API Key Claude berhasil disimpan & diaktifkan!');
+      } else {
+        localStorage.removeItem('claude_api_key');
+        showToast('API Key Claude dihapus.', 'info');
+      }
+    } catch(e) {
+      showToast('Gagal menyimpan API Key: ' + e.message, 'error');
+    }
+  };
+
   const handleDeletePersonal = (id) => {
     if (confirm("Hapus item Pembelian Pribadi ini?")) {
       setStudioData(prev => ({
@@ -1558,15 +1577,15 @@ export default function App() {
     };
 
     try {
-      showToast("Menghasilkan CFO Executive Insight (AI)...", "info", 5000);
-      const prompt = `Sebagai Paramara CFO & Strategy Analyst, berikan insight keuangan eksekutif berdasarkan data berikut:
-Pendapatan Kotor: Rp ${snapshot.grossRevenue}
-OPEX: Rp ${snapshot.opex}
-CAPEX (Investasi Aset): Rp ${snapshot.capex}
-Laba Operasional (Operating Profit): Rp ${snapshot.operatingProfit} (Margin: ${snapshot.operatingMargin.toFixed(1)}%)
-Cash Flow Setelah Investasi: Rp ${snapshot.cashFlowAfterInvestment}
-Penarikan Pribadi (Owner Withdrawal): Rp ${snapshot.personalWithdrawals}
-Total E-Commerce GMV: Rp ${snapshot.totalGMV}
+      showToast("Menghasilkan CFO Executive Insight via Claude AI...", "info", 5000);
+      const prompt = `Sebagai Paramara CFO & Strategy Analyst Eksekutif, berikan insight keuangan bisnis mendalam berdasarkan data berikut:
+Pendapatan Kotor: Rp ${snapshot.grossRevenue.toLocaleString('id-ID')}
+OPEX: Rp ${snapshot.opex.toLocaleString('id-ID')}
+CAPEX (Investasi Aset): Rp ${snapshot.capex.toLocaleString('id-ID')}
+Laba Operasional (Operating Profit): Rp ${snapshot.operatingProfit.toLocaleString('id-ID')} (Margin: ${snapshot.operatingMargin.toFixed(1)}%)
+Cash Flow Setelah Investasi: Rp ${snapshot.cashFlowAfterInvestment.toLocaleString('id-ID')}
+Penarikan Pribadi (Owner Withdrawal): Rp ${snapshot.personalWithdrawals.toLocaleString('id-ID')}
+Total E-Commerce GMV: Rp ${snapshot.totalGMV.toLocaleString('id-ID')}
 Tingkat Reinvestasi (Reinvestment Rate): ${snapshot.reinvestmentRate.toFixed(1)}%
 
 Berikan analisis dalam format teks ringkas (tanpa basa-basi). Gunakan format ini persis:
@@ -1589,22 +1608,45 @@ NEXT 7 DAYS
 METRIC TO WATCH
 [Metrik utama yang harus dipantau]`;
 
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || localStorage.getItem('gemini_api_key');
-      if (!apiKey) {
-        throw new Error("API Key Gemini tidak ditemukan. Harap masukkan di pengaturan.");
+      const claudeKey = localStorage.getItem('claude_api_key') || import.meta.env.VITE_CLAUDE_API_KEY;
+      const geminiKey = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY;
+
+      let insightText = '';
+
+      if (claudeKey) {
+        // Call Anthropic Claude API
+        const response = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: {
+            'x-api-key': claudeKey,
+            'anthropic-version': '2023-06-01',
+            'content-type': 'application/json',
+            'anthropic-dangerous-direct-browser-access': 'true'
+          },
+          body: JSON.stringify({
+            model: 'claude-3-haiku-20240307',
+            max_tokens: 1024,
+            messages: [{ role: 'user', content: prompt }]
+          })
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Claude (Anthropic)');
+        insightText = data.content?.[0]?.text;
+      } else if (geminiKey) {
+        // Call Google Gemini API
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Gemini');
+        insightText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      } else {
+        throw new Error('API Key Claude belum diset. Harap masukkan Claude API Key Anda di menu Manajemen Admin.');
       }
 
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent?key=${apiKey}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-      });
-
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error?.message || "Gagal menghubungi AI");
-      
-      const insightText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      
       if (!insightText) throw new Error("Format respons AI tidak valid.");
 
       const generatedAt = new Date().toLocaleString('id-ID');
@@ -1620,7 +1662,7 @@ METRIC TO WATCH
         }
       }));
 
-      showToast("AI Insight berhasil diperbarui!");
+      showToast("Claude Executive AI Insight berhasil diperbarui!");
     } catch (err) {
       console.error(err);
       showToast("Gagal menghasilkan insight: " + err.message, "error");
@@ -3185,6 +3227,57 @@ METRIC TO WATCH
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* ANTHROPIC CLAUDE AI INTEGRATION CARD */}
+            <div className="glass-card" style={{ padding: '1.5rem', marginTop: '1.5rem', borderLeft: '4px solid #8B5CF6' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
+                <div>
+                  <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                    <Sparkles style={{ color: '#8B5CF6', width: 18, height: 18 }} /> Integrasi Anthropic Claude AI (Executive CFO Assistant)
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                    Masukkan Anthropic API Key Anda untuk mengaktifkan pemrosesan insight CFO bisnis otomatis menggunakan model <strong>Claude 3.5 Sonnet / Claude 3 Haiku</strong>.
+                  </p>
+                </div>
+                <span className="brand-badge" style={{ padding: '4px 12px', fontSize: '0.725rem', background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}>
+                  {localStorage.getItem('claude_api_key') ? '✓ API Key Claude Terhubung' : 'Belum Ada API Key'}
+                </span>
+              </div>
+
+              <div style={{ background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
+                <form onSubmit={(e) => { e.preventDefault(); handleSaveClaudeApiKey(claudeApiKeyInput); }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                    Anthropic API Key (sk-ant-api03-...):
+                  </label>
+                  <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                    <input 
+                      type="password"
+                      className="form-control"
+                      style={{ flex: 1, minWidth: 260, padding: '10px 14px', fontSize: '0.9rem', fontFamily: 'monospace' }}
+                      value={claudeApiKeyInput}
+                      onChange={(e) => setClaudeApiKeyInput(e.target.value)}
+                      placeholder="sk-ant-api03-xxxx..."
+                    />
+                    <button type="submit" className="btn btn-primary" style={{ background: '#8B5CF6', borderColor: '#8B5CF6', padding: '10px 20px' }}>
+                      Simpan API Key Claude
+                    </button>
+                    {localStorage.getItem('claude_api_key') && (
+                      <button 
+                        type="button" 
+                        className="btn btn-secondary"
+                        onClick={() => { setClaudeApiKeyInput(''); handleSaveClaudeApiKey(''); }}
+                        style={{ color: '#D32F2F', padding: '10px 16px' }}
+                      >
+                        Hapus Key
+                      </button>
+                    )}
+                  </div>
+                  <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 8, display: 'block' }}>
+                    💡 API Key Anda disimpan secara aman hanya di browser lokal ini (Local Storage) dan dipanggil langsung ke Anthropic API secara enkripsi SSL.
+                  </span>
+                </form>
+              </div>
             </div>
 
             {/* BACKUP & RESTORE DATA SECTION */}
