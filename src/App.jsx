@@ -1405,6 +1405,20 @@ export default function App() {
     }
   };
 
+  const handleSaveBudgetLimit = (newLimit) => {
+    const parsed = parseInt(newLimit) || 0;
+    if (parsed <= 0) {
+      showToast('Batas anggaran harus lebih dari Rp 0', 'error');
+      return;
+    }
+    setStudioData(prev => ({
+      ...prev,
+      monthlyBudgetLimit: parsed
+    }));
+    setModalType(null);
+    showToast(`Batas anggaran berhasil diperbarui ke Rp ${parsed.toLocaleString('id-ID')}!`);
+  };
+
   const handleSavePlannedExpense = (planItem) => {
     if (!planItem.name || !planItem.amount) {
       showToast('Mohon lengkapi nama rencana dan estimasi nominal.', 'error');
@@ -3958,6 +3972,101 @@ METRIC TO WATCH
                 </div>
               )}
 
+              {/* Rencana Pengeluaran Table */}
+              {(financeSubTab === 'all' || financeSubTab === 'planning') && (
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', width: '100%', borderLeft: '4px solid #2563EB' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 8 }}>
+                    <div>
+                      <h3 style={{ fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 800 }}>
+                        <Target style={{ width: 18, height: 18, color: '#2563EB' }} /> Daftar Rencana Pengeluaran (Planning)
+                      </h3>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Proyeksi Kebutuhan & Target Pembelian Mendatang</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+                      <span className="brand-badge" style={{ padding: '6px 14px', fontSize: '0.8rem', fontWeight: 800, background: 'rgba(37, 99, 235, 0.1)', color: '#2563EB' }}>
+                        Total Rencana: Rp {totalPlannedExpenses.toLocaleString('id-ID')}
+                      </span>
+                      <button 
+                        className="btn btn-sm btn-primary" 
+                        onClick={() => { setEditingPlannedExpense({ name: '', category: 'CAPEX', amount: 500000, targetDate: new Date().toISOString().split('T')[0], priority: 'Sedang', status: 'Direncanakan', notes: '' }); setModalType('plannedExpense'); }}
+                        style={{ fontSize: '0.75rem', padding: '5px 12px', background: '#2563EB', borderColor: '#2563EB' }}
+                      >
+                        <PlusCircle style={{ width: 13, height: 13 }} /> + Tambah Rencana
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="table-wrapper">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                      <thead>
+                        <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Nama Item / Rencana</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Kategori</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Prioritas</th>
+                          <th style={{ textAlign: 'left', padding: '10px 12px' }}>Target Tanggal</th>
+                          <th style={{ textAlign: 'right', padding: '10px 12px' }}>Estimasi (Rp)</th>
+                          <th style={{ textAlign: 'center', padding: '10px 12px' }}>Status</th>
+                          <th style={{ textAlign: 'center', padding: '10px 12px' }}>Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {plannedExpenses.length > 0 ? (
+                          plannedExpenses.map(p => (
+                            <tr key={p.id} style={{ borderBottom: '1px solid var(--border-color)', opacity: p.status === 'Terealisasi' ? 0.6 : 1 }}>
+                              <td style={{ padding: '10px 12px' }}>
+                                <strong>{p.name}</strong>
+                                {p.notes && <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 2 }}>{p.notes}</div>}
+                              </td>
+                              <td style={{ padding: '10px 12px' }}>
+                                <span className="brand-badge" style={{ background: p.category === 'CAPEX' ? 'rgba(184, 142, 57, 0.1)' : 'rgba(211, 47, 47, 0.1)', color: p.category === 'CAPEX' ? '#B88E39' : '#D32F2F' }}>
+                                  {p.category || 'OPEX'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 12px' }}>
+                                <span className="brand-badge" style={{ background: p.priority === 'Tinggi' ? 'rgba(211, 47, 47, 0.15)' : p.priority === 'Sedang' ? 'rgba(184, 142, 57, 0.15)' : 'rgba(5, 150, 105, 0.15)', color: p.priority === 'Tinggi' ? '#D32F2F' : p.priority === 'Sedang' ? '#B88E39' : '#059669' }}>
+                                  {p.priority || 'Sedang'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 12px', color: 'var(--text-dim)' }}>{p.targetDate || p.date || '-'}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 700, color: '#2563EB' }}>Rp {(p.amount || 0).toLocaleString('id-ID')}</td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <span className="brand-badge" style={{ background: p.status === 'Terealisasi' ? 'rgba(5, 150, 105, 0.15)' : 'rgba(37, 99, 235, 0.15)', color: p.status === 'Terealisasi' ? '#059669' : '#2563EB' }}>
+                                  {p.status || 'Direncanakan'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                  {p.status !== 'Terealisasi' && (
+                                    <button 
+                                      className="btn btn-sm btn-primary" 
+                                      style={{ padding: '4px 8px', fontSize: '0.725rem', background: '#059669', borderColor: '#059669' }} 
+                                      onClick={() => handleConvertPlanToActual(p)}
+                                      title="Realisasikan ke transaksi aktual"
+                                    >
+                                      <CheckCircle2 style={{ width: 13, height: 13 }} /> Realisasikan
+                                    </button>
+                                  )}
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', fontSize: '0.725rem', color: 'var(--primary)' }} onClick={() => { setEditingPlannedExpense(p); setModalType('plannedExpense'); }}>
+                                    <Edit3 style={{ width: 13, height: 13 }} /> Edit
+                                  </button>
+                                  <button className="btn btn-sm btn-secondary" style={{ padding: '4px 8px', fontSize: '0.725rem', color: '#D32F2F' }} onClick={() => handleDeletePlannedExpense(p.id)}>
+                                    <Trash2 style={{ width: 13, height: 13 }} /> Hapus
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan="7" style={{ textAlign: 'center', padding: '2rem', color: 'var(--text-dim)' }}>Belum ada data rencana pengeluaran (planning). Klik tombol "+ Tambah Rencana" untuk menambahkan prospeksi kebutuhan mendatang.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         )}
@@ -5680,6 +5789,218 @@ METRIC TO WATCH
                 Saya Mengerti
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: SET BATAS ANGGARAN */}
+      {modalType === 'setBudgetLimit' && (
+        <div className="modal-overlay active" onClick={() => setModalType(null)}>
+          <div className="modal-card" style={{ maxWidth: 480, padding: '1.75rem' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ marginBottom: '1.25rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 800 }}>
+                <Target style={{ color: '#2563EB', width: 20, height: 20 }} /> Set Batas Anggaran Operasional
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveBudgetLimit(tempBudgetInput); }}>
+              <div style={{ background: 'rgba(37, 99, 235, 0.06)', border: '1px solid rgba(37, 99, 235, 0.2)', padding: '12px 14px', borderRadius: 10, marginBottom: '1.25rem' }}>
+                <strong style={{ color: '#2563EB', display: 'block', marginBottom: 4, fontSize: '0.85rem' }}>Alokasi Maksimum Operasional Studio</strong>
+                <span style={{ fontSize: '0.775rem', color: 'var(--text-dim)', lineHeight: 1.5, display: 'block' }}>
+                  Batas ini menjadi acuan persentase penggunaan anggaran bulanan dan indikator peringatan (Aman / Waspada / Melampaui).
+                </span>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                  Target Batas Anggaran (Rp):
+                </label>
+                <input 
+                  type="number" 
+                  className="form-control"
+                  style={{ width: '100%', fontSize: '1.1rem', fontWeight: 800, padding: '10px 14px' }}
+                  value={tempBudgetInput}
+                  onChange={(e) => setTempBudgetInput(e.target.value)}
+                  placeholder="Contoh: 2500000"
+                  required
+                />
+                <div style={{ fontSize: '0.75rem', color: 'var(--primary)', marginTop: 6, fontWeight: 600 }}>
+                  Terbilang: Rp {(parseInt(tempBudgetInput) || 0).toLocaleString('id-ID')}
+                </div>
+              </div>
+
+              {/* Quick Amount Presets */}
+              <div style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: 6 }}>
+                  Pilihan Cepat Batas Anggaran:
+                </label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[1000000, 2500000, 5000000, 10000000, 15000000, 20000000].map(amt => (
+                    <button
+                      key={amt}
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      style={{ fontSize: '0.75rem', padding: '4px 10px', borderRadius: 16 }}
+                      onClick={() => setTempBudgetInput(amt)}
+                    >
+                      Rp {(amt/1000000).toFixed(amt % 1000000 === 0 ? 0 : 1)} Jt
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setModalType(null)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ background: '#2563EB', borderColor: '#2563EB' }}>
+                  Simpan Batas Anggaran
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: TAMBAH / EDIT RENCANA PENGELUARAN */}
+      {modalType === 'plannedExpense' && editingPlannedExpense && (
+        <div className="modal-overlay active" onClick={() => setModalType(null)}>
+          <div className="modal-card" style={{ maxWidth: 540, padding: '1.75rem' }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ marginBottom: '1.25rem' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.15rem', color: 'var(--text-main)', fontWeight: 800 }}>
+                <PlusCircle style={{ color: '#2563EB', width: 20, height: 20 }} />
+                {editingPlannedExpense.id ? 'Edit Rencana Pengeluaran' : 'Tambah Rencana Pengeluaran'}
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSavePlannedExpense(editingPlannedExpense); }}>
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                  Nama Item / Rencana Pengeluaran:
+                </label>
+                <input
+                  type="text"
+                  className="form-control"
+                  style={{ width: '100%', padding: '10px 12px' }}
+                  value={editingPlannedExpense.name}
+                  onChange={(e) => setEditingPlannedExpense({ ...editingPlannedExpense, name: e.target.value })}
+                  placeholder="Contoh: Beli Lampu Softbox Ring Light 18 Inci"
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                    Kategori Alokasi:
+                  </label>
+                  <select
+                    className="form-control"
+                    style={{ width: '100%', padding: '10px 12px' }}
+                    value={editingPlannedExpense.category || 'CAPEX'}
+                    onChange={(e) => setEditingPlannedExpense({ ...editingPlannedExpense, category: e.target.value })}
+                  >
+                    <option value="CAPEX">Belanja Modal (CAPEX)</option>
+                    <option value="OPEX">Operasional (OPEX)</option>
+                    <option value="Personal">Pembelian Pribadi</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                    Prioritas Kebutuhan:
+                  </label>
+                  <select
+                    className="form-control"
+                    style={{ width: '100%', padding: '10px 12px' }}
+                    value={editingPlannedExpense.priority || 'Sedang'}
+                    onChange={(e) => setEditingPlannedExpense({ ...editingPlannedExpense, priority: e.target.value })}
+                  >
+                    <option value="Tinggi">Tinggi (Mendesak)</option>
+                    <option value="Sedang">Sedang (Normal)</option>
+                    <option value="Rendah">Rendah (Opsional)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: '1rem' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                    Estimasi Nominal (Rp):
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    style={{ width: '100%', padding: '10px 12px', fontWeight: 700 }}
+                    value={editingPlannedExpense.amount}
+                    onChange={(e) => setEditingPlannedExpense({ ...editingPlannedExpense, amount: e.target.value })}
+                    placeholder="Contoh: 750000"
+                    required
+                  />
+                  <div style={{ fontSize: '0.725rem', color: 'var(--primary)', marginTop: 4, fontWeight: 600 }}>
+                    Rp {(parseInt(editingPlannedExpense.amount) || 0).toLocaleString('id-ID')}
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                    Target Tanggal / Eksekusi:
+                  </label>
+                  <input
+                    type="date"
+                    className="form-control"
+                    style={{ width: '100%', padding: '10px 12px' }}
+                    value={editingPlannedExpense.targetDate || editingPlannedExpense.date || new Date().toISOString().split('T')[0]}
+                    onChange={(e) => setEditingPlannedExpense({ ...editingPlannedExpense, targetDate: e.target.value, date: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              {/* Quick Amount Buttons */}
+              <div style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', fontSize: '0.725rem', fontWeight: 700, color: 'var(--text-dim)', marginBottom: 6 }}>
+                  Preset Estimasi Nominal Cepat:
+                </label>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {[250000, 500000, 1000000, 2500000, 5000000].map(amt => (
+                    <button
+                      key={amt}
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      style={{ fontSize: '0.725rem', padding: '3px 8px', borderRadius: 14 }}
+                      onClick={() => setEditingPlannedExpense({ ...editingPlannedExpense, amount: amt })}
+                    >
+                      Rp {(amt/1000).toLocaleString('id-ID')}rb
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.25rem' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight 700, marginBottom: 6, color: 'var(--text-main)' }}>
+                  Catatan / Note (Opsional):
+                </label>
+                <textarea
+                  className="form-control"
+                  rows="2"
+                  style={{ width: '100%', padding: '8px 12px', fontSize: '0.85rem' }}
+                  value={editingPlannedExpense.notes || ''}
+                  onChange={(e) => setEditingPlannedExpense({ ...editingPlannedExpense, notes: e.target.value })}
+                  placeholder="Detail spesifikasi alat atau alasan kebutuhan pengeluaran ini..."
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setModalType(null)}>
+                  Batal
+                </button>
+                <button type="submit" className="btn btn-primary" style={{ background: '#2563EB', borderColor: '#2563EB' }}>
+                  Simpan Rencana
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
