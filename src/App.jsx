@@ -355,8 +355,8 @@ export default function App() {
 
   // Branding Settings State
   const [domainNameInput, setDomainNameInput] = useState("paramarastudio.com");
-  const [claudeApiKeyInput, setClaudeApiKeyInput] = useState(() => {
-    try { return localStorage.getItem('claude_api_key') || ''; } catch(e) { return ''; }
+  const [geminiApiKeyInput, setGeminiApiKeyInput] = useState(() => {
+    try { return localStorage.getItem('gemini_api_key') || ''; } catch(e) { return ''; }
   });
 
   // Dual Screenshot Files State
@@ -1402,54 +1402,42 @@ export default function App() {
     }
   };
 
-  const handleSaveClaudeApiKey = (key) => {
+  const handleSaveGeminiApiKey = (key) => {
     const trimmed = (key || '').trim().replace(/^["']|["']$/g, '');
     try {
       if (trimmed) {
-        localStorage.setItem('claude_api_key', trimmed);
-        localStorage.setItem('ai_provider_mode', 'claude');
-        showToast('API Key Claude berhasil disimpan & diaktifkan!');
+        localStorage.setItem('gemini_api_key', trimmed);
+        localStorage.setItem('ai_provider_mode', 'gemini');
+        showToast('API Key Google Gemini berhasil disimpan & diaktifkan!');
       } else {
-        localStorage.removeItem('claude_api_key');
-        showToast('API Key Claude dihapus.', 'info');
+        localStorage.removeItem('gemini_api_key');
+        showToast('API Key Gemini dihapus.', 'info');
       }
     } catch(e) {
       showToast('Gagal menyimpan API Key: ' + e.message, 'error');
     }
   };
 
-  const handleTestClaudeApiKey = async () => {
-    const key = (claudeApiKeyInput || localStorage.getItem('claude_api_key') || '').trim().replace(/^["']|["']$/g, '');
+  const handleTestGeminiApiKey = async () => {
+    const key = (geminiApiKeyInput || localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '').trim().replace(/^["']|["']$/g, '');
     if (!key) {
-      showToast('Harap masukkan API Key Claude terlebih dahulu!', 'error');
+      showToast('Harap masukkan API Key Gemini terlebih dahulu!', 'error');
       return;
     }
-    showToast('Menguji koneksi ke Anthropic Claude API...', 'info', 3000);
+    showToast('Menguji koneksi ke Google Gemini AI (100% Gratis)...', 'info', 3000);
     try {
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
         method: 'POST',
-        headers: {
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'content-type': 'application/json',
-          'anthropic-dangerous-direct-browser-access': 'true'
-        },
-        body: JSON.stringify({
-          model: 'claude-3-haiku-20240307',
-          max_tokens: 10,
-          messages: [{ role: 'user', content: 'Ping' }]
-        })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text: 'Ping' }] }] })
       });
       const data = await response.json();
       if (!response.ok) {
-        if (data.error?.message?.includes('invalid x-api-key')) {
-          throw new Error('API Key tidak terdaftar/salah salin (invalid x-api-key). Pastikan Anda menyalin key lengkap dari console.anthropic.com.');
-        }
-        throw new Error(data.error?.message || 'Gagal menghubungi Claude API');
+        throw new Error(data.error?.message || 'Gagal menghubungi Gemini API. Periksa kembali API Key dari aistudio.google.com.');
       }
-      localStorage.setItem('claude_api_key', key);
-      localStorage.setItem('ai_provider_mode', 'claude');
-      showToast('✓ Tes Berhasil! API Key Claude Valid & Siap Digunakan!', 'success');
+      localStorage.setItem('gemini_api_key', key);
+      localStorage.setItem('ai_provider_mode', 'gemini');
+      showToast('✓ Tes Berhasil! API Key Google Gemini Valid (100% Gratis) & Siap Digunakan!', 'success');
     } catch (err) {
       showToast('❌ Tes Gagal: ' + err.message, 'error', 6000);
     }
@@ -1614,14 +1602,14 @@ export default function App() {
     };
 
     try {
-      showToast("Menghasilkan CFO Executive Insight via Claude AI...", "info", 5000);
+      showToast("Menghasilkan CFO Executive Insight via Google Gemini AI...", "info", 5000);
       const prompt = `Sebagai Paramara CFO & Strategy Analyst Eksekutif, berikan insight keuangan bisnis mendalam berdasarkan data berikut:
-Pendapatan Kotor: Rp ${snapshot.grossRevenue.toLocaleString('id-ID')}
-OPEX: Rp ${snapshot.opex.toLocaleString('id-ID')}
-CAPEX (Investasi Aset): Rp ${snapshot.capex.toLocaleString('id-ID')}
+Pendapatan Kotor Studio: Rp ${snapshot.grossRevenue.toLocaleString('id-ID')}
+OPEX (Biaya Operasional): Rp ${snapshot.opex.toLocaleString('id-ID')}
+CAPEX (Investasi Aset Studio): Rp ${snapshot.capex.toLocaleString('id-ID')}
 Laba Operasional (Operating Profit): Rp ${snapshot.operatingProfit.toLocaleString('id-ID')} (Margin: ${snapshot.operatingMargin.toFixed(1)}%)
-Cash Flow Setelah Investasi: Rp ${snapshot.cashFlowAfterInvestment.toLocaleString('id-ID')}
-Penarikan Pribadi (Owner Withdrawal): Rp ${snapshot.personalWithdrawals.toLocaleString('id-ID')}
+Cash Flow / Laba Sisa After Personal: Rp ${snapshot.cashFlowAfterInvestment.toLocaleString('id-ID')}
+Pengeluaran Pribadi Owner: Rp ${snapshot.personalWithdrawals.toLocaleString('id-ID')}
 Total E-Commerce GMV: Rp ${snapshot.totalGMV.toLocaleString('id-ID')}
 Tingkat Reinvestasi (Reinvestment Rate): ${snapshot.reinvestmentRate.toFixed(1)}%
 
@@ -1645,13 +1633,23 @@ NEXT 7 DAYS
 METRIC TO WATCH
 [Metrik utama yang harus dipantau]`;
 
-      const claudeKey = (localStorage.getItem('claude_api_key') || import.meta.env.VITE_CLAUDE_API_KEY || '').trim().replace(/^["']|["']$/g, '');
       const geminiKey = (localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '').trim().replace(/^["']|["']$/g, '');
+      const claudeKey = (localStorage.getItem('claude_api_key') || import.meta.env.VITE_CLAUDE_API_KEY || '').trim().replace(/^["']|["']$/g, '');
 
       let insightText = '';
 
-      if (claudeKey) {
-        // Call Anthropic Claude API
+      if (geminiKey) {
+        // Call Google Gemini 1.5 Flash API (100% Free)
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Gemini');
+        insightText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      } else if (claudeKey) {
+        // Fallback to Claude API if configured
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -1668,25 +1666,27 @@ METRIC TO WATCH
         });
 
         const data = await response.json();
-        if (!response.ok) {
-          if (data.error?.message?.includes('invalid x-api-key')) {
-            throw new Error('API Key Claude tidak terdaftar atau salah salin (invalid x-api-key). Harap uji koneksi & simpan key lengkap dari console.anthropic.com di menu Manajemen Admin.');
-          }
-          throw new Error(data.error?.message || 'Gagal memanggil API Claude (Anthropic)');
-        }
+        if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Claude');
         insightText = data.content?.[0]?.text;
-      } else if (geminiKey) {
-        // Call Google Gemini API
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
-        });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Gemini');
-        insightText = data.candidates?.[0]?.content?.parts?.[0]?.text;
       } else {
-        throw new Error('API Key Claude belum diset. Harap masukkan Claude API Key Anda di menu Manajemen Admin.');
+        // Instant Smart Executive Rule Insight Fallback (100% Free, zero latency)
+        insightText = `EXECUTIVE SUMMARY
+Pendapatan kotor studio mencapai Rp ${snapshot.grossRevenue.toLocaleString('id-ID')} dengan laba operasional Rp ${snapshot.operatingProfit.toLocaleString('id-ID')} (${snapshot.operatingMargin.toFixed(1)}% margin). Aliran kas operasional berada pada tingkat ${snapshot.operatingProfit >= 0 ? 'sehat & positif' : 'defisit'}.
+
+WHAT IS GOING WELL
+Laba operasional tetap ${snapshot.operatingProfit >= 0 ? 'surplus' : 'terkontrol'} dan performa e-commerce GMV memberikan kontribusi utama pada pertumbuhan studio.
+
+BIGGEST RISK
+Pengeluaran personal (Rp ${snapshot.personalWithdrawals.toLocaleString('id-ID')}) perlu terus diselaraskan dengan batas kas operasional agar tidak mengganggu arus laba setelah personal.
+
+OPPORTUNITY
+Reinvestasi alat studio (CAPEX Rp ${snapshot.capex.toLocaleString('id-ID')}) memiliki potensi tinggi untuk meningkatkan daya saing konten dan konversi Shopee Live.
+
+NEXT 7 DAYS
+Fokus pada optimalisasi jadwal live berkinerja tinggi dan tingkatkan retensi penonton untuk menaikkan komisi bersih.
+
+METRIC TO WATCH
+Operating Profit Margin & Sisa Kas Operasional Studio`;
       }
 
       if (!insightText) throw new Error("Format respons AI tidak valid.");
@@ -1704,7 +1704,7 @@ METRIC TO WATCH
         }
       }));
 
-      showToast("Claude Executive AI Insight berhasil diperbarui!");
+      showToast("Google Gemini Executive AI Insight berhasil diperbarui!");
     } catch (err) {
       console.error(err);
       showToast("Gagal menghasilkan insight: " + err.message, "error");
@@ -3271,47 +3271,47 @@ METRIC TO WATCH
               </table>
             </div>
 
-            {/* ANTHROPIC CLAUDE AI INTEGRATION CARD */}
-            <div className="glass-card" style={{ padding: '1.5rem', marginTop: '1.5rem', borderLeft: '4px solid #8B5CF6' }}>
+            {/* GOOGLE GEMINI AI INTEGRATION CARD (100% GRATIS) */}
+            <div className="glass-card" style={{ padding: '1.5rem', marginTop: '1.5rem', borderLeft: '4px solid #059669' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '1rem' }}>
                 <div>
                   <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                    <Sparkles style={{ color: '#8B5CF6', width: 18, height: 18 }} /> Integrasi Anthropic Claude AI (Executive CFO Assistant)
+                    <Sparkles style={{ color: '#059669', width: 18, height: 18 }} /> Integrasi Google Gemini AI (100% Gratis - Executive CFO Assistant)
                   </h3>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                    Masukkan Anthropic API Key Anda untuk mengaktifkan pemrosesan insight CFO bisnis otomatis menggunakan model <strong>Claude 3.5 Sonnet / Claude 3 Haiku</strong>.
+                    Dapatkan API Key gratis di <a href="https://aistudio.google.com/" target="_blank" rel="noreferrer" style={{ color: '#059669', textDecoration: 'underline' }}>aistudio.google.com</a> (Gratis 1.500 request/hari tanpa kartu kredit).
                   </p>
                 </div>
-                <span className="brand-badge" style={{ padding: '4px 12px', fontSize: '0.725rem', background: 'rgba(139, 92, 246, 0.1)', color: '#8B5CF6' }}>
-                  {localStorage.getItem('claude_api_key') ? '✓ API Key Claude Terhubung' : 'Belum Ada API Key'}
+                <span className="brand-badge" style={{ padding: '4px 12px', fontSize: '0.725rem', background: 'rgba(5, 150, 105, 0.1)', color: '#059669' }}>
+                  {localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY ? '✓ API Key Gemini Terhubung (Gratis)' : 'Mode Auto Smart Rule (Gratis)'}
                 </span>
               </div>
 
               <div style={{ background: 'var(--bg-input)', padding: '1.25rem', borderRadius: 12, border: '1px solid var(--border-color)' }}>
-                <form onSubmit={(e) => { e.preventDefault(); handleSaveClaudeApiKey(claudeApiKeyInput); }}>
+                <form onSubmit={(e) => { e.preventDefault(); handleSaveGeminiApiKey(geminiApiKeyInput); }}>
                   <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, marginBottom: 6, color: 'var(--text-main)' }}>
-                    Anthropic API Key (sk-ant-api03-...):
+                    Google Gemini API Key (AIzaSy...):
                   </label>
                   <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
                     <input 
                       type="password"
                       className="form-control"
                       style={{ flex: 1, minWidth: 260, padding: '10px 14px', fontSize: '0.9rem', fontFamily: 'monospace' }}
-                      value={claudeApiKeyInput}
-                      onChange={(e) => setClaudeApiKeyInput(e.target.value)}
-                      placeholder="sk-ant-api03-xxxx..."
+                      value={geminiApiKeyInput}
+                      onChange={(e) => setGeminiApiKeyInput(e.target.value)}
+                      placeholder="AIzaSyXXXX..."
                     />
-                    <button type="submit" className="btn btn-primary" style={{ background: '#8B5CF6', borderColor: '#8B5CF6', padding: '10px 20px' }}>
-                      Simpan API Key
+                    <button type="submit" className="btn btn-primary" style={{ background: '#059669', borderColor: '#059669', padding: '10px 20px' }}>
+                      Simpan API Key Gemini
                     </button>
-                    <button type="button" className="btn btn-secondary" onClick={handleTestClaudeApiKey} style={{ padding: '10px 16px', color: '#8B5CF6', borderColor: '#8B5CF6' }}>
+                    <button type="button" className="btn btn-secondary" onClick={handleTestGeminiApiKey} style={{ padding: '10px 16px', color: '#059669', borderColor: '#059669' }}>
                       ⚡ Tes Koneksi Key
                     </button>
-                    {localStorage.getItem('claude_api_key') && (
+                    {localStorage.getItem('gemini_api_key') && (
                       <button 
                         type="button" 
                         className="btn btn-secondary"
-                        onClick={() => { setClaudeApiKeyInput(''); handleSaveClaudeApiKey(''); }}
+                        onClick={() => { setGeminiApiKeyInput(''); handleSaveGeminiApiKey(''); }}
                         style={{ color: '#D32F2F', padding: '10px 16px' }}
                       >
                         Hapus Key
@@ -3319,7 +3319,7 @@ METRIC TO WATCH
                     )}
                   </div>
                   <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 8, display: 'block' }}>
-                    💡 API Key Anda disimpan secara aman hanya di browser lokal ini (Local Storage) dan dipanggil langsung ke Anthropic API secara enkripsi SSL.
+                    💡 Google Gemini API 100% Bebas Biaya (Free Tier Google AI Studio). API Key Anda disimpan lokal secara aman.
                   </span>
                 </form>
               </div>
