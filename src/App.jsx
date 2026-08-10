@@ -594,7 +594,8 @@ export default function App() {
   const [livePage, setLivePage] = useState(1);
   const [videoPage, setVideoPage] = useState(1);
   const [plannedPage, setPlannedPage] = useState(1);
-  const [editingPlannedExpense, setEditingPlannedExpense] = useState(null); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
+  const [editingPlannedExpense, setEditingPlannedExpense] = useState(null);
+  const [tempBudgetInput, setTempBudgetInput] = useState(2500000); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
 
   // Parse various date formats into a local Date object (safe for iOS Safari & Mobile browsers)
   const parseItemDate = (item) => {
@@ -3572,14 +3573,8 @@ METRIC TO WATCH
                     <button 
                       className="btn btn-sm btn-secondary" 
                       onClick={() => {
-                        const limitStr = prompt("Masukkan Batas Anggaran Pengeluaran Bulanan (Rp):", monthlyBudgetLimit);
-                        if (limitStr !== null) {
-                          const val = parseInt(limitStr.replace(/\D/g, '')) || 0;
-                          if (val > 0) {
-                            setStudioData(prev => ({ ...prev, monthlyBudgetLimit: val }));
-                            showToast(`Target Anggaran Bulanan berhasil diubah ke Rp ${val.toLocaleString('id-ID')}`);
-                          }
-                        }
+                        setTempBudgetInput(monthlyBudgetLimit);
+                        setModalType('setBudgetLimit');
                       }}
                       style={{ fontSize: '0.75rem', padding: '5px 12px' }}
                     >
