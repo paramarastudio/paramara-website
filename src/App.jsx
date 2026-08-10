@@ -917,10 +917,12 @@ export default function App() {
 
   // Planning Expense Calculations (placed after totalExpenses declaration)
   const plannedExpenses = sortItems(filterByDate(allPlannedExpenses));
-  const totalPlannedExpenses = plannedExpenses.reduce((acc, p) => acc + (p.amount || 0), 0);
+  const activePlannedExpenses = plannedExpenses.filter(p => p.status !== 'Terealisasi');
+  const totalPlannedExpenses = activePlannedExpenses.reduce((acc, p) => acc + (p.amount || 0), 0);
   const monthlyBudgetLimit = studioData.monthlyBudgetLimit || 2500000;
-  const budgetUtilizationPercent = monthlyBudgetLimit > 0 ? (totalExpenses / monthlyBudgetLimit) * 100 : 0;
-  const remainingBudget = monthlyBudgetLimit - totalExpenses;
+  const totalCommittedExpenses = totalExpenses + totalPlannedExpenses;
+  const budgetUtilizationPercent = monthlyBudgetLimit > 0 ? (totalCommittedExpenses / monthlyBudgetLimit) * 100 : 0;
+  const remainingBudget = monthlyBudgetLimit - totalCommittedExpenses;
 
   // Profitability
   const netProfit = totalStudioGrossRevenue - totalExpenses;
@@ -3615,27 +3617,27 @@ METRIC TO WATCH
                     <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2563EB', marginTop: 2 }}>
                       Rp {totalPlannedExpenses.toLocaleString('id-ID')}
                     </div>
-                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{plannedExpenses.length} item proyeksi mendatang</span>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{activePlannedExpenses.length} item proyeksi mendatang</span>
                   </div>
 
                   <div style={{ background: remainingBudget >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)', padding: '12px 14px', borderRadius: 10, border: `1px solid ${remainingBudget >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
                     <span style={{ fontSize: '0.7rem', color: remainingBudget >= 0 ? '#059669' : '#D32F2F', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>
-                      {remainingBudget >= 0 ? 'Sisa Anggaran Tersedia' : 'Over Budget (Melampaui Target)'}
+                      {remainingBudget >= 0 ? 'Sisa Anggaran Tersedia' : 'Defisit Anggaran (Termasuk Rencana)'}
                     </span>
                     <div style={{ fontSize: '1.2rem', fontWeight: 800, color: remainingBudget >= 0 ? '#059669' : '#D32F2F', marginTop: 2 }}>
-                      Rp {Math.abs(remainingBudget).toLocaleString('id-ID')}
+                      {remainingBudget < 0 ? `-Rp ${Math.abs(remainingBudget).toLocaleString('id-ID')}` : `Rp ${remainingBudget.toLocaleString('id-ID')}`}
                     </div>
                     <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                      {budgetUtilizationPercent.toFixed(1)}% anggaran terpakai
+                      {budgetUtilizationPercent.toFixed(1)}% total komitmen terpakai
                     </span>
                   </div>
                 </div>
 
                 <div style={{ marginTop: '1rem' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4, fontWeight: 600 }}>
-                    <span>Penggunaan Anggaran ({budgetUtilizationPercent.toFixed(1)}%)</span>
+                    <span>Penggunaan Anggaran (Realisasi + Rencana): {budgetUtilizationPercent.toFixed(1)}%</span>
                     <span style={{ color: budgetUtilizationPercent > 100 ? '#D32F2F' : budgetUtilizationPercent > 80 ? '#B88E39' : '#059669' }}>
-                      {budgetUtilizationPercent > 100 ? 'MELAMPAUI ANGGARAN' : budgetUtilizationPercent > 80 ? 'WASPADA ANGGARAN' : 'AMAN (DALAM BATAS)'}
+                      {budgetUtilizationPercent > 100 ? 'MELAMPAUI ANGGARAN (OVER BUDGET)' : budgetUtilizationPercent > 80 ? 'WASPADA ANGGARAN' : 'AMAN (DALAM BATAS)'}
                     </span>
                   </div>
                   <div style={{ width: '100%', height: 8, background: 'var(--border-color)', borderRadius: 4, overflow: 'hidden' }}>
