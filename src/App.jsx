@@ -1403,7 +1403,7 @@ export default function App() {
   };
 
   const handleSaveClaudeApiKey = (key) => {
-    const trimmed = (key || '').trim();
+    const trimmed = (key || '').trim().replace(/^["']|["']$/g, '');
     try {
       if (trimmed) {
         localStorage.setItem('claude_api_key', trimmed);
@@ -1415,6 +1415,43 @@ export default function App() {
       }
     } catch(e) {
       showToast('Gagal menyimpan API Key: ' + e.message, 'error');
+    }
+  };
+
+  const handleTestClaudeApiKey = async () => {
+    const key = (claudeApiKeyInput || localStorage.getItem('claude_api_key') || '').trim().replace(/^["']|["']$/g, '');
+    if (!key) {
+      showToast('Harap masukkan API Key Claude terlebih dahulu!', 'error');
+      return;
+    }
+    showToast('Menguji koneksi ke Anthropic Claude API...', 'info', 3000);
+    try {
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key': key,
+          'anthropic-version': '2023-06-01',
+          'content-type': 'application/json',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-3-haiku-20240307',
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'Ping' }]
+        })
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        if (data.error?.message?.includes('invalid x-api-key')) {
+          throw new Error('API Key tidak terdaftar/salah salin (invalid x-api-key). Pastikan Anda menyalin key lengkap dari console.anthropic.com.');
+        }
+        throw new Error(data.error?.message || 'Gagal menghubungi Claude API');
+      }
+      localStorage.setItem('claude_api_key', key);
+      localStorage.setItem('ai_provider_mode', 'claude');
+      showToast('✓ Tes Berhasil! API Key Claude Valid & Siap Digunakan!', 'success');
+    } catch (err) {
+      showToast('❌ Tes Gagal: ' + err.message, 'error', 6000);
     }
   };
 
@@ -1608,8 +1645,8 @@ NEXT 7 DAYS
 METRIC TO WATCH
 [Metrik utama yang harus dipantau]`;
 
-      const claudeKey = localStorage.getItem('claude_api_key') || import.meta.env.VITE_CLAUDE_API_KEY;
-      const geminiKey = localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY;
+      const claudeKey = (localStorage.getItem('claude_api_key') || import.meta.env.VITE_CLAUDE_API_KEY || '').trim().replace(/^["']|["']$/g, '');
+      const geminiKey = (localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '').trim().replace(/^["']|["']$/g, '');
 
       let insightText = '';
 
@@ -1631,7 +1668,12 @@ METRIC TO WATCH
         });
 
         const data = await response.json();
-        if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Claude (Anthropic)');
+        if (!response.ok) {
+          if (data.error?.message?.includes('invalid x-api-key')) {
+            throw new Error('API Key Claude tidak terdaftar atau salah salin (invalid x-api-key). Harap uji koneksi & simpan key lengkap dari console.anthropic.com di menu Manajemen Admin.');
+          }
+          throw new Error(data.error?.message || 'Gagal memanggil API Claude (Anthropic)');
+        }
         insightText = data.content?.[0]?.text;
       } else if (geminiKey) {
         // Call Google Gemini API
@@ -3260,7 +3302,10 @@ METRIC TO WATCH
                       placeholder="sk-ant-api03-xxxx..."
                     />
                     <button type="submit" className="btn btn-primary" style={{ background: '#8B5CF6', borderColor: '#8B5CF6', padding: '10px 20px' }}>
-                      Simpan API Key Claude
+                      Simpan API Key
+                    </button>
+                    <button type="button" className="btn btn-secondary" onClick={handleTestClaudeApiKey} style={{ padding: '10px 16px', color: '#8B5CF6', borderColor: '#8B5CF6' }}>
+                      ⚡ Tes Koneksi Key
                     </button>
                     {localStorage.getItem('claude_api_key') && (
                       <button 
