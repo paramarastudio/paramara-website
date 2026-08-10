@@ -246,7 +246,11 @@ export default function App() {
 
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem("paramara_auth_session") === "true";
+    try {
+      return localStorage.getItem("paramara_auth_session") === "true";
+    } catch (e) {
+      return false;
+    }
   });
   
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -263,7 +267,11 @@ export default function App() {
   
   // Light/Dark Theme state
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem("paramara_theme") || "light";
+    try {
+      return localStorage.getItem("paramara_theme") || "light";
+    } catch (e) {
+      return "light";
+    }
   });
 
   // Apply theme class to document
@@ -289,7 +297,8 @@ export default function App() {
   
   const [studioData, setStudioData] = useState(() => {
     let rawData = INITIAL_STUDIO_DATA;
-    const saved = localStorage.getItem("paramara_studio_admin_data_v2");
+    let saved = null;
+    try { saved = localStorage.getItem("paramara_studio_admin_data_v2"); } catch (e) {}
     if (saved) {
       try { rawData = JSON.parse(saved); } catch (e) {}
     }
@@ -587,25 +596,27 @@ export default function App() {
   const [plannedPage, setPlannedPage] = useState(1);
   const [editingPlannedExpense, setEditingPlannedExpense] = useState(null); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
 
-  // Parse various date formats used in the app into a local Date object (00:00:00 local time)
+  // Parse various date formats into a local Date object (safe for iOS Safari & Mobile browsers)
   const parseItemDate = (item) => {
     if (!item) return null;
-    const raw = item.date || item.dateFormatted || item.startTime || '';
+    const raw = (item.date || item.dateFormatted || item.startTime || item.createdAt || '').toString().trim();
     if (!raw) return null;
 
-    // YYYY-MM-DD or YYYY-MM-DDTHH:mm:ss
-    let match = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+    // Format 1: YYYY-MM-DD or YYYY-MM-DD HH:mm or YYYY-MM-DDTHH:mm:ss
+    let match = raw.match(/^(\d{4})[-/](\d{1,2})[-/](\d{1,2})/);
     if (match) {
       return new Date(parseInt(match[1]), parseInt(match[2]) - 1, parseInt(match[3]));
     }
 
-    // DD-MM-YYYY or DD-MM-YYYY HH:mm
-    match = raw.match(/^(\d{1,2})-(\d{1,2})-(\d{4})/);
+    // Format 2: DD-MM-YYYY or DD-MM-YYYY HH:mm
+    match = raw.match(/^(\d{1,2})[-/](\d{1,2})[-/](\d{4})/);
     if (match) {
       return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
     }
 
-    const d = new Date(raw);
+    // Convert space to T for iOS Safari: "2026-08-01 21:37" -> "2026-08-01T21:37"
+    const safeIso = raw.replace(' ', 'T');
+    const d = new Date(safeIso);
     return isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
   };
 
