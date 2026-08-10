@@ -355,6 +355,23 @@ export default function App() {
 
   // Branding Settings State
   const [domainNameInput, setDomainNameInput] = useState("paramarastudio.com");
+
+  // Project & Collaboration Form State
+  const [editingProject, setEditingProject] = useState({
+    id: null,
+    clientName: '',
+    projectTitle: '',
+    category: 'Live Streaming',
+    budget: 5000000,
+    estimatedNetProfit: 2000000,
+    startDate: new Date().toISOString().split('T')[0],
+    deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    status: 'Aktif',
+    tasks: [],
+    notes: ''
+  });
+  const [newProjectTaskInput, setNewProjectTaskInput] = useState('');
+  const [expandedProjectId, setExpandedProjectId] = useState(null);
   const [geminiApiKeyInput, setGeminiApiKeyInput] = useState(() => {
     try { return localStorage.getItem('gemini_api_key') || ''; } catch(e) { return ''; }
   });
@@ -1443,6 +1460,63 @@ export default function App() {
     }
   };
 
+    const handleSaveProject = (e) => {
+    if (e) e.preventDefault();
+    if (!editingProject.clientName || !editingProject.projectTitle) {
+      showToast('Nama Klien & Judul Proyek wajib diisi!', 'error');
+      return;
+    }
+
+    const payload = {
+      id: editingProject.id || `proj_${Date.now()}`,
+      clientName: editingProject.clientName,
+      projectTitle: editingProject.projectTitle,
+      category: editingProject.category || 'Live Streaming',
+      budget: Number(editingProject.budget) || 0,
+      estimatedNetProfit: Number(editingProject.estimatedNetProfit) || 0,
+      startDate: editingProject.startDate || new Date().toISOString().split('T')[0],
+      deadline: editingProject.deadline || '-',
+      status: editingProject.status || 'Aktif',
+      tasks: editingProject.tasks || [],
+      notes: editingProject.notes || ''
+    };
+
+    setStudioData(prev => {
+      const existing = prev.clientProjects || [];
+      const updated = editingProject.id
+        ? existing.map(p => p.id === editingProject.id ? payload : p)
+        : [payload, ...existing];
+      return { ...prev, clientProjects: updated };
+    });
+
+    showToast(`Proyek "${payload.projectTitle}" berhasil disimpan!`);
+    setModalType(null);
+  };
+
+  const handleToggleProjectTask = (projectId, taskId) => {
+    setStudioData(prev => {
+      const updatedProjects = (prev.clientProjects || []).map(proj => {
+        if (proj.id !== projectId) return proj;
+        const updatedTasks = (proj.tasks || []).map(t => {
+          if (t.id !== taskId) return t;
+          return { ...t, isCompleted: !t.isCompleted };
+        });
+        return { ...proj, tasks: updatedTasks };
+      });
+      return { ...prev, clientProjects: updatedProjects };
+    });
+  };
+
+  const handleDeleteProjectItem = (id) => {
+    if (confirm("Apakah Anda yakin ingin menghapus proyek ini?")) {
+      setStudioData(prev => ({
+        ...prev,
+        clientProjects: (prev.clientProjects || []).filter(item => item.id !== id)
+      }));
+      showToast('Proyek berhasil dihapus.', 'info');
+    }
+  };
+
   const handleDeletePersonal = (id) => {
     if (confirm("Hapus item Pembelian Pribadi ini?")) {
       setStudioData(prev => ({
@@ -2281,7 +2355,25 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             )}
 
             {activeTab === 'tabProjects' && (
-              <button className="btn btn-primary" onClick={() => setModalType('project')}>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => {
+                  setEditingProject({
+                    id: null,
+                    clientName: '',
+                    projectTitle: '',
+                    category: 'Live Streaming',
+                    budget: 5000000,
+                    estimatedNetProfit: 2000000,
+                    startDate: new Date().toISOString().split('T')[0],
+                    deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'Aktif',
+                    tasks: [],
+                    notes: ''
+                  });
+                  setModalType('project');
+                }}
+              >
                 <PlusCircle style={{ width: 15, height: 15 }} />
                 <span className="btn-label">Input Proyek</span>
               </button>
@@ -4642,47 +4734,251 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
 
 
 
-        {/* Tab 4: Projects */}
+        {/* Tab 4: Projects & Collaborations */}
         {activeTab === 'tabProjects' && (
           <div className="tab-content main-inner">
-            <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Briefcase style={{ color: 'var(--primary)' }} /> Manajemen Proyek & Klien Studio</h3>
-                <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Kelola kontrak jasa live streaming, produksi konten, dan anggaran klien.</p>
+            
+            {/* KPI OVERVIEW GRID FOR PROJECTS */}
+            <div className="kpi-grid" style={{ marginBottom: '1.5rem', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': 'var(--primary)' }}>
+                <div className="kpi-icon" style={{ background: 'rgba(8,47,38,0.1)', color: 'var(--primary)' }}>
+                  <Briefcase style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Proyek Aktif</div>
+                <div className="kpi-value">{projects.filter(p => p.status === 'Aktif' || !p.status).length} Proyek</div>
+                <div className="kpi-subtext">Dari total {projects.length} kolaborasi brand</div>
               </div>
-              <button className="btn btn-accent" onClick={() => setModalType('project')}><PlusCircle /> Input Proyek Baru</button>
+
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#059669' }}>
+                <div className="kpi-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
+                  <ArrowUpRight style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Total Nilai Kontrak (Gross)</div>
+                <div className="kpi-value text-success">
+                  Rp {projects.reduce((acc, p) => acc + Number(p.budget || 0), 0).toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">Pendapatan kotor seluruh proyek</div>
+              </div>
+
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#2563EB' }}>
+                <div className="kpi-icon" style={{ background: 'rgba(37,99,235,0.1)', color: '#2563EB' }}>
+                  <TrendingUp style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Estimasi Profit Bersih</div>
+                <div className="kpi-value" style={{ color: '#2563EB' }}>
+                  Rp {projects.reduce((acc, p) => acc + Number(p.estimatedNetProfit || 0), 0).toLocaleString('id-ID')}
+                </div>
+                <div className="kpi-subtext">Proyeksi margin keuntungan bersih</div>
+              </div>
+
+              <div className="glass-card kpi-card" style={{ '--kpi-accent': '#8B5CF6' }}>
+                <div className="kpi-icon" style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6' }}>
+                  <CheckCircle2 style={{ width: 18, height: 18 }} />
+                </div>
+                <div className="kpi-title">Pengerjaan Task Deliverables</div>
+                <div className="kpi-value" style={{ color: '#8B5CF6' }}>
+                  {(() => {
+                    let total = 0, done = 0;
+                    projects.forEach(p => (p.tasks || []).forEach(t => { total++; if (t.isCompleted) done++; }));
+                    return total > 0 ? `${((done / total) * 100).toFixed(0)}%` : '0%';
+                  })()}
+                </div>
+                <div className="kpi-subtext">Tingkat penyelesaian tugas tim</div>
+              </div>
             </div>
 
-            <div className="table-wrapper glass-card">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Nama Klien</th>
-                    <th>Judul Proyek & Kategori</th>
-                    <th>Nilai Kontrak (Rp)</th>
-                    <th>Status</th>
-                    <th>Deadline</th>
-                    <th>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {projects.map(p => (
-                    <tr key={p.id}>
-                      <td><strong>{p.clientName}</strong></td>
-                      <td>{p.projectTitle}<br/><small style={{ color: 'var(--text-dim)' }}>{p.category}</small></td>
-                      <td className="text-success" style={{ fontWeight: 700 }}>Rp {(p.budget || 0).toLocaleString('id-ID')}</td>
-                      <td><span className="brand-badge" style={{ background: p.status === 'Aktif' ? 'rgba(5,150,105,0.1)' : 'rgba(0,0,0,0.05)', color: p.status === 'Aktif' ? '#059669' : 'var(--text-muted)' }}>{p.status}</span></td>
-                      <td>{p.deadline}</td>
-                      <td>
-                        <button className="btn btn-sm btn-secondary" style={{ color: '#D32F2F' }} onClick={() => {
-                          setStudioData(prev => ({ ...prev, clientProjects: prev.clientProjects.filter(item => item.id !== p.id) }));
-                        }}>Hapus</button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            {/* ACTION BANNER */}
+            <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '1.05rem', fontWeight: 800 }}>
+                  <Briefcase style={{ color: 'var(--primary)', width: 18, height: 18 }} /> Manajemen Proyek &amp; Kolaborasi Brand
+                </h3>
+                <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: 2 }}>
+                  Kelola kontrak jasa live streaming, produksi konten video, profit margin, checklist deliverables, dan deadline klien.
+                </p>
+              </div>
+              <button 
+                className="btn btn-primary" 
+                onClick={() => {
+                  setEditingProject({
+                    id: null,
+                    clientName: '',
+                    projectTitle: '',
+                    category: 'Live Streaming',
+                    budget: 5000000,
+                    estimatedNetProfit: 2000000,
+                    startDate: new Date().toISOString().split('T')[0],
+                    deadline: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+                    status: 'Aktif',
+                    tasks: [],
+                    notes: ''
+                  });
+                  setModalType('project');
+                }}
+              >
+                <PlusCircle style={{ width: 15, height: 15 }} /> Input Proyek Baru
+              </button>
             </div>
+
+            {/* PROJECTS TABLE / CARDS LIST */}
+            <div className="glass-card" style={{ padding: '1.25rem 1.5rem' }}>
+              <div className="table-wrapper">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
+                  <thead>
+                    <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                      <th style={{ textAlign: 'left', padding: '10px 12px' }}>Nama Klien / Brand</th>
+                      <th style={{ textAlign: 'left', padding: '10px 12px' }}>Judul Proyek &amp; Kategori</th>
+                      <th style={{ textAlign: 'right', padding: '10px 12px' }}>Nilai Kontrak (Gross)</th>
+                      <th style={{ textAlign: 'right', padding: '10px 12px' }}>Est. Profit Bersih</th>
+                      <th style={{ textAlign: 'left', padding: '10px 12px' }}>Progress Deliverables</th>
+                      <th style={{ textAlign: 'center', padding: '10px 12px' }}>Status</th>
+                      <th style={{ textAlign: 'left', padding: '10px 12px' }}>Deadline</th>
+                      <th style={{ textAlign: 'center', padding: '10px 12px' }}>Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {projects.length > 0 ? (
+                      projects.map(p => {
+                        const tasks = p.tasks || [];
+                        const completedTasks = tasks.filter(t => t.isCompleted).length;
+                        const taskPercent = tasks.length > 0 ? Math.round((completedTasks / tasks.length) * 100) : 0;
+                        const isExpanded = expandedProjectId === p.id;
+
+                        return (
+                          <React.Fragment key={p.id}>
+                            <tr style={{ borderBottom: '1px solid var(--border-color)' }}>
+                              <td style={{ padding: '12px' }}>
+                                <strong>{p.clientName}</strong>
+                              </td>
+                              <td style={{ padding: '12px' }}>
+                                <div style={{ fontWeight: 700, color: 'var(--text-main)' }}>{p.projectTitle}</div>
+                                <span className="brand-badge" style={{ fontSize: '0.7rem', marginTop: 2 }}>{p.category || 'Live Streaming'}</span>
+                              </td>
+                              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>
+                                Rp {(p.budget || 0).toLocaleString('id-ID')}
+                              </td>
+                              <td style={{ padding: '12px', textAlign: 'right', fontWeight: 800, color: '#2563EB' }}>
+                                Rp {(p.estimatedNetProfit || 0).toLocaleString('id-ID')}
+                              </td>
+                              <td style={{ padding: '12px' }}>
+                                {tasks.length > 0 ? (
+                                  <div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 2 }}>
+                                      <span>{completedTasks}/{tasks.length} Task</span>
+                                      <strong>{taskPercent}%</strong>
+                                    </div>
+                                    <div style={{ width: '100%', height: 5, background: 'var(--border-color)', borderRadius: 3, overflow: 'hidden' }}>
+                                      <div style={{ width: `${taskPercent}%`, height: '100%', background: taskPercent === 100 ? '#059669' : '#8B5CF6', borderRadius: 3 }} />
+                                    </div>
+                                  </div>
+                                ) : (
+                                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Belum ada task</span>
+                                )}
+                              </td>
+                              <td style={{ padding: '12px', textAlign: 'center' }}>
+                                <span className="brand-badge" style={{ 
+                                  background: p.status === 'Selesai' ? 'rgba(5,150,105,0.1)' : p.status === 'Review Klien' ? 'rgba(37,99,235,0.1)' : p.status === 'Aktif' ? 'rgba(139,92,246,0.1)' : 'rgba(0,0,0,0.05)', 
+                                  color: p.status === 'Selesai' ? '#059669' : p.status === 'Review Klien' ? '#2563EB' : p.status === 'Aktif' ? '#8B5CF6' : 'var(--text-muted)' 
+                                }}>
+                                  {p.status || 'Aktif'}
+                                </span>
+                              </td>
+                              <td style={{ padding: '12px', color: 'var(--text-dim)', fontSize: '0.8rem' }}>{p.deadline || '-'}</td>
+                              <td style={{ padding: '12px', textAlign: 'center' }}>
+                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'center' }}>
+                                  <button 
+                                    className="btn btn-sm btn-secondary" 
+                                    onClick={() => setExpandedProjectId(isExpanded ? null : p.id)}
+                                    style={{ fontSize: '0.725rem', padding: '4px 8px' }}
+                                  >
+                                    {isExpanded ? 'Tutup Task' : `Checklist (${tasks.length})`}
+                                  </button>
+                                  <button 
+                                    className="btn btn-sm btn-secondary" 
+                                    style={{ color: 'var(--primary)', fontSize: '0.725rem', padding: '4px 8px' }} 
+                                    onClick={() => { setEditingProject(p); setModalType('project'); }}
+                                  >
+                                    <Edit3 style={{ width: 13, height: 13 }} /> Edit
+                                  </button>
+                                  <button 
+                                    className="btn btn-sm btn-secondary" 
+                                    style={{ color: '#D32F2F', fontSize: '0.725rem', padding: '4px 8px' }} 
+                                    onClick={() => handleDeleteProjectItem(p.id)}
+                                  >
+                                    <Trash2 style={{ width: 13, height: 13 }} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+
+                            {/* EXPANDED TASK CHECKLIST ROW */}
+                            {isExpanded && (
+                              <tr style={{ background: 'var(--bg-input)' }}>
+                                <td colSpan="8" style={{ padding: '1rem 1.5rem' }}>
+                                  <div style={{ background: 'var(--bg-card)', padding: '1rem', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                      <strong style={{ fontSize: '0.875rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                                        <CheckCircle2 style={{ width: 16, height: 16 }} /> Checklist Deliverables: {p.projectTitle} ({p.clientName})
+                                      </strong>
+                                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Klik checkbox untuk mencentang task yang telah selesai</span>
+                                    </div>
+
+                                    {tasks.length > 0 ? (
+                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '8px' }}>
+                                        {tasks.map(t => (
+                                          <label 
+                                            key={t.id} 
+                                            style={{ 
+                                              display: 'flex', 
+                                              alignItems: 'center', 
+                                              gap: 8, 
+                                              padding: '8px 12px', 
+                                              background: 'var(--bg-input)', 
+                                              borderRadius: 8, 
+                                              border: '1px solid var(--border-color)', 
+                                              cursor: 'pointer',
+                                              textDecoration: t.isCompleted ? 'line-through' : 'none',
+                                              opacity: t.isCompleted ? 0.6 : 1
+                                            }}
+                                          >
+                                            <input 
+                                              type="checkbox" 
+                                              checked={t.isCompleted} 
+                                              onChange={() => handleToggleProjectTask(p.id, t.id)} 
+                                              style={{ width: 16, height: 16, cursor: 'pointer' }}
+                                            />
+                                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-main)' }}>{t.taskName}</span>
+                                          </label>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', margin: 0 }}>Belum ada task deliverables. Klik 'Edit' untuk menambahkan checklist task.</p>
+                                    )}
+
+                                    {p.notes && (
+                                      <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border-color)', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                                        <strong>Brief &amp; Target Metrics:</strong> {p.notes}
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan="8" style={{ textAlign: 'center', padding: '3rem 1.5rem', color: 'var(--text-dim)' }}>
+                          Belum ada proyek/kolaborasi brand. Klik tombol <strong>"+ Input Proyek Baru"</strong> untuk menambahkan proyek &amp; daftar task pertama Anda!
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
           </div>
         )}
 
@@ -6185,6 +6481,204 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 </button>
                 <button type="submit" className="btn btn-primary" style={{ background: '#2563EB', borderColor: '#2563EB' }}>
                   Simpan Rencana
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+            {/* Modal: PROJECT & CLIENT COLLABORATION */}
+      {modalType === 'project' && (
+        <div className="modal-overlay active" style={{ zIndex: 9999 }}>
+          <div className="modal-card" style={{ maxWidth: 620, maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 800 }}>
+                <Briefcase style={{ color: 'var(--primary)' }} />
+                {editingProject.id ? 'Edit Proyek & Klien' : 'Tambah Proyek & Klien Baru'}
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={handleSaveProject}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Nama Brand / Klien *</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="contoh: Vitalife, Maybelline" 
+                    value={editingProject.clientName} 
+                    onChange={e => setEditingProject({ ...editingProject, clientName: e.target.value })} 
+                    required 
+                  />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Judul Proyek / Kampanye *</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="contoh: Campaign Shopee Live 11.11" 
+                    value={editingProject.projectTitle} 
+                    onChange={e => setEditingProject({ ...editingProject, projectTitle: e.target.value })} 
+                    required 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Kategori Proyek</label>
+                  <select 
+                    className="form-select" 
+                    value={editingProject.category} 
+                    onChange={e => setEditingProject({ ...editingProject, category: e.target.value })}
+                  >
+                    <option value="Live Streaming">Live Streaming</option>
+                    <option value="Shopee Video / Reels">Shopee Video / Reels Production</option>
+                    <option value="Endorsement & Retainer">Endorsement &amp; Creator Retainer</option>
+                    <option value="Konsultasi & Management">Konsultasi &amp; Brand Management</option>
+                    <option value="Proyek Khusus">Proyek Khusus / Lainnya</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Status Proyek</label>
+                  <select 
+                    className="form-select" 
+                    value={editingProject.status} 
+                    onChange={e => setEditingProject({ ...editingProject, status: e.target.value })}
+                  >
+                    <option value="Aktif">Aktif (Dalam Pengerjaan)</option>
+                    <option value="Review Klien">Review Klien</option>
+                    <option value="Selesai">Selesai</option>
+                    <option value="Pending">Pending / Draft</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Nilai Kontrak / Gross Revenue (Rp)</label>
+                  <input 
+                    type="number"
+                    className="form-input" 
+                    placeholder="5000000" 
+                    value={editingProject.budget} 
+                    onChange={e => setEditingProject({ ...editingProject, budget: e.target.value })} 
+                    required 
+                  />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Estimasi Profit Bersih / Net Profit (Rp)</label>
+                  <input 
+                    type="number"
+                    className="form-input" 
+                    placeholder="2000000" 
+                    value={editingProject.estimatedNetProfit} 
+                    onChange={e => setEditingProject({ ...editingProject, estimatedNetProfit: e.target.value })} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Tanggal Mulai</label>
+                  <input 
+                    type="date"
+                    className="form-input" 
+                    value={editingProject.startDate} 
+                    onChange={e => setEditingProject({ ...editingProject, startDate: e.target.value })} 
+                  />
+                </div>
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontWeight: 700 }}>Deadline Selesai</label>
+                  <input 
+                    type="date"
+                    className="form-input" 
+                    value={editingProject.deadline} 
+                    onChange={e => setEditingProject({ ...editingProject, deadline: e.target.value })} 
+                  />
+                </div>
+              </div>
+
+              {/* LIST TASK / DELIVERABLES */}
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 700 }}>Checklist Task &amp; Deliverables Proyek</label>
+                <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+                  <input 
+                    className="form-input" 
+                    placeholder="contoh: Live Stream 3 Jam (Tgl 15 Ags)" 
+                    value={newProjectTaskInput} 
+                    onChange={e => setNewProjectTaskInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        if (newProjectTaskInput.trim()) {
+                          setEditingProject(prev => ({
+                            ...prev,
+                            tasks: [...(prev.tasks || []), { id: `t_${Date.now()}`, taskName: newProjectTaskInput.trim(), isCompleted: false }]
+                          }));
+                          setNewProjectTaskInput('');
+                        }
+                      }
+                    }}
+                  />
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary"
+                    onClick={() => {
+                      if (newProjectTaskInput.trim()) {
+                        setEditingProject(prev => ({
+                          ...prev,
+                          tasks: [...(prev.tasks || []), { id: `t_${Date.now()}`, taskName: newProjectTaskInput.trim(), isCompleted: false }]
+                        }));
+                        setNewProjectTaskInput('');
+                      }
+                    }}
+                    style={{ whiteSpace: 'nowrap' }}
+                  >
+                    + Tambah Task
+                  </button>
+                </div>
+
+                {/* TASK ITEMS LIST */}
+                {editingProject.tasks && editingProject.tasks.length > 0 ? (
+                  <div style={{ background: 'var(--bg-input)', padding: '10px 12px', borderRadius: 10, border: '1px solid var(--border-color)', display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {editingProject.tasks.map((t, idx) => (
+                      <div key={t.id || idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'var(--bg-card)', padding: '6px 10px', borderRadius: 6, border: '1px solid var(--border-color)' }}>
+                        <span style={{ fontSize: '0.825rem', color: 'var(--text-main)' }}>• {t.taskName}</span>
+                        <button 
+                          type="button" 
+                          onClick={() => setEditingProject(prev => ({ ...prev, tasks: prev.tasks.filter((_, i) => i !== idx) }))}
+                          style={{ background: 'none', border: 'none', color: '#D32F2F', cursor: 'pointer', fontSize: '0.8rem', padding: '2px 6px' }}
+                        >
+                          &times; Hapus
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Belum ada task ditambahkan. Ketik nama task lalu tekan Enter.</span>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label" style={{ fontWeight: 700 }}>Catatan Brief Klien &amp; Target Metrics</label>
+                <textarea 
+                  className="form-input" 
+                  rows="3" 
+                  placeholder="Target GMV Rp 50.000.000, 10.000 Views, Brief khusus..." 
+                  value={editingProject.notes} 
+                  onChange={e => setEditingProject({ ...editingProject, notes: e.target.value })} 
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, marginTop: '1.5rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setModalType(null)}>Batal</button>
+                <button type="submit" className="btn btn-primary" style={{ background: 'var(--primary)', borderColor: 'var(--primary)' }}>
+                  Simpan Proyek &amp; Klien
                 </button>
               </div>
             </form>
