@@ -51,6 +51,33 @@ export const INITIAL_STUDIO_DATA = {
   personalList: [],
   otherIncomeList: [],
 
+  // 4c. Planning Expense & Budget Limit
+  monthlyBudgetLimit: 2500000,
+  plannedExpenses: [
+    {
+      id: "plan_001",
+      name: "Upgrade Camera & Lighting Studio 1",
+      category: "CAPEX",
+      targetDate: "2026-09-01",
+      date: "2026-09-01",
+      amount: 1500000,
+      priority: "Tinggi",
+      status: "Disetujui",
+      notes: "Upgrade visual livestream untuk event kampanye 9.9"
+    },
+    {
+      id: "plan_002",
+      name: "Alokasi Iklan & Ads Promosi Shopee Live",
+      category: "OPEX",
+      targetDate: "2026-08-25",
+      date: "2026-08-25",
+      amount: 500000,
+      priority: "Sedang",
+      status: "Direncanakan",
+      notes: "Budget Iklan Toko & CPAS Meta"
+    }
+  ],
+
   // 4b. AI Financial Insight Cache
   finIntelAiInsight: null,
 

@@ -583,7 +583,9 @@ export default function App() {
   const [personalPage, setPersonalPage] = useState(1);
   const [otherIncomePage, setOtherIncomePage] = useState(1);
   const [livePage, setLivePage] = useState(1);
-  const [videoPage, setVideoPage] = useState(1); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
+  const [videoPage, setVideoPage] = useState(1);
+  const [plannedPage, setPlannedPage] = useState(1);
+  const [editingPlannedExpense, setEditingPlannedExpense] = useState(null); // 'date_desc' | 'date_asc' | 'gmv_desc' | 'gmv_asc' | 'comm_desc' | 'comm_asc'
 
   // Parse various date formats used in the app into a local Date object (00:00:00 local time)
   const parseItemDate = (item) => {
@@ -688,6 +690,7 @@ export default function App() {
   const allOpexList = studioData.opexList || [];
   const allPersonalList = studioData.personalList || [];
   const allOtherIncomeList = studioData.otherIncomeList || [];
+  const allPlannedExpenses = studioData.plannedExpenses || INITIAL_STUDIO_DATA.plannedExpenses || [];
   const allProjects = studioData.clientProjects || [];
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
   const allPinterestReports = studioData.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics;
@@ -760,6 +763,11 @@ export default function App() {
   const opexList = sortItems(filterByDate(allOpexList));
   const personalList = sortItems(filterByDate(allPersonalList));
   const otherIncomeList = sortItems(filterByDate(allOtherIncomeList));
+  const plannedExpenses = sortItems(filterByDate(allPlannedExpenses));
+  const totalPlannedExpenses = plannedExpenses.reduce((acc, p) => acc + (p.amount || 0), 0);
+  const monthlyBudgetLimit = studioData.monthlyBudgetLimit || 2500000;
+  const budgetUtilizationPercent = monthlyBudgetLimit > 0 ? (totalExpenses / monthlyBudgetLimit) * 100 : 0;
+  const remainingBudget = monthlyBudgetLimit - totalExpenses;
   const projects = allProjects; // Projects don't have date field yet
   const pinterestReports = allPinterestReports;
 
@@ -1379,6 +1387,72 @@ export default function App() {
         ...prev,
         personalList: (prev.personalList || []).filter(item => item.id !== id)
       }));
+    }
+  };
+
+  const handleSavePlannedExpense = (planItem) => {
+    if (!planItem.name || !planItem.amount) {
+      showToast('Mohon lengkapi nama rencana dan estimasi nominal.', 'error');
+      return;
+    }
+    const isEdit = Boolean(planItem.id);
+    const itemToSave = {
+      ...planItem,
+      id: planItem.id || 'plan_' + Date.now(),
+      amount: parseInt(planItem.amount) || 0,
+      date: planItem.targetDate || planItem.date || new Date().toISOString().split('T')[0]
+    };
+
+    setStudioData(prev => {
+      const list = [...(prev.plannedExpenses || INITIAL_STUDIO_DATA.plannedExpenses || [])];
+      if (isEdit) {
+        const idx = list.findIndex(p => p.id === planItem.id);
+        if (idx !== -1) list[idx] = itemToSave;
+      } else {
+        list.unshift(itemToSave);
+      }
+      return { ...prev, plannedExpenses: list };
+    });
+
+    setModalType(null);
+    setEditingPlannedExpense(null);
+    showToast(`Rencana pengeluaran "${itemToSave.name}" berhasil disimpan!`);
+  };
+
+  const handleDeletePlannedExpense = (id) => {
+    if (confirm("Apakah Anda yakin ingin menghapus rencana pengeluaran ini?")) {
+      setStudioData(prev => ({
+        ...prev,
+        plannedExpenses: (prev.plannedExpenses || []).filter(p => p.id !== id)
+      }));
+      showToast("Rencana pengeluaran berhasil dihapus!");
+    }
+  };
+
+  const handleConvertPlanToActual = (planItem) => {
+    if (confirm(`Realisasikan rencana "${planItem.name}" ke transaksi aktual?`)) {
+      const todayISO = new Date().toISOString().split('T')[0];
+      const actualTransaction = {
+        id: (planItem.category === 'CAPEX' ? 'capex_' : 'opex_') + Date.now(),
+        name: planItem.name,
+        category: planItem.category || 'Operasional',
+        amount: planItem.amount,
+        date: todayISO,
+        frequency: 'Once'
+      };
+
+      setStudioData(prev => {
+        const updatedPlans = (prev.plannedExpenses || []).map(p => 
+          p.id === planItem.id ? { ...p, status: 'Terealisasi' } : p
+        );
+        if (planItem.category === 'CAPEX') {
+          return { ...prev, plannedExpenses: updatedPlans, capexList: [actualTransaction, ...(prev.capexList || [])] };
+        } else {
+          return { ...prev, plannedExpenses: updatedPlans, opexList: [actualTransaction, ...(prev.opexList || [])] };
+        }
+      });
+
+      showToast(`Rencana "${planItem.name}" berhasil direalisasikan ke ${planItem.category || 'OPEX'}!`);
     }
   };
 
@@ -3468,6 +3542,103 @@ METRIC TO WATCH
 
               </div>
 
+              {/* METRICS PLANNING EXPENSE & BUDGET PERFORMANCE */}
+              <div className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid #2563EB' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: 10 }}>
+                  <div>
+                    <h3 style={{ fontSize: '1.05rem', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 8, fontWeight: 800, margin: 0 }}>
+                      <Target style={{ width: 18, height: 18, color: '#2563EB' }} /> Perencanaan & Anggaran Pengeluaran (Expense Planning & Budget)
+                    </h3>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                      Monitoring Alokasi Anggaran Bulanan vs Realisasi Pengeluaran Studio
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <button 
+                      className="btn btn-sm btn-secondary" 
+                      onClick={() => {
+                        const limitStr = prompt("Masukkan Batas Anggaran Pengeluaran Bulanan (Rp):", monthlyBudgetLimit);
+                        if (limitStr !== null) {
+                          const val = parseInt(limitStr.replace(/\D/g, '')) || 0;
+                          if (val > 0) {
+                            setStudioData(prev => ({ ...prev, monthlyBudgetLimit: val }));
+                            showToast(`Target Anggaran Bulanan berhasil diubah ke Rp ${val.toLocaleString('id-ID')}`);
+                          }
+                        }
+                      }}
+                      style={{ fontSize: '0.75rem', padding: '5px 12px' }}
+                    >
+                      <Edit3 style={{ width: 13, height: 13 }} /> Set Batas Anggaran
+                    </button>
+
+                    <button 
+                      className="btn btn-sm btn-primary" 
+                      onClick={() => { setEditingPlannedExpense({ name: '', category: 'CAPEX', amount: 500000, targetDate: new Date().toISOString().split('T')[0], priority: 'Sedang', status: 'Direncanakan', notes: '' }); setModalType('plannedExpense'); }}
+                      style={{ fontSize: '0.75rem', padding: '5px 12px', background: '#2563EB', borderColor: '#2563EB' }}
+                    >
+                      <PlusCircle style={{ width: 13, height: 13 }} /> + Tambah Rencana
+                    </button>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+                  <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>
+                      Batas Anggaran (Budget Limit)
+                    </span>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', marginTop: 2 }}>
+                      Rp {monthlyBudgetLimit.toLocaleString('id-ID')}
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>Target alokasi max operasional</span>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>
+                      Realisasi Pengeluaran
+                    </span>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: totalExpenses > monthlyBudgetLimit ? '#D32F2F' : '#059669', marginTop: 2 }}>
+                      Rp {totalExpenses.toLocaleString('id-ID')}
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>Total CAPEX + OPEX terpilih</span>
+                  </div>
+
+                  <div style={{ background: 'var(--bg-input)', padding: '12px 14px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>
+                      Total Rencana (Planning)
+                    </span>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2563EB', marginTop: 2 }}>
+                      Rp {totalPlannedExpenses.toLocaleString('id-ID')}
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{plannedExpenses.length} item proyeksi mendatang</span>
+                  </div>
+
+                  <div style={{ background: remainingBudget >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)', padding: '12px 14px', borderRadius: 10, border: `1px solid ${remainingBudget >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
+                    <span style={{ fontSize: '0.7rem', color: remainingBudget >= 0 ? '#059669' : '#D32F2F', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>
+                      {remainingBudget >= 0 ? 'Sisa Anggaran Tersedia' : 'Over Budget (Melampaui Target)'}
+                    </span>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 800, color: remainingBudget >= 0 ? '#059669' : '#D32F2F', marginTop: 2 }}>
+                      Rp {Math.abs(remainingBudget).toLocaleString('id-ID')}
+                    </div>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                      {budgetUtilizationPercent.toFixed(1)}% anggaran terpakai
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '1rem' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', marginBottom: 4, fontWeight: 600 }}>
+                    <span>Penggunaan Anggaran ({budgetUtilizationPercent.toFixed(1)}%)</span>
+                    <span style={{ color: budgetUtilizationPercent > 100 ? '#D32F2F' : budgetUtilizationPercent > 80 ? '#B88E39' : '#059669' }}>
+                      {budgetUtilizationPercent > 100 ? 'MELAMPAUI ANGGARAN' : budgetUtilizationPercent > 80 ? 'WASPADA ANGGARAN' : 'AMAN (DALAM BATAS)'}
+                    </span>
+                  </div>
+                  <div style={{ width: '100%', height: 8, background: 'var(--border-color)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ width: `${Math.min(100, budgetUtilizationPercent)}%`, height: '100%', background: budgetUtilizationPercent > 100 ? '#D32F2F' : budgetUtilizationPercent > 80 ? '#B88E39' : '#059669', transition: 'width 0.3s ease', borderRadius: 4 }} />
+                  </div>
+                </div>
+              </div>
+
               {/* NET PROFIT HIGHLIGHT BANNER */}
               <div style={{
                 display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem',
@@ -3549,6 +3720,13 @@ METRIC TO WATCH
                   style={{ borderRadius: 20 }}
                 >
                   Bonus ({otherIncomeList.length})
+                </button>
+                <button 
+                  className={`btn btn-sm ${financeSubTab === 'planning' ? 'btn-primary' : 'btn-secondary'}`} 
+                  onClick={() => setFinanceSubTab('planning')}
+                  style={{ borderRadius: 20, background: financeSubTab === 'planning' ? '#2563EB' : undefined, borderColor: financeSubTab === 'planning' ? '#2563EB' : undefined }}
+                >
+                  Rencana ({plannedExpenses.length})
                 </button>
               </div>
             </div>
