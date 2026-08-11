@@ -2346,6 +2346,63 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
               </>
             )}
 
+            {activeTab === 'tabShopeeTracker' && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                  <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
+                  <select 
+                    value={dateFilterPreset}
+                    onChange={e => setDateFilterPreset(e.target.value)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+                  >
+                    <option value="all">Semua Waktu</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="yesterday">Kemarin</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="thisMonth">Bulan Ini</option>
+                    <option value="custom">Custom Tanggal...</option>
+                  </select>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'tabShopeeVideo' && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                  <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
+                  <select 
+                    value={dateFilterPreset}
+                    onChange={e => setDateFilterPreset(e.target.value)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+                  >
+                    <option value="all">Semua Waktu</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="yesterday">Kemarin</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="thisMonth">Bulan Ini</option>
+                    <option value="custom">Custom Tanggal...</option>
+                  </select>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={handleExportVideoToExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <FileText style={{ width: 14, height: 14, color: '#059669' }} /> Ekspor Excel
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualVideoInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Film style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                </button>
+              </div>
+            )}
+
             {activeTab === 'tabPinterest' && (
               <label className="btn btn-primary" style={{ cursor: 'pointer', margin: 0 }}>
                 <PlusCircle style={{ width: 15, height: 15 }} />
@@ -2962,6 +3019,89 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
               </div>
             </div>
 
+            
+            {/* FILTER TOOLBAR BAR */}
+            <div className="glass-card" style={{ padding: '0.75rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.725rem', fontWeight: 800, color: 'var(--text-dim)', marginRight: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  FILTER WAKTU:
+                </span>
+                {[
+                  { key: 'all', label: 'Semua' },
+                  { key: 'today', label: 'Hari Ini' },
+                  { key: 'yesterday', label: 'Kemarin' },
+                  { key: '7d', label: '7 Hari' },
+                  { key: '30d', label: '30 Hari' },
+                  { key: 'thisMonth', label: 'Bulan Ini' },
+                  { key: 'custom', label: 'Custom' },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setDateFilterPreset(opt.key)}
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '0.75rem',
+                      fontWeight: dateFilterPreset === opt.key ? 700 : 500,
+                      borderRadius: 20,
+                      border: `1.5px solid ${dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--border-color)'}`,
+                      background: dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--bg-input)',
+                      color: dateFilterPreset === opt.key ? (theme === 'dark' ? '#09110F' : 'white') : 'var(--text-main)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+
+                {dateFilterPreset === 'custom' && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 4 }}>
+                    <input
+                      type="date"
+                      value={customDateStart}
+                      onChange={e => setCustomDateStart(e.target.value)}
+                      style={{ padding: '3px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
+                    <input
+                      type="date"
+                      value={customDateEnd}
+                      onChange={e => setCustomDateEnd(e.target.value)}
+                      style={{ padding: '3px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* SORT DROPDOWN */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: '0.725rem', fontWeight: 800, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>URUTKAN:</span>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    borderRadius: 20,
+                    border: '1.5px solid var(--border-color)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="date_desc">Terbaru (Tanggal)</option>
+                  <option value="date_asc">Terlama (Tanggal)</option>
+                  <option value="gmv_desc">GMV / Penjualan Terbesar</option>
+                  <option value="gmv_asc">GMV / Penjualan Terkecil</option>
+                  <option value="comm_desc">Komisi Kotor Terbesar</option>
+                  <option value="comm_asc">Komisi Kotor Terkecil</option>
+                </select>
+              </div>
+            </div>
+
             {/* EXPANDABLE EXECUTIVE SESSION CARDS OR CLEAN ZERO STATE */}
             {sessions.length > 0 ? (
               <>
@@ -3439,6 +3579,89 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <button className="btn btn-primary btn-sm" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <Film style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
                 </button>
+              </div>
+            </div>
+
+            
+            {/* FILTER TOOLBAR BAR */}
+            <div className="glass-card" style={{ padding: '0.75rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.725rem', fontWeight: 800, color: 'var(--text-dim)', marginRight: 4, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                  FILTER WAKTU:
+                </span>
+                {[
+                  { key: 'all', label: 'Semua' },
+                  { key: 'today', label: 'Hari Ini' },
+                  { key: 'yesterday', label: 'Kemarin' },
+                  { key: '7d', label: '7 Hari' },
+                  { key: '30d', label: '30 Hari' },
+                  { key: 'thisMonth', label: 'Bulan Ini' },
+                  { key: 'custom', label: 'Custom' },
+                ].map(opt => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setDateFilterPreset(opt.key)}
+                    style={{
+                      padding: '4px 12px',
+                      fontSize: '0.75rem',
+                      fontWeight: dateFilterPreset === opt.key ? 700 : 500,
+                      borderRadius: 20,
+                      border: `1.5px solid ${dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--border-color)'}`,
+                      background: dateFilterPreset === opt.key ? 'var(--primary)' : 'var(--bg-input)',
+                      color: dateFilterPreset === opt.key ? (theme === 'dark' ? '#09110F' : 'white') : 'var(--text-main)',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+
+                {dateFilterPreset === 'custom' && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, marginLeft: 4 }}>
+                    <input
+                      type="date"
+                      value={customDateStart}
+                      onChange={e => setCustomDateStart(e.target.value)}
+                      style={{ padding: '3px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
+                    <input
+                      type="date"
+                      value={customDateEnd}
+                      onChange={e => setCustomDateEnd(e.target.value)}
+                      style={{ padding: '3px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* SORT DROPDOWN */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <span style={{ fontSize: '0.725rem', fontWeight: 800, color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>URUTKAN:</span>
+                <select
+                  value={sortBy}
+                  onChange={e => setSortBy(e.target.value)}
+                  style={{
+                    padding: '4px 10px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    borderRadius: 20,
+                    border: '1.5px solid var(--border-color)',
+                    background: 'var(--bg-input)',
+                    color: 'var(--text-main)',
+                    cursor: 'pointer',
+                    outline: 'none'
+                  }}
+                >
+                  <option value="date_desc">Terbaru (Tanggal)</option>
+                  <option value="date_asc">Terlama (Tanggal)</option>
+                  <option value="gmv_desc">GMV / Penjualan Terbesar</option>
+                  <option value="gmv_asc">GMV / Penjualan Terkecil</option>
+                  <option value="comm_desc">Komisi Kotor Terbesar</option>
+                  <option value="comm_asc">Komisi Kotor Terkecil</option>
+                </select>
               </div>
             </div>
 
@@ -4351,7 +4574,64 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         )}
 
         {/* Tab 6: Pinterest Analytics (US Affiliate Market) */}
-        {activeTab === 'tabPinterest' && (
+        {activeTab === 'tabShopeeTracker' && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                  <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
+                  <select 
+                    value={dateFilterPreset}
+                    onChange={e => setDateFilterPreset(e.target.value)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+                  >
+                    <option value="all">Semua Waktu</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="yesterday">Kemarin</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="thisMonth">Bulan Ini</option>
+                    <option value="custom">Custom Tanggal...</option>
+                  </select>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'tabShopeeVideo' && (
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                  <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
+                  <select 
+                    value={dateFilterPreset}
+                    onChange={e => setDateFilterPreset(e.target.value)}
+                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
+                  >
+                    <option value="all">Semua Waktu</option>
+                    <option value="today">Hari Ini</option>
+                    <option value="yesterday">Kemarin</option>
+                    <option value="7d">7 Hari Terakhir</option>
+                    <option value="30d">30 Hari Terakhir</option>
+                    <option value="thisMonth">Bulan Ini</option>
+                    <option value="custom">Custom Tanggal...</option>
+                  </select>
+                </div>
+                <button className="btn btn-secondary btn-sm" onClick={handleExportVideoToExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <FileText style={{ width: 14, height: 14, color: '#059669' }} /> Ekspor Excel
+                </button>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualVideoInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                </button>
+                <button className="btn btn-primary btn-sm" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Film style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                </button>
+              </div>
+            )}
+
+            {activeTab === 'tabPinterest' && (
           <div className="tab-content main-inner">
             
             {/* PINTEREST CHANNEL BANNER & UPLOAD BUTTONS */}
