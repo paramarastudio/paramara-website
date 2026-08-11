@@ -54,10 +54,10 @@ async function getSupportedGeminiModels(apiKey) {
           .filter(Boolean);
 
         if (validModels.length > 0) {
-          // Filter out non-vision models (TTS, Audio, Embedding, or Deprecated 2.5-flash)
+          // Filter out non-vision/deprecated models (TTS, Audio, Embedding, 2.5 legacy, Gemma)
           const visionModels = validModels.filter(name => {
             const lower = name.toLowerCase();
-            return !lower.includes("tts") && !lower.includes("audio") && !lower.includes("embedding") && !lower.includes("2.5-flash");
+            return !lower.includes("tts") && !lower.includes("audio") && !lower.includes("embedding") && !lower.includes("2.5") && !lower.includes("gemma");
           });
 
           // Sort models: gemini-1.5-flash > gemini-2.0-flash > others
