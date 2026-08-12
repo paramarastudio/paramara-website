@@ -3879,6 +3879,34 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     </div>
                   </div>
                 </div>
+
+                {/* 3. AI EXECUTIVE INSIGHT (KEUANGAN) */}
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginTop: '1.5rem', borderRadius: 12, border: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div style={{ background: 'var(--primary-glow)', color: 'var(--primary)', padding: '10px', borderRadius: '50%', flexShrink: 0 }}>
+                    <Sparkles style={{ width: 20, height: 20 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      AI Executive Insight
+                      <span style={{ fontSize: '0.65rem', background: 'var(--primary)', color: '#fff', padding: '2px 8px', borderRadius: 10, fontWeight: 700, textTransform: 'uppercase' }}>Keuangan</span>
+                    </h4>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.6' }}>
+                      <p style={{ margin: '0 0 8px 0' }}>
+                        <strong>Kondisi Saat Ini:</strong> Laba bersih operasional tercatat <strong style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>Rp {netProfit.toLocaleString('id-ID')}</strong>. 
+                        Setelah dikurangi pengeluaran pribadi (Personal) sebesar Rp {totalPersonal.toLocaleString('id-ID')}, 
+                        sisa kas akhir (Laba Bersih After Personal) berada pada posisi <strong style={{ color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>Rp {netProfitAfterPersonal.toLocaleString('id-ID')}</strong>.
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        <strong>Next Decision:</strong>{' '}
+                        {netProfitAfterPersonal < 0 
+                          ? (netProfit > 0 
+                            ? "Operasional bisnis mencetak profit, namun total penarikan/belanja pribadi terlalu besar sehingga menggerus kas. Disarankan membatasi pengeluaran personal." 
+                            : "Operasional studio sedang dalam posisi defisit. Hentikan seluruh belanja/penarikan pribadi sementara waktu dan fokus pada efisiensi OPEX serta peningkatan omset.")
+                          : "Sisa kas positif dan berada dalam batas aman. Anda dapat mempertahankan ritme keuangan saat ini atau mengalokasikan sisa kas untuk investasi produktif (CAPEX/Iklan)."}
+                      </p>
+                    </div>
+                  </div>
+                </div>
               </>
             )}
 
@@ -4066,6 +4094,34 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                         )}
                       </tbody>
                     </table>
+                  </div>
+                </div>
+
+                {/* 3. AI EXECUTIVE INSIGHT (KEUANGAN) */}
+                <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginTop: '1.5rem', borderRadius: 12, border: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
+                  <div style={{ background: 'var(--primary-glow)', color: 'var(--primary)', padding: '10px', borderRadius: '50%', flexShrink: 0 }}>
+                    <Sparkles style={{ width: 20, height: 20 }} />
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ fontSize: '0.95rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      AI Executive Insight
+                      <span style={{ fontSize: '0.65rem', background: 'var(--primary)', color: '#fff', padding: '2px 8px', borderRadius: 10, fontWeight: 700, textTransform: 'uppercase' }}>Keuangan</span>
+                    </h4>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', lineHeight: '1.6' }}>
+                      <p style={{ margin: '0 0 8px 0' }}>
+                        <strong>Kondisi Saat Ini:</strong> Laba bersih operasional tercatat <strong style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>Rp {netProfit.toLocaleString('id-ID')}</strong>. 
+                        Setelah dikurangi pengeluaran pribadi (Personal) sebesar Rp {totalPersonal.toLocaleString('id-ID')}, 
+                        sisa kas akhir (Laba Bersih After Personal) berada pada posisi <strong style={{ color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>Rp {netProfitAfterPersonal.toLocaleString('id-ID')}</strong>.
+                      </p>
+                      <p style={{ margin: 0 }}>
+                        <strong>Next Decision:</strong>{' '}
+                        {netProfitAfterPersonal < 0 
+                          ? (netProfit > 0 
+                            ? "Operasional bisnis mencetak profit, namun total penarikan/belanja pribadi terlalu besar sehingga menggerus kas. Disarankan membatasi pengeluaran personal." 
+                            : "Operasional studio sedang dalam posisi defisit. Hentikan seluruh belanja/penarikan pribadi sementara waktu dan fokus pada efisiensi OPEX serta peningkatan omset.")
+                          : "Sisa kas positif dan berada dalam batas aman. Anda dapat mempertahankan ritme keuangan saat ini atau mengalokasikan sisa kas untuk investasi produktif (CAPEX/Iklan)."}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </>
