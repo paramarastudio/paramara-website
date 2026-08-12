@@ -929,6 +929,9 @@ export default function App() {
   // Actual Studio Gross Revenue (Live Comm + Video Comm + Project Income + Other Income/Bonus)
   const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalProjectRev + totalOtherIncome;
 
+  // Cash Revenue Only (Excludes Non-Cash Project Barter/Goods Value)
+  const totalCashRevenue = totalGrossCommission + totalGrossVideoCommission + totalOtherIncome;
+
   // Expenses
   const totalCapex = capexList.reduce((acc, c) => acc + (c.amount || 0), 0);
   const totalOpex = opexList.reduce((acc, o) => acc + (o.amount || 0), 0);
@@ -945,13 +948,13 @@ export default function App() {
   const budgetUtilizationPercent = monthlyBudgetLimit > 0 ? (totalCommittedExpenses / monthlyBudgetLimit) * 100 : 0;
   const remainingBudget = monthlyBudgetLimit - totalCommittedExpenses;
 
-  // Profitability
-  const netProfit = totalStudioGrossRevenue - totalExpenses;
-  const netProfitMarginPercent = totalStudioGrossRevenue > 0 ? (netProfit / totalStudioGrossRevenue) * 100 : 0;
+  // Profitability (Calculated strictly from CASH Revenue minus Expenses - excluding Barter/Goods Project value)
+  const netProfit = totalCashRevenue - totalExpenses;
+  const netProfitMarginPercent = totalCashRevenue > 0 ? (netProfit / totalCashRevenue) * 100 : 0;
 
-  // Profitability After Personal Purchase
-  const netProfitAfterPersonal = totalStudioGrossRevenue - totalCashOutflow;
-  const netProfitAfterPersonalMarginPercent = totalStudioGrossRevenue > 0 ? (netProfitAfterPersonal / totalStudioGrossRevenue) * 100 : 0;
+  // Cash Net Profitability After Personal Purchase
+  const netProfitAfterPersonal = totalCashRevenue - totalCashOutflow;
+  const netProfitAfterPersonalMarginPercent = totalCashRevenue > 0 ? (netProfitAfterPersonal / totalCashRevenue) * 100 : 0;
 
   const totalCombinedIncome = totalShopeeRev + totalProjectRev; // fallback compatibility
   const activeProjectsCount = projects.filter(p => p.status === "Aktif").length;
@@ -2508,7 +2511,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <div className="kpi-icon" style={{ '--kpi-accent': netProfit >= 0 ? '#059669' : '#D32F2F', background: netProfit >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(211,47,47,0.1)', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
                   <TrendingUp style={{ width: 16, height: 16 }} />
                 </div>
-                <div className="kpi-title">Laba Bersih (Net Profit)</div>
+                <div className="kpi-title">Laba Bersih (Kas Tunai)</div>
                 <div className="kpi-value" style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
                   Rp {netProfit.toLocaleString('id-ID')}
                 </div>
@@ -2615,12 +2618,12 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         {/* Tab 2: Shopee Live Tracker */}
         {/* Tab 1b: Financial Intelligence (CFO View) */}
         {activeTab === 'tabFinIntel' && (() => {
-          // CFO Calculations
-          const opProfit = totalStudioGrossRevenue - totalOpex;
-          const opMargin = totalStudioGrossRevenue > 0 ? (opProfit / totalStudioGrossRevenue) * 100 : 0;
+          // CFO Calculations (Strict Cash Flow Accounting)
+          const opProfit = totalCashRevenue - totalOpex;
+          const opMargin = totalCashRevenue > 0 ? (opProfit / totalCashRevenue) * 100 : 0;
           const cashFlowAfterInv = opProfit - totalCapex;
           const cashFlowAfterOwner = cashFlowAfterInv - totalPersonal;
-          const reinvestmentRate = totalStudioGrossRevenue > 0 ? (totalCapex / totalStudioGrossRevenue) * 100 : 0;
+          const reinvestmentRate = totalCashRevenue > 0 ? (totalCapex / totalCashRevenue) * 100 : 0;
           
           const livePct = totalStudioGrossRevenue > 0 ? (totalGrossCommission / totalStudioGrossRevenue) * 100 : 0;
           const videoPct = totalStudioGrossRevenue > 0 ? (totalGrossVideoCommission / totalStudioGrossRevenue) * 100 : 0;
@@ -3718,7 +3721,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     </div>
                     <div className="kpi-title">Pendapatan Kotor Studio</div>
                     <div className="kpi-value text-success">Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</div>
-                    <div className="kpi-subtext">Live (10%) + Video (10%) + Proyek</div>
+                    <div className="kpi-subtext">Live (10%) + Video (10%) + Proyek (Barang)</div>
                   </div>
 
                   <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
@@ -3736,7 +3739,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     <div className="kpi-icon" style={{ background: netProfit >= 0 ? 'rgba(5,150,105,0.1)' : 'rgba(211,47,47,0.1)', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
                       <TrendingUp style={{ width: 18, height: 18 }} />
                     </div>
-                    <div className="kpi-title">Laba Bersih (Net Profit)</div>
+                    <div className="kpi-title">Laba Bersih (Kas Tunai)</div>
                     <div className="kpi-value" style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
                       Rp {netProfit.toLocaleString('id-ID')}
                     </div>
@@ -3815,7 +3818,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                             <strong style={{ color: '#059669' }}>Rp {totalProjectRev.toLocaleString('id-ID')}</strong>
                           </div>
                           <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Nilai Kontrak Klien Aktif</span>
+                            <span>Nilai Barang / Barter (Non-Tunai)</span>
                             <span>{totalStudioGrossRevenue > 0 ? ((totalProjectRev / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
                           </div>
                           <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
