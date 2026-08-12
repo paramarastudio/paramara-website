@@ -3838,47 +3838,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                   </div>
                 </div>
 
-                {/* NET PROFIT HIGHLIGHT BANNER */}
-                <div style={{
-                  display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem',
-                  padding: '1.25rem 1.5rem',
-                  borderRadius: 12,
-                  background: 'var(--bg-card)',
-                  border: '1.5px solid var(--border-color)'
-                }}>
-                  {/* Metric 1: Operational Net Profit */}
-                  <div style={{ padding: '12px 16px', background: netProfit >= 0 ? 'rgba(5, 150, 105, 0.08)' : 'rgba(211, 47, 47, 0.08)', borderRadius: 10, border: `1px solid ${netProfit >= 0 ? 'rgba(5, 150, 105, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>
-                        Laba Bersih Operasional (Net Profit)
-                      </span>
-                      <span className="brand-badge" style={{ background: netProfit >= 0 ? '#059669' : '#D32F2F', color: '#fff', fontSize: '0.7rem' }}>
-                        Margin {netProfitMarginPercent.toFixed(1)}%
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: netProfit >= 0 ? '#059669' : '#D32F2F', marginTop: 4 }}>
-                      Rp {netProfit.toLocaleString('id-ID')}
-                    </div>
-                    <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', marginTop: 4 }}>
-                      Pendapatan Kotor - (CAPEX + OPEX)
-                    </div>
-                  </div>
 
-                  {/* Metric 2: Net Profit After Personal Purchase */}
-                  <div style={{ padding: '12px 16px', background: netProfitAfterPersonal >= 0 ? 'rgba(139, 92, 246, 0.08)' : 'rgba(211, 47, 47, 0.08)', borderRadius: 10, border: `1px solid ${netProfitAfterPersonal >= 0 ? 'rgba(139, 92, 246, 0.3)' : 'rgba(211, 47, 47, 0.3)'}` }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>
-                        Laba Bersih After Personal Purchase
-                      </span>
-                      <span className="brand-badge" style={{ background: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F', color: '#fff', fontSize: '0.7rem' }}>
-                        {netProfitAfterPersonal >= 0 ? 'SURPLUS' : 'DEFISIT'}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 900, color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F', marginTop: 4 }}>
-                      Rp {netProfitAfterPersonal.toLocaleString('id-ID')}
-                    </div>
-                  </div>
-                </div>
 
                 {/* 3. AI EXECUTIVE INSIGHT (KEUANGAN) */}
                 <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginTop: '1.5rem', borderRadius: 12, border: '1px solid var(--border-color)', background: 'var(--bg-card)', display: 'flex', gap: '1rem', alignItems: 'flex-start' }}>
