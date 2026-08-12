@@ -3574,83 +3574,103 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         {activeTab === 'tabFinance' && (
           <div className="tab-content main-inner">
             
-            {/* SUB-NAVIGASI HALAMAN KEUANGAN (SEGMENTED CONTROL) */}
+            {/* SUB-NAVIGASI HALAMAN KEUANGAN (ULTRA-CLEAN LINEAR/STRIPE TABS) */}
             <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(3, 1fr)', 
-              background: 'var(--bg-card)', 
-              padding: '6px', 
-              borderRadius: 14, 
-              border: '1.5px solid var(--border-color)', 
-              marginBottom: '1.5rem',
-              gap: 6,
-              boxShadow: '0 2px 10px rgba(0, 0, 0, 0.03)'
+              display: 'flex', 
+              alignItems: 'center',
+              gap: '2rem', 
+              borderBottom: '1.5px solid var(--border-color)', 
+              marginBottom: '1.75rem',
+              paddingBottom: '0px',
+              overflowX: 'auto'
             }}>
               <button 
                 type="button"
                 onClick={() => setFinanceMainView('overview')}
                 style={{ 
-                  padding: '10px 16px', 
-                  borderRadius: 10, 
-                  fontSize: '0.85rem', 
-                  fontWeight: 700, 
+                  padding: '10px 4px 14px 4px', 
+                  fontSize: '0.875rem', 
+                  fontWeight: financeMainView === 'overview' ? 800 : 600, 
                   border: 'none', 
-                  background: financeMainView === 'overview' ? 'var(--primary)' : 'transparent', 
-                  color: financeMainView === 'overview' ? '#ffffff' : 'var(--text-dim)',
-                  boxShadow: financeMainView === 'overview' ? '0 2px 8px rgba(8, 47, 38, 0.25)' : 'none',
+                  borderBottom: financeMainView === 'overview' ? '3px solid var(--primary)' : '3px solid transparent',
+                  marginBottom: '-1.5px',
+                  background: 'transparent', 
+                  color: financeMainView === 'overview' ? 'var(--text-main)' : 'var(--text-dim)',
                   transition: 'all 0.2s ease',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 8
+                  gap: 8,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <PieChart style={{ width: 16, height: 16 }} /> Overview &amp; P&amp;L
+                <PieChart style={{ width: 16, height: 16, color: financeMainView === 'overview' ? 'var(--primary)' : 'var(--text-dim)' }} /> Overview &amp; P&amp;L
               </button>
+
               <button 
                 type="button"
                 onClick={() => setFinanceMainView('planning')}
                 style={{ 
-                  padding: '10px 16px', 
-                  borderRadius: 10, 
-                  fontSize: '0.85rem', 
-                  fontWeight: 700, 
+                  padding: '10px 4px 14px 4px', 
+                  fontSize: '0.875rem', 
+                  fontWeight: financeMainView === 'planning' ? 800 : 600, 
                   border: 'none', 
-                  background: financeMainView === 'planning' ? '#2563EB' : 'transparent', 
-                  color: financeMainView === 'planning' ? '#ffffff' : 'var(--text-dim)',
-                  boxShadow: financeMainView === 'planning' ? '0 2px 8px rgba(37, 99, 235, 0.3)' : 'none',
+                  borderBottom: financeMainView === 'planning' ? '3px solid #2563EB' : '3px solid transparent',
+                  marginBottom: '-1.5px',
+                  background: 'transparent', 
+                  color: financeMainView === 'planning' ? 'var(--text-main)' : 'var(--text-dim)',
                   transition: 'all 0.2s ease',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'center',
-                  gap: 8
+                  gap: 8,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <Target style={{ width: 16, height: 16 }} /> Anggaran &amp; Rencana ({activePlannedExpenses.length})
+                <Target style={{ width: 16, height: 16, color: financeMainView === 'planning' ? '#2563EB' : 'var(--text-dim)' }} /> Anggaran &amp; Rencana
+                <span style={{ 
+                  fontSize: '0.725rem', 
+                  padding: '2px 8px', 
+                  borderRadius: 10, 
+                  background: financeMainView === 'planning' ? 'rgba(37,99,235,0.12)' : 'var(--bg-input)', 
+                  color: financeMainView === 'planning' ? '#2563EB' : 'var(--text-dim)',
+                  fontWeight: 800 
+                }}>
+                  {activePlannedExpenses.length}
+                </span>
               </button>
+
               <button 
                 type="button"
                 onClick={() => setFinanceMainView('ledger')}
                 style={{ 
-                  padding: '10px 16px', 
-                  borderRadius: 10, 
-                  fontSize: '0.85rem', 
-                  fontWeight: 700, 
+                  padding: '10px 4px 14px 4px', 
+                  fontSize: '0.875rem', 
+                  fontWeight: financeMainView === 'ledger' ? 800 : 600, 
                   border: 'none', 
-                  background: financeMainView === 'ledger' ? 'var(--primary)' : 'transparent', 
-                  color: financeMainView === 'ledger' ? '#ffffff' : 'var(--text-dim)',
-                  boxShadow: financeMainView === 'ledger' ? '0 2px 8px rgba(8, 47, 38, 0.25)' : 'none',
+                  borderBottom: financeMainView === 'ledger' ? '3px solid var(--primary)' : '3px solid transparent',
+                  marginBottom: '-1.5px',
+                  background: 'transparent', 
+                  color: financeMainView === 'ledger' ? 'var(--text-main)' : 'var(--text-dim)',
                   transition: 'all 0.2s ease',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  justify: 'center',
-                  gap: 8
+                  gap: 8,
+                  whiteSpace: 'nowrap'
                 }}
               >
-                <Receipt style={{ width: 16, height: 16 }} /> Buku Kas &amp; Transaksi ({capexList.length + opexList.length + personalList.length + otherIncomeList.length})
+                <Receipt style={{ width: 16, height: 16, color: financeMainView === 'ledger' ? 'var(--primary)' : 'var(--text-dim)' }} /> Buku Kas &amp; Transaksi
+                <span style={{ 
+                  fontSize: '0.725rem', 
+                  padding: '2px 8px', 
+                  borderRadius: 10, 
+                  background: financeMainView === 'ledger' ? 'var(--primary-glow)' : 'var(--bg-input)', 
+                  color: financeMainView === 'ledger' ? 'var(--primary)' : 'var(--text-dim)',
+                  fontWeight: 800 
+                }}>
+                  {capexList.length + opexList.length + personalList.length + otherIncomeList.length}
+                </span>
               </button>
             </div>
 
