@@ -3628,16 +3628,6 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 }}
               >
                 <Target style={{ width: 16, height: 16, color: financeMainView === 'planning' ? '#2563EB' : 'var(--text-dim)' }} /> Anggaran &amp; Rencana
-                <span style={{ 
-                  fontSize: '0.725rem', 
-                  padding: '2px 8px', 
-                  borderRadius: 10, 
-                  background: financeMainView === 'planning' ? 'rgba(37,99,235,0.12)' : 'var(--bg-input)', 
-                  color: financeMainView === 'planning' ? '#2563EB' : 'var(--text-dim)',
-                  fontWeight: 800 
-                }}>
-                  {activePlannedExpenses.length}
-                </span>
               </button>
 
               <button 
@@ -3661,16 +3651,6 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 }}
               >
                 <Receipt style={{ width: 16, height: 16, color: financeMainView === 'ledger' ? 'var(--primary)' : 'var(--text-dim)' }} /> Buku Kas &amp; Transaksi
-                <span style={{ 
-                  fontSize: '0.725rem', 
-                  padding: '2px 8px', 
-                  borderRadius: 10, 
-                  background: financeMainView === 'ledger' ? 'var(--primary-glow)' : 'var(--bg-input)', 
-                  color: financeMainView === 'ledger' ? 'var(--primary)' : 'var(--text-dim)',
-                  fontWeight: 800 
-                }}>
-                  {capexList.length + opexList.length + personalList.length + otherIncomeList.length}
-                </span>
               </button>
             </div>
 
