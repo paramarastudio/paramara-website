@@ -55,6 +55,27 @@ export function parsePinterestCsv(csvText) {
       if (m) result.month = m[0];
       continue;
     }
+    
+    // Extract Audience Size directly
+    if (line.startsWith("Your total audience,")) {
+      const parts = line.split(",");
+      if (parts.length >= 4) {
+        result.totalAudience = parseInt(parts[3], 10) || 0;
+        result.monthlyTotalAudience = parseInt(parts[3], 10) || 0; // If monthly aggregation
+        const dateMatch = parts[1].match(/\d{4}-\d{2}/);
+        if (dateMatch && result.month === new Date().toISOString().slice(0, 7)) {
+            result.month = dateMatch[0]; // Set month from audience data if not set by dateRange
+        }
+      }
+      continue;
+    }
+    if (line.startsWith("Your engaged audience,")) {
+      const parts = line.split(",");
+      if (parts.length >= 4) {
+        result.engagedAudience = parseInt(parts[3], 10) || 0;
+      }
+      continue;
+    }
 
     if (line.startsWith("Top Boards")) { currentSection = "boards"; continue; }
     if (line.startsWith("Top Pins")) { currentSection = "pins"; continue; }
