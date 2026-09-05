@@ -2263,7 +2263,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         
         {/* Top Header */}
         <div className="top-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div className="top-header-left">
             {sidebarCollapsed && (
               <button className="mobile-nav-toggle" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center' }} onClick={() => setSidebarCollapsed(false)}>
                 <PanelLeftClose />
@@ -2329,7 +2329,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             {/* CONTEXTUAL ACTION BUTTONS */}
             {activeTab === 'tabFinance' && (
               <>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 10px', borderRadius: 10, border: '1px solid var(--border-color)', flexShrink: 0 }}>
                   <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
                   <select 
                     value={dateFilterPreset}
@@ -2347,28 +2347,28 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 </div>
 
                 {dateFilterPreset === 'custom' && (
-                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
                     <input
                       type="date"
                       value={customDateStart}
                       onChange={e => setCustomDateStart(e.target.value)}
-                      style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                      style={{ padding: '4px 6px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', width: '118px' }}
                     />
                     <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
                     <input
                       type="date"
                       value={customDateEnd}
                       onChange={e => setCustomDateEnd(e.target.value)}
-                      style={{ padding: '4px 8px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)' }}
+                      style={{ padding: '4px 6px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', width: '118px' }}
                     />
                   </div>
                 )}
 
-                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center' }} onClick={handleExportFinanceToExcel}>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} onClick={handleExportFinanceToExcel}>
                   <FileText style={{ width: 14, height: 14, color: '#059669' }} />
                   <span className="btn-label">Ekspor Excel</span>
                 </button>
-                <button className="btn btn-primary" onClick={() => { setItemName(""); setItemCategory(""); setItemAmount(""); setItemDate(""); setOpexFrequency("Once"); setFinancialType("capex"); setModalType('finance'); }}>
+                <button className="btn btn-primary" style={{ flexShrink: 0 }} onClick={() => { setItemName(""); setItemCategory(""); setItemAmount(""); setItemDate(""); setOpexFrequency("Once"); setFinancialType("capex"); setModalType('finance'); }}>
                   <PlusCircle style={{ width: 15, height: 15 }} />
                   <span className="btn-label">Tambah Transaksi</span>
                 </button>
@@ -2376,8 +2376,8 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             )}
 
             {activeTab === 'tabShopeeTracker' && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 10px', borderRadius: 10, border: '1px solid var(--border-color)', flexShrink: 0 }}>
                   <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
                   <select 
                     value={dateFilterPreset}
@@ -2393,18 +2393,35 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     <option value="custom">Custom Tanggal...</option>
                   </select>
                 </div>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {dateFilterPreset === 'custom' && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                    <input
+                      type="date"
+                      value={customDateStart}
+                      onChange={e => setCustomDateStart(e.target.value)}
+                      style={{ padding: '4px 6px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', width: '118px' }}
+                    />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
+                    <input
+                      type="date"
+                      value={customDateEnd}
+                      onChange={e => setCustomDateEnd(e.target.value)}
+                      style={{ padding: '4px 6px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', width: '118px' }}
+                    />
+                  </div>
+                )}
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
                 </button>
-                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
                 </button>
               </div>
             )}
 
             {activeTab === 'tabShopeeVideo' && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 10px', borderRadius: 10, border: '1px solid var(--border-color)', flexShrink: 0 }}>
                   <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
                   <select 
                     value={dateFilterPreset}
@@ -2420,13 +2437,30 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     <option value="custom">Custom Tanggal...</option>
                   </select>
                 </div>
-                <button className="btn btn-secondary btn-sm" onClick={handleExportVideoToExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                {dateFilterPreset === 'custom' && (
+                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+                    <input
+                      type="date"
+                      value={customDateStart}
+                      onChange={e => setCustomDateStart(e.target.value)}
+                      style={{ padding: '4px 6px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', width: '118px' }}
+                    />
+                    <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>—</span>
+                    <input
+                      type="date"
+                      value={customDateEnd}
+                      onChange={e => setCustomDateEnd(e.target.value)}
+                      style={{ padding: '4px 6px', fontSize: '0.75rem', borderRadius: 8, border: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-main)', width: '118px' }}
+                    />
+                  </div>
+                )}
+                <button className="btn btn-secondary btn-sm" onClick={handleExportVideoToExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <FileText style={{ width: 14, height: 14, color: '#059669' }} /> Ekspor Excel
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualVideoInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualVideoInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
                 </button>
-                <button className="btn btn-primary btn-sm" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <Film style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
                 </button>
               </div>

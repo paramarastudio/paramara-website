@@ -261,7 +261,7 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2.5rem;
+  padding: 0.875rem 2rem;
   background: var(--bg-sidebar);
   border-bottom: 1px solid var(--border-color);
   position: sticky;
@@ -271,6 +271,14 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow: 0 1px 0 var(--border-color), 0 4px 20px rgba(0,0,0,0.03);
+}
+
+.top-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .mobile-nav-toggle {
@@ -290,22 +298,27 @@ body {
 }
 
 .header-title {
-  flex-shrink: 0;
+  min-width: 0;
+  flex: 1 1 auto;
 }
 
 .header-title h2 {
-  font-size: 1.25rem;
+  font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-title p {
-  font-size: 0.775rem;
+  font-size: 0.75rem;
   color: var(--text-muted);
-  margin-top: 1px;
+  margin-top: 2px;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header-actions {
@@ -313,6 +326,8 @@ body {
   align-items: center;
   gap: 8px;
   flex-shrink: 0;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 /* Sync status pill */
