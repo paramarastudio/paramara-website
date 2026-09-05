@@ -289,17 +289,23 @@ body {
   border-color: var(--primary);
 }
 
+.header-title {
+  flex-shrink: 0;
+}
+
 .header-title h2 {
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: -0.02em;
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .header-title p {
   font-size: 0.775rem;
   color: var(--text-muted);
   margin-top: 1px;
+  white-space: nowrap;
 }
 
 .header-actions {
