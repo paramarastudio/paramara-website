@@ -71,9 +71,17 @@ export function parsePinterestCsv(csvText) {
     if (currentSection === "daily") {
       if (parts.length >= 2 && parts[0].match(/\d{4}-\d{2}-\d{2}/)) {
         const val = parseInt(parts[1], 10) || 0;
+        const engs = parseInt(parts[2], 10) || 0;
+        const outClk = parseInt(parts[4], 10) || 0;
+        const svs = parseInt(parts[5], 10) || 0;
+        
         const shortDate = parts[0].slice(5);
         result.dailyImpressions.push({ date: shortDate, impressions: val });
+        
         result.impressions += val;
+        result.engagements += engs;
+        result.outboundClicks += outClk;
+        result.saves += svs;
       }
     } else if (currentSection === "boards") {
       if (parts[0].includes("pinterest.com") && parts.length >= 2) {
@@ -92,9 +100,6 @@ export function parsePinterestCsv(csvText) {
           outboundClicks: outClk,
           saves: svs
         });
-        result.engagements += engs;
-        result.saves += svs;
-        result.outboundClicks += outClk;
       }
     } else if (currentSection === "pins") {
       if (parts[0].includes("pinterest.com") && parts.length >= 2) {
@@ -821,7 +826,7 @@ export default function App() {
         setStudioData(prev => {
           const existingList = [...(prev.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics)];
           
-          let targetIndex = existingList.findIndex(r => r.month === parsedData.month || r.id === "pin_2026_07");
+          let targetIndex = existingList.findIndex(r => r.month === parsedData.month);
           if (targetIndex === -1 && existingList.length > 0) targetIndex = 0;
 
           if (targetIndex !== -1) {
@@ -830,10 +835,10 @@ export default function App() {
             if (isOverviewFile) {
               current.overviewFileName = fileName;
               current.overviewUploadedAt = new Date().toLocaleString('id-ID');
-              if (parsedData.impressions > 0) current.impressions = parsedData.impressions;
-              if (parsedData.engagements > 0) current.engagements = parsedData.engagements;
+              if (parsedData.impressions >= 0) current.impressions = parsedData.impressions;
+              if (parsedData.engagements >= 0) current.engagements = parsedData.engagements;
               if (parsedData.outboundClicks >= 0) current.outboundClicks = parsedData.outboundClicks;
-              if (parsedData.saves > 0) current.saves = parsedData.saves;
+              if (parsedData.saves >= 0) current.saves = parsedData.saves;
               if (parsedData.dailyImpressions.length > 0) current.dailyImpressions = parsedData.dailyImpressions;
               if (parsedData.topBoards.length > 0) current.topBoards = parsedData.topBoards;
               if (parsedData.topPins.length > 0) current.topPins = parsedData.topPins;
@@ -843,9 +848,9 @@ export default function App() {
             if (isAudienceFile) {
               current.audienceFileName = fileName;
               current.audienceUploadedAt = new Date().toLocaleString('id-ID');
-              if (parsedData.totalAudience > 0) current.totalAudience = parsedData.totalAudience;
-              if (parsedData.engagedAudience > 0) current.engagedAudience = parsedData.engagedAudience;
-              if (parsedData.monthlyTotalAudience > 0) current.monthlyTotalAudience = parsedData.monthlyTotalAudience;
+              if (parsedData.totalAudience >= 0) current.totalAudience = parsedData.totalAudience;
+              if (parsedData.engagedAudience >= 0) current.engagedAudience = parsedData.engagedAudience;
+              if (parsedData.monthlyTotalAudience >= 0) current.monthlyTotalAudience = parsedData.monthlyTotalAudience;
               if (parsedData.demographics.age.length > 0) current.demographics.age = parsedData.demographics.age;
               if (parsedData.demographics.gender.length > 0) current.demographics.gender = parsedData.demographics.gender;
               if (parsedData.demographics.device.length > 0) current.demographics.device = parsedData.demographics.device;
