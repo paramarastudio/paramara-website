@@ -5,7 +5,7 @@ import {
   CheckCircle, Save, Menu, Lock, LogOut, Eye, EyeOff, Trash2,
   ChevronDown, ChevronUp, ChevronLeft, ChevronRight, ImagePlus, Edit3, UserCheck, UserPlus, ExternalLink, ArrowRight,
   Leaf, Compass, Monitor, Cloud, CloudOff, Loader2, PanelLeftClose, Film, DollarSign, CheckCircle2, WifiOff,
-  Sun, Moon, ArrowUpRight, ArrowDownRight, Receipt, Wallet, Scale, ShoppingBag,
+  Sun, Moon, ArrowUpRight, ArrowDownRight, Receipt, Wallet, Scale, ShoppingBag, Utensils,
   BarChart2, Users, Smartphone, Target, Pin, FileText, Clock, Activity
 } from 'lucide-react';
 
@@ -633,6 +633,7 @@ export default function App() {
   const [dateFilterPreset, setDateFilterPreset] = useState('all'); // 'all' | 'today' | '7d' | '30d' | 'thisMonth' | 'custom'
   const [customDateStart, setCustomDateStart] = useState('');
   const [customDateEnd, setCustomDateEnd] = useState('');
+  const [shopeeChannelFilter, setShopeeChannelFilter] = useState('all'); // 'all' | 'Shopee Live' | 'ShopeeFood Live'
   const [sortBy, setSortBy] = useState('date_desc');
   const [capexPage, setCapexPage] = useState(1);
   const [opexPage, setOpexPage] = useState(1);
@@ -816,7 +817,17 @@ export default function App() {
   };
 
   // Filtered & Sorted data arrays used everywhere
-  const sessions = sortItems(filterByDate(allSessions));
+  const rawSessions = sortItems(filterByDate(allSessions));
+  const sessions = rawSessions.filter(s => {
+    if (shopeeChannelFilter === 'all') return true;
+    if (shopeeChannelFilter === 'ShopeeFood Live') {
+      return s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood');
+    }
+    if (shopeeChannelFilter === 'Shopee Live') {
+      return s.channelType !== 'ShopeeFood Live' && !(s.title || '').toLowerCase().includes('shopeefood');
+    }
+    return true;
+  });
   const videoSessions = sortItems(filterByDate(allVideoSessions));
   const capexList = sortItems(filterByDate(allCapexList));
   const opexList = sortItems(filterByDate(allOpexList));
@@ -1241,6 +1252,34 @@ export default function App() {
       created_at: new Date().toISOString()
     });
     setModalType('manual_live');
+  };
+
+  const handleOpenShopeeFoodLiveInput = () => {
+    const now = new Date();
+    const isoDate = now.toISOString().split('T')[0];
+    const todayStr = now.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' }).replace(/\//g, '-');
+    setScannedPreview({
+      id: "live_shopeefood_" + Date.now(),
+      title: `ShopeeFood Live ${todayStr}`,
+      channelType: 'ShopeeFood Live',
+      startTime: `${todayStr} 12:00`,
+      dateISO: isoDate,
+      dateFormatted: todayStr,
+      duration: "01:30:00",
+      revenue: 0,
+      grossCommission: 0,
+      totalOrders: 0,
+      totalViews: 0,
+      activeViewers: 0,
+      newFollowers: 0,
+      cartAdditions: 0,
+      likes: 0,
+      conversionRatePercent: 0,
+      products: [],
+      aiSummary: "Sesi ShopeeFood Live diinput secara manual.",
+      created_at: new Date().toISOString()
+    });
+    setModalType('manual_shopeefood_live');
   };
 
   const handleOpenManualVideoInput = () => {
@@ -2410,6 +2449,9 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     />
                   </div>
                 )}
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
+                  <Utensils style={{ width: 14, height: 14 }} /> Input ShopeeFood Live
+                </button>
                 <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
                 </button>
@@ -3006,19 +3048,27 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
 
             </div>
           );
-        })()}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content main-inner">
-
             {/* ACTION BANNER (MOBILE & DESKTOP ACCESSIBLE) */}
             <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: 2 }}>Shopee Live Tracker</h3>
+                <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+                  Shopee Live Tracker
+                  {shopeeChannelFilter === 'ShopeeFood Live' && (
+                    <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 999, background: 'rgba(238,77,45,0.15)', color: '#EE4D2D', border: '1px solid rgba(238,77,45,0.3)', fontWeight: 700 }}>
+                      ShopeeFood Live Only
+                    </span>
+                  )}
+                </h3>
                 <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{sessions.length} sesi live terekam</span>
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
+                  <Utensils style={{ width: 14, height: 14 }} /> Input ShopeeFood Live
+                </button>
                 <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual (Shopee Live)
                 </button>
                 <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
                   <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
@@ -3026,8 +3076,46 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
               </div>
             </div>
 
-            
-
+            {/* CHANNEL FILTER BADGES BAR */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '1.25rem', alignItems: 'center', flexWrap: 'wrap' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-muted)', marginRight: 4 }}>Filter Channel:</span>
+              <button 
+                onClick={() => setShopeeChannelFilter('all')}
+                style={{
+                  padding: '4px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                  border: '1px solid', transition: 'all 0.2s',
+                  background: shopeeChannelFilter === 'all' ? 'var(--primary)' : 'var(--bg-card)',
+                  color: shopeeChannelFilter === 'all' ? '#fff' : 'var(--text-main)',
+                  borderColor: shopeeChannelFilter === 'all' ? 'var(--primary)' : 'var(--border-color)'
+                }}
+              >
+                Semua Sesi ({rawSessions.length})
+              </button>
+              <button 
+                onClick={() => setShopeeChannelFilter('Shopee Live')}
+                style={{
+                  padding: '4px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                  border: '1px solid', transition: 'all 0.2s',
+                  background: shopeeChannelFilter === 'Shopee Live' ? '#059669' : 'var(--bg-card)',
+                  color: shopeeChannelFilter === 'Shopee Live' ? '#fff' : 'var(--text-main)',
+                  borderColor: shopeeChannelFilter === 'Shopee Live' ? '#059669' : 'var(--border-color)'
+                }}
+              >
+                Shopee Live Regular ({rawSessions.filter(s => s.channelType !== 'ShopeeFood Live' && !(s.title || '').toLowerCase().includes('shopeefood')).length})
+              </button>
+              <button 
+                onClick={() => setShopeeChannelFilter('ShopeeFood Live')}
+                style={{
+                  padding: '4px 12px', borderRadius: 20, fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                  border: '1px solid', transition: 'all 0.2s',
+                  background: shopeeChannelFilter === 'ShopeeFood Live' ? '#EE4D2D' : 'rgba(238, 77, 45, 0.08)',
+                  color: shopeeChannelFilter === 'ShopeeFood Live' ? '#fff' : '#EE4D2D',
+                  borderColor: '#EE4D2D'
+                }}
+              >
+                🍔 ShopeeFood Live ({rawSessions.filter(s => s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood')).length})
+              </button>
+            </div>
 
             {/* EXPANDABLE EXECUTIVE SESSION CARDS OR CLEAN ZERO STATE */}
             {sessions.length > 0 ? (
@@ -3035,16 +3123,29 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   {sessions.slice((livePage - 1) * 10, livePage * 10).map(s => {
                     const isExpanded = expandedSessionId === s.id;
+                    const isShopeeFood = s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood');
                     return (
-                      <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: '4px solid var(--primary)' }}>
+                      <div key={s.id} className="glass-card" style={{ padding: '1.25rem 1.5rem', borderLeft: isShopeeFood ? '4px solid #EE4D2D' : '4px solid var(--primary)' }}>
                         
                         {/* CARD HEADER */}
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
                           <div>
-                            <h3 style={{ fontSize: '1.1rem', color: 'var(--primary)', marginBottom: 4 }}>{s.title}</h3>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
+                              <h3 style={{ fontSize: '1.1rem', color: isShopeeFood ? '#EE4D2D' : 'var(--primary)', margin: 0 }}>{s.title}</h3>
+                              {isShopeeFood ? (
+                                <span style={{ background: 'rgba(238,77,45,0.12)', color: '#EE4D2D', border: '1px solid rgba(238,77,45,0.3)', padding: '2px 8px', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                                  <Utensils style={{ width: 10, height: 10 }} /> ShopeeFood Live
+                                </span>
+                              ) : (
+                                <span style={{ background: 'rgba(5,150,105,0.1)', color: '#059669', border: '1px solid rgba(5,150,105,0.25)', padding: '2px 8px', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700 }}>
+                                  Shopee Live Regular
+                                </span>
+                              )}
+                            </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                               <span>Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
                               <span>Durasi: <strong>{s.duration}</strong></span>
+                              {s.newFollowers ? <span>Pengikut Baru: <strong>{s.newFollowers}</strong></span> : null}
                             </div>
                           </div>
 
@@ -5363,6 +5464,18 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <input className="form-input" value={editingSession.title} onChange={e => setEditingSession({ ...editingSession, title: e.target.value })} />
               </div>
               <div className="form-group">
+                <label className="form-label">Tipe Channel</label>
+                <select 
+                  className="form-input"
+                  value={editingSession.channelType || ((editingSession.title || '').toLowerCase().includes('shopeefood') ? 'ShopeeFood Live' : 'Shopee Live')}
+                  onChange={e => setEditingSession({ ...editingSession, channelType: e.target.value })}
+                  style={{ fontWeight: 700, color: editingSession.channelType === 'ShopeeFood Live' ? '#EE4D2D' : 'var(--primary)' }}
+                >
+                  <option value="Shopee Live">Shopee Live Regular</option>
+                  <option value="ShopeeFood Live">ShopeeFood Live</option>
+                </select>
+              </div>
+              <div className="form-group">
                 <label className="form-label">Durasi Live</label>
                 <input className="form-input" value={editingSession.duration} onChange={e => setEditingSession({ ...editingSession, duration: e.target.value })} />
               </div>
@@ -5990,6 +6103,167 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
 
               <button type="submit" className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px' }}>
                 <CheckCircle /> Simpan Sesi Live Shopee
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: INPUT MANUAL SHOPEEFOOD LIVE */}
+      {modalType === 'manual_shopeefood_live' && (
+        <div className="modal-overlay active" onClick={() => setModalType(null)}>
+          <div className="modal-card" style={{ maxWidth: 660 }} onClick={e => e.stopPropagation()}>
+            <div className="modal-header" style={{ borderBottom: '1px solid rgba(238, 77, 45, 0.2)' }}>
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EE4D2D' }}>
+                <Utensils style={{ color: '#EE4D2D' }} /> Input Data Sesi ShopeeFood Live
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <form onSubmit={(e) => { e.preventDefault(); handleSaveScannedSession(); }}>
+              <div style={{ background: 'rgba(238, 77, 45, 0.06)', padding: '10px 14px', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid rgba(238, 77, 45, 0.2)', fontSize: '0.8rem', color: 'var(--text-main)' }}>
+                <strong>ShopeeFood Live Analytics:</strong> Masukkan rincian metrik dari Dashboard Performa Live (ShopeeFood Channel) seperti GMV, Pesanan, Total Views, Rata-rata Durasi Menonton & Pengikut Baru.
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Judul Sesi Live</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="Contoh: ShopeeFood Live Special Diskon 50%" 
+                    value={scannedPreview?.title || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, title: e.target.value })} 
+                    required 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tipe Channel</label>
+                  <select 
+                    className="form-input"
+                    value={scannedPreview?.channelType || 'ShopeeFood Live'}
+                    onChange={e => setScannedPreview({ ...scannedPreview, channelType: e.target.value })}
+                    style={{ fontWeight: 700, color: '#EE4D2D' }}
+                  >
+                    <option value="ShopeeFood Live">ShopeeFood Live</option>
+                    <option value="Shopee Live">Shopee Live Regular</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Tanggal Sesi Live</label>
+                  <input 
+                    className="form-input" 
+                    type="date" 
+                    value={parseDateToISO(scannedPreview?.dateISO || scannedPreview?.dateFormatted || scannedPreview?.startTime)} 
+                    onChange={e => {
+                      const newISO = e.target.value;
+                      if (newISO) {
+                        const [y, m, d] = newISO.split('-');
+                        const formatted = `${d}-${m}-${y}`;
+                        const timePart = scannedPreview?.startTime?.split(' ')[1] || '12:00';
+                        setScannedPreview({ 
+                          ...scannedPreview, 
+                          dateISO: newISO,
+                          dateFormatted: formatted,
+                          startTime: `${formatted} ${timePart}`,
+                          title: `ShopeeFood Live ${formatted}`
+                        });
+                      }
+                    }} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Durasi Live</label>
+                  <input 
+                    className="form-input" 
+                    placeholder="Contoh: 01:30:00 atau 98j 40d" 
+                    value={scannedPreview?.duration || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Penjualan GMV (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Jumlah Penjualan Rp" 
+                    value={scannedPreview?.revenue || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, revenue: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Total Pesanan (Orders)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Jumlah Pesanan" 
+                    value={scannedPreview?.totalOrders || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '10px' }}>
+                <div className="form-group">
+                  <label className="form-label">Total Views (Ditonton)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Ditonton" 
+                    value={scannedPreview?.totalViews || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, totalViews: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Penonton Terbanyak (Peak)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Peak Viewers" 
+                    value={scannedPreview?.activeViewers || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, activeViewers: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Pengikut Baru</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Followers" 
+                    value={scannedPreview?.newFollowers || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, newFollowers: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Komisi Kotor (Rp)</label>
+                  <input 
+                    className="form-input" 
+                    type="number" 
+                    placeholder="Komisi Rp" 
+                    value={scannedPreview?.grossCommission || ''} 
+                    onChange={e => setScannedPreview({ ...scannedPreview, grossCommission: parseInt(e.target.value) || 0 })} 
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginTop: '10px' }}>
+                <label className="form-label" style={{ fontWeight: 700, color: '#EE4D2D', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <FileText style={{ width: 14, height: 14 }} /> Catatan & Evaluasi Streamer ShopeeFood
+                </label>
+                <textarea 
+                  className="form-input" 
+                  rows="3" 
+                  placeholder="Tuliskan catatan performa sesi ShopeeFood Live ini..." 
+                  value={scannedPreview?.streamerNotes || ''} 
+                  onChange={e => setScannedPreview({ ...scannedPreview, streamerNotes: e.target.value })} 
+                  style={{ fontFamily: 'inherit', resize: 'vertical', fontSize: '0.825rem', lineHeight: '1.5' }} 
+                />
+              </div>
+
+              <button type="submit" className="btn" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem', padding: '12px', background: '#EE4D2D', color: '#fff', fontWeight: 700 }}>
+                <CheckCircle /> Simpan Data ShopeeFood Live
               </button>
             </form>
           </div>
