@@ -50,11 +50,49 @@ Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gamb
 }
 `;
 
-export function fileToBase64(file) {
+export function fileToBase64(file, maxWidth = 1200, maxHeight = 1600, quality = 0.8) {
   return new Promise((resolve, reject) => {
+    // If not an image file, fallback to direct reader
+    if (!file.type || !file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = (error) => reject(error);
+      return;
+    }
+
     const reader = new FileReader();
     reader.readAsDataURL(file);
-    reader.onload = () => resolve(reader.result.split(",")[1]);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+
+        // Resize down if image exceeds max dimensions while maintaining aspect ratio
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert to compressed JPEG data URL
+        const dataUrl = canvas.toDataURL('image/jpeg', quality);
+        const base64Data = dataUrl.split(',')[1];
+        resolve(base64Data);
+      };
+      img.onerror = () => {
+        // Fallback to original base64 if canvas load fails
+        resolve(event.target.result.split(',')[1]);
+      };
+    };
     reader.onerror = (error) => reject(error);
   });
 }
