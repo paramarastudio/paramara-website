@@ -5374,6 +5374,29 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                       <option value="ShopeeFood Live">ShopeeFood Live</option>
                     </select>
                   </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Tanggal Sesi Live</label>
+                    <input 
+                      className="form-input" 
+                      type="date" 
+                      value={parseDateToISO(scannedPreview?.dateISO || scannedPreview?.dateFormatted || scannedPreview?.startTime)} 
+                      onChange={e => {
+                        const newISO = e.target.value;
+                        if (newISO) {
+                          const [y, m, d] = newISO.split('-');
+                          const formatted = `${d}-${m}-${y}`;
+                          const timePart = scannedPreview?.startTime?.split(' ')[1] || '20:00';
+                          setScannedPreview({ 
+                            ...scannedPreview, 
+                            dateISO: newISO,
+                            dateFormatted: formatted,
+                            startTime: `${formatted} ${timePart}`
+                          });
+                        }
+                      }} 
+                    />
+                  </div>
                   <div className="form-group">
                     <label className="form-label">Durasi Live</label>
                     <input className="form-input" value={scannedPreview.duration} onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} />
@@ -5430,6 +5453,29 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                   <option value="Shopee Live">Shopee Live Regular</option>
                   <option value="ShopeeFood Live">ShopeeFood Live</option>
                 </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Tanggal Sesi Live</label>
+                <input 
+                  className="form-input" 
+                  type="date" 
+                  value={parseDateToISO(editingSession?.dateISO || editingSession?.dateFormatted || editingSession?.startTime)} 
+                  onChange={e => {
+                    const newISO = e.target.value;
+                    if (newISO) {
+                      const [y, m, d] = newISO.split('-');
+                      const formatted = `${d}-${m}-${y}`;
+                      const timePart = editingSession?.startTime?.split(' ')[1] || '20:00';
+                      setEditingSession({ 
+                        ...editingSession, 
+                        dateISO: newISO,
+                        dateFormatted: formatted,
+                        startTime: `${formatted} ${timePart}`
+                      });
+                    }
+                  }} 
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Durasi Live</label>
