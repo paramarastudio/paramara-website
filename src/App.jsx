@@ -3048,6 +3048,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
 
             </div>
           );
+        })()}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content main-inner">
             {/* ACTION BANNER (MOBILE & DESKTOP ACCESSIBLE) */}
@@ -4538,64 +4539,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         )}
 
         {/* Tab 6: Pinterest Analytics (US Affiliate Market) */}
-        {activeTab === 'tabShopeeTracker' && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
-                  <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
-                  <select 
-                    value={dateFilterPreset}
-                    onChange={e => setDateFilterPreset(e.target.value)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
-                  >
-                    <option value="all">Semua Waktu</option>
-                    <option value="today">Hari Ini</option>
-                    <option value="yesterday">Kemarin</option>
-                    <option value="7d">7 Hari Terakhir</option>
-                    <option value="30d">30 Hari Terakhir</option>
-                    <option value="thisMonth">Bulan Ini</option>
-                    <option value="custom">Custom Tanggal...</option>
-                  </select>
-                </div>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
-                </button>
-                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
-                </button>
-              </div>
-            )}
-
-            {activeTab === 'tabShopeeVideo' && (
-              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--bg-input)', padding: '5px 12px', borderRadius: 10, border: '1px solid var(--border-color)' }}>
-                  <Calendar style={{ width: 14, height: 14, color: 'var(--primary)' }} />
-                  <select 
-                    value={dateFilterPreset}
-                    onChange={e => setDateFilterPreset(e.target.value)}
-                    style={{ background: 'transparent', border: 'none', color: 'var(--text-main)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', outline: 'none' }}
-                  >
-                    <option value="all">Semua Waktu</option>
-                    <option value="today">Hari Ini</option>
-                    <option value="yesterday">Kemarin</option>
-                    <option value="7d">7 Hari Terakhir</option>
-                    <option value="30d">30 Hari Terakhir</option>
-                    <option value="thisMonth">Bulan Ini</option>
-                    <option value="custom">Custom Tanggal...</option>
-                  </select>
-                </div>
-                <button className="btn btn-secondary btn-sm" onClick={handleExportVideoToExcel} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <FileText style={{ width: 14, height: 14, color: '#059669' }} /> Ekspor Excel
-                </button>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualVideoInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
-                </button>
-                <button className="btn btn-primary btn-sm" onClick={() => { setVideoFileSlot1(null); setVideoFileSlot2(null); setVideoPreviewUrl1(null); setVideoPreviewUrl2(null); setScannedVideoPreview(null); setModalType('scan_video'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Film style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
-                </button>
-              </div>
-            )}
-
-            {activeTab === 'tabPinterest' && (
+        {activeTab === 'tabPinterest' && (
           <div className="tab-content main-inner">
             
             {/* PINTEREST CHANNEL BANNER & UPLOAD BUTTONS */}
