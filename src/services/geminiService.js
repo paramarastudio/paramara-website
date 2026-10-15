@@ -12,10 +12,10 @@ Tugas Anda:
 Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
 
 {
-  "title": "string (Jika terdeteksi logo/tulisan ShopeeFood atau produk makanan, beri judul 'ShopeeFood Live [Tanggal]', jika regular beri judul sesuai sesi)",
+  "title": "string (Jika terdeteksi logo/tulisan ShopeeFood atau produk makanan, beri judul 'ShopeeFood Live [Tanggal DD-MM-YYYY]', jika regular beri judul sesuai sesi)",
   "channelType": "string ('ShopeeFood Live' jika terdapat logo/indikasi ShopeeFood Live atau produk makanan resto, atau 'Shopee Live' jika live toko biasa)",
-  "startTime": "string (Waktu mulai atau tanggal, contoh: 16-10-2026 14:30)",
-  "duration": "string (Durasi live atau Durasi Rata-rata Menonton jika durasi live tidak ada, contoh: 01:27:11 atau 00:00:21)",
+  "startTime": "string (Format: DD-MM-YYYY HH:mm. Waktu live dan tanggal aktual dari screenshot. Jangan gunakan tanggal contoh, cari tanggal dari teks/banner screenshot jika ada)",
+  "duration": "string (Durasi SIARAN LIVE sebenarnya, contoh: 02:00:00. PENTING: JANGAN isi kolom ini dengan 'Durasi Rata-rata Menonton'! Jika durasi total siaran tidak tertera di screenshot, kosongkan '')",
   "revenue": number (Penjualan / GMV Rp tanpa titik/koma/spasi, contoh dari 5.464.798 menjadi 5464798),
   "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 546480),
   "activeViewers": number (Penonton Aktif / Penonton >= 1 menit, contoh: 96),
@@ -26,7 +26,7 @@ Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gamb
   "totalOrders": number (Pesanan / Pesanan Voucher Diskon, contoh dari 1.478 menjadi 1478),
   
   "totalViews": number (Total Dilihat / Ditonton / Total Penonton, contoh dari 662.082 menjadi 662082),
-  "avgWatchDuration": "string (Durasi Rata-rata Menonton, contoh: 00:00:21)",
+  "avgWatchDuration": "string (Durasi Rata-rata Menonton penonton, contoh: 00:00:21)",
   "commentRatePercent": number (Persentase Komentar, jika tidak tertera isi 0),
   "peakConcurrentViewers": number (Penonton Terbanyak, contoh: 832),
   "likes": number (Disukai / Total Suka, contoh dari 118.235 menjadi 118235),

@@ -8,10 +8,10 @@ Tugas Anda:
 Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
 
 {
-  "title": "string (Jika terdeteksi logo/tulisan ShopeeFood atau produk makanan, beri judul 'ShopeeFood Live [Tanggal]', jika regular beri judul sesuai sesi)",
+  "title": "string (Jika terdeteksi logo/tulisan ShopeeFood atau produk makanan, beri judul 'ShopeeFood Live [Tanggal DD-MM-YYYY]', jika regular beri judul sesuai sesi)",
   "channelType": "string ('ShopeeFood Live' jika terdapat logo/indikasi ShopeeFood Live atau produk makanan resto, atau 'Shopee Live' jika live toko biasa)",
-  "startTime": "string (Waktu mulai atau tanggal, contoh: 16-10-2026 14:30)",
-  "duration": "string (Durasi live atau Durasi Rata-rata Menonton jika durasi live tidak ada, contoh: 01:27:11 atau 00:00:21)",
+  "startTime": "string (Format: DD-MM-YYYY HH:mm. Waktu live dan tanggal aktual dari screenshot. Jangan gunakan tanggal contoh, cari tanggal dari teks/banner screenshot jika ada)",
+  "duration": "string (Durasi SIARAN LIVE sebenarnya, contoh: 02:00:00. PENTING: JANGAN isi kolom ini dengan 'Durasi Rata-rata Menonton'! Jika durasi total siaran tidak tertera di screenshot, kosongkan '')",
   "revenue": number (Penjualan / GMV Rp tanpa titik/koma/spasi, contoh dari 5.464.798 menjadi 5464798),
   "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 546480),
   "activeViewers": number (Penonton Aktif / Penonton >= 1 menit, contoh: 96),
@@ -22,7 +22,7 @@ Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gamb
   "totalOrders": number (Pesanan / Pesanan Voucher Diskon, contoh dari 1.478 menjadi 1478),
   
   "totalViews": number (Total Dilihat / Ditonton / Total Penonton, contoh dari 662.082 menjadi 662082),
-  "avgWatchDuration": "string (Durasi Rata-rata Menonton, contoh: 00:00:21)",
+  "avgWatchDuration": "string (Durasi Rata-rata Menonton penonton, contoh: 00:00:21)",
   "commentRatePercent": number (Persentase Komentar, jika tidak tertera isi 0),
   "peakConcurrentViewers": number (Penonton Terbanyak, contoh: 832),
   "likes": number (Disukai / Total Suka, contoh dari 118.235 menjadi 118235),
@@ -177,7 +177,48 @@ export default async function handler(req, res) {
           const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(cleanJson);
           parsed.id = 'session_' + Date.now();
-          parsed.dateFormatted = parsed.startTime || new Date().toLocaleString('id-ID');
+
+          // Intelligent Date Alignment: check title, startTime, or current date
+          const titleDateMatch = (parsed.title || '').match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+          const startMatch = (parsed.startTime || '').match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+          const timeMatch = (parsed.startTime || '').match(/\b(\d{1,2}:\d{2})\b/);
+          const timeStr = timeMatch ? timeMatch[1] : '14:30';
+
+          let resolvedDateFormatted = '';
+          let resolvedDateISO = '';
+
+          if (titleDateMatch) {
+            const d = titleDateMatch[1].padStart(2, '0');
+            const m = titleDateMatch[2].padStart(2, '0');
+            const y = titleDateMatch[3];
+            resolvedDateFormatted = `${d}-${m}-${y}`;
+            resolvedDateISO = `${y}-${m}-${d}`;
+          } else if (startMatch) {
+            const d = startMatch[1].padStart(2, '0');
+            const m = startMatch[2].padStart(2, '0');
+            const y = startMatch[3];
+            resolvedDateFormatted = `${d}-${m}-${y}`;
+            resolvedDateISO = `${y}-${m}-${d}`;
+          } else {
+            const now = new Date();
+            const d = String(now.getDate()).padStart(2, '0');
+            const m = String(now.getMonth() + 1).padStart(2, '0');
+            const y = String(now.getFullYear());
+            resolvedDateFormatted = `${d}-${m}-${y}`;
+            resolvedDateISO = `${y}-${m}-${d}`;
+          }
+
+          parsed.dateFormatted = resolvedDateFormatted;
+          parsed.dateISO = resolvedDateISO;
+          parsed.startTime = `${resolvedDateFormatted} ${timeStr}`;
+
+          // If duration was mistakenly populated with seconds (< 2 mins) like 00:00:21 or 00:00:14
+          if (parsed.duration && /^00:0[0-1]:\d{2}$/.test(parsed.duration.trim())) {
+            if (!parsed.avgWatchDuration) parsed.avgWatchDuration = parsed.duration;
+            parsed.duration = '01:30:00'; // Set default realistic stream duration for user confirmation
+          } else if (!parsed.duration) {
+            parsed.duration = '01:30:00';
+          }
           
           if (!parsed.grossCommission && parsed.revenue) {
             parsed.grossCommission = 0;

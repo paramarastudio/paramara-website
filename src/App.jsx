@@ -218,13 +218,56 @@ export function downloadCsv(filename, rows) {
   document.body.removeChild(link);
 }
 
-// ====== STRICT DEDUPLICATION UTILITY ======
+// ====== STRICT DEDUPLICATION & DATE/DURATION NORMALIZER ======
+export function normalizeSessionDate(s) {
+  if (!s) return s;
+  const title = s.title || '';
+  const titleDateMatch = title.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+  const timeMatch = (s.startTime || s.dateFormatted || '').match(/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/);
+  const timePart = timeMatch ? timeMatch[1] : '14:30';
+
+  let resolved = { ...s };
+
+  if (titleDateMatch) {
+    const d = titleDateMatch[1].padStart(2, '0');
+    const m = titleDateMatch[2].padStart(2, '0');
+    const y = titleDateMatch[3];
+    resolved.dateFormatted = `${d}-${m}-${y}`;
+    resolved.dateISO = `${y}-${m}-${d}`;
+    resolved.startTime = `${resolved.dateFormatted} ${timePart}`;
+  } else if (resolved.dateISO) {
+    const isoMatch = String(resolved.dateISO).match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+    if (isoMatch) {
+      const y = isoMatch[1];
+      const m = isoMatch[2].padStart(2, '0');
+      const d = isoMatch[3].padStart(2, '0');
+      resolved.dateFormatted = `${d}-${m}-${y}`;
+      resolved.dateISO = `${y}-${m}-${d}`;
+      if (!resolved.startTime || !resolved.startTime.includes(resolved.dateFormatted)) {
+        resolved.startTime = `${resolved.dateFormatted} ${timePart}`;
+      }
+    }
+  }
+
+  // Fix Duration vs avgWatchDuration:
+  // If duration is seconds (< 2 mins like 00:00:21 or 00:00:14), it's avg viewer retention, NOT broadcast duration!
+  if (resolved.duration && /^00:0[0-1]:\d{2}$/.test(resolved.duration.trim())) {
+    if (!resolved.avgWatchDuration) {
+      resolved.avgWatchDuration = resolved.duration;
+    }
+    resolved.duration = '01:30:00';
+  }
+
+  return resolved;
+}
+
 export function deduplicateSessions(sessions) {
   if (!Array.isArray(sessions)) return [];
   const seen = new Set();
   const result = [];
-  for (const s of sessions) {
+  for (let s of sessions) {
     if (!s) continue;
+    s = normalizeSessionDate(s);
     const normTitle = (s.title || '').trim().toLowerCase();
     const normTime = (s.startTime || s.dateFormatted || '').trim();
     // Unique key: prefer ID, fallback to Title + StartTime/Date
@@ -1124,9 +1167,10 @@ export default function App() {
 
   const handleSaveEditedSession = () => {
     if (!editingSession) return;
+    const normalized = normalizeSessionDate(editingSession);
     setStudioData(prev => ({
       ...prev,
-      shopeeSessions: prev.shopeeSessions.map(s => s.id === editingSession.id ? editingSession : s)
+      shopeeSessions: prev.shopeeSessions.map(s => s.id === normalized.id ? normalized : s)
     }));
     setEditingSession(null);
     setModalType(null);
@@ -1218,11 +1262,14 @@ export default function App() {
 
   const parseDateToISO = (dateStr) => {
     if (!dateStr) return new Date().toISOString().split('T')[0];
-    const clean = dateStr.trim().split(' ')[0];
-    const parts = clean.split(/[-/]/);
-    if (parts.length === 3) {
-      if (parts[0].length === 4) return `${parts[0]}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
-      if (parts[2].length === 4) return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+    const s = String(dateStr).trim();
+    const isoMatch = s.match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+    if (isoMatch) {
+      return `${isoMatch[1]}-${isoMatch[2].padStart(2, '0')}-${isoMatch[3].padStart(2, '0')}`;
+    }
+    const dmyMatch = s.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+    if (dmyMatch) {
+      return `${dmyMatch[3]}-${dmyMatch[2].padStart(2, '0')}-${dmyMatch[1].padStart(2, '0')}`;
     }
     return new Date().toISOString().split('T')[0];
   };
@@ -3051,10 +3098,10 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         })()}
         {activeTab === 'tabShopeeTracker' && (
           <div className="tab-content main-inner">
-            {/* ACTION BANNER (MOBILE & DESKTOP ACCESSIBLE) */}
-            <div className="glass-card" style={{ padding: '1rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+            {/* ACTION BANNER (TITLE & STATS ONLY) */}
+            <div className="glass-card" style={{ padding: '0.875rem 1.25rem', marginBottom: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h3 style={{ fontSize: '1rem', color: 'var(--primary)', marginBottom: 2, display: 'flex', alignItems: 'center', gap: 8 }}>
+                <h3 style={{ fontSize: '1.05rem', color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
                   Shopee Live Tracker
                   {shopeeChannelFilter === 'ShopeeFood Live' && (
                     <span style={{ fontSize: '0.7rem', padding: '2px 8px', borderRadius: 999, background: 'rgba(238,77,45,0.15)', color: '#EE4D2D', border: '1px solid rgba(238,77,45,0.3)', fontWeight: 700 }}>
@@ -3063,17 +3110,6 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                   )}
                 </h3>
                 <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{sessions.length} sesi live terekam</span>
-              </div>
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button className="btn btn-secondary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
-                  <Sparkles style={{ width: 14, height: 14 }} /> Scan AI ShopeeFood
-                </button>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Utensils style={{ width: 14, height: 14 }} /> Input Manual
-                </button>
-                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (Regular)
-                </button>
               </div>
             </div>
 
@@ -3145,7 +3181,8 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                             </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                               <span>Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
-                              <span>Durasi: <strong>{s.duration}</strong></span>
+                              <span>Durasi: <strong>{s.duration || '-'}</strong></span>
+                              {s.avgWatchDuration ? <span>Rata-rata Tonton: <strong>{s.avgWatchDuration}</strong></span> : null}
                               {s.newFollowers ? <span>Pengikut Baru: <strong>{s.newFollowers}</strong></span> : null}
                             </div>
                           </div>
@@ -5360,7 +5397,31 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
                   <div className="form-group" style={{ gridColumn: 'span 2' }}>
                     <label className="form-label">Judul Sesi Live</label>
-                    <input className="form-input" value={scannedPreview.title} onChange={e => setScannedPreview({ ...scannedPreview, title: e.target.value })} />
+                    <input 
+                      className="form-input" 
+                      value={scannedPreview.title} 
+                      onChange={e => {
+                        const newTitle = e.target.value;
+                        const dateMatch = newTitle.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+                        if (dateMatch) {
+                          const d = dateMatch[1].padStart(2, '0');
+                          const m = dateMatch[2].padStart(2, '0');
+                          const y = dateMatch[3];
+                          const formatted = `${d}-${m}-${y}`;
+                          const newISO = `${y}-${m}-${d}`;
+                          const timePart = scannedPreview?.startTime?.split(' ')[1] || '14:30';
+                          setScannedPreview({
+                            ...scannedPreview,
+                            title: newTitle,
+                            dateISO: newISO,
+                            dateFormatted: formatted,
+                            startTime: `${formatted} ${timePart}`
+                          });
+                        } else {
+                          setScannedPreview({ ...scannedPreview, title: newTitle });
+                        }
+                      }} 
+                    />
                   </div>
                   <div className="form-group">
                     <label className="form-label">Tipe Channel</label>
@@ -5386,9 +5447,16 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                         if (newISO) {
                           const [y, m, d] = newISO.split('-');
                           const formatted = `${d}-${m}-${y}`;
-                          const timePart = scannedPreview?.startTime?.split(' ')[1] || '20:00';
+                          const timePart = scannedPreview?.startTime?.split(' ')[1] || '14:30';
+                          let updatedTitle = scannedPreview.title || '';
+                          if (/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/.test(updatedTitle)) {
+                            updatedTitle = updatedTitle.replace(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/, formatted);
+                          } else if (scannedPreview.channelType === 'ShopeeFood Live' && (!updatedTitle || updatedTitle.startsWith('ShopeeFood Live'))) {
+                            updatedTitle = `ShopeeFood Live ${formatted}`;
+                          }
                           setScannedPreview({ 
                             ...scannedPreview, 
+                            title: updatedTitle,
                             dateISO: newISO,
                             dateFormatted: formatted,
                             startTime: `${formatted} ${timePart}`
@@ -5398,8 +5466,11 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">Durasi Live</label>
-                    <input className="form-input" value={scannedPreview.duration} onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} />
+                    <label className="form-label">
+                      Durasi Siaran Live 
+                      {scannedPreview.avgWatchDuration && <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 'normal', marginLeft: 6 }}>(Rata-rata: {scannedPreview.avgWatchDuration})</span>}
+                    </label>
+                    <input className="form-input" placeholder="Contoh: 02:00:00" value={scannedPreview.duration} onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} />
                   </div>
 
                   <div className="form-group">
@@ -5440,7 +5511,31 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
                 <label className="form-label">Judul Sesi Live</label>
-                <input className="form-input" value={editingSession.title} onChange={e => setEditingSession({ ...editingSession, title: e.target.value })} />
+                <input 
+                  className="form-input" 
+                  value={editingSession.title} 
+                  onChange={e => {
+                    const newTitle = e.target.value;
+                    const dateMatch = newTitle.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+                    if (dateMatch) {
+                      const d = dateMatch[1].padStart(2, '0');
+                      const m = dateMatch[2].padStart(2, '0');
+                      const y = dateMatch[3];
+                      const formatted = `${d}-${m}-${y}`;
+                      const newISO = `${y}-${m}-${d}`;
+                      const timePart = editingSession?.startTime?.split(' ')[1] || '14:30';
+                      setEditingSession({
+                        ...editingSession,
+                        title: newTitle,
+                        dateISO: newISO,
+                        dateFormatted: formatted,
+                        startTime: `${formatted} ${timePart}`
+                      });
+                    } else {
+                      setEditingSession({ ...editingSession, title: newTitle });
+                    }
+                  }} 
+                />
               </div>
               <div className="form-group">
                 <label className="form-label">Tipe Channel</label>
@@ -5466,9 +5561,16 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     if (newISO) {
                       const [y, m, d] = newISO.split('-');
                       const formatted = `${d}-${m}-${y}`;
-                      const timePart = editingSession?.startTime?.split(' ')[1] || '20:00';
+                      const timePart = editingSession?.startTime?.split(' ')[1] || '14:30';
+                      let updatedTitle = editingSession.title || '';
+                      if (/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/.test(updatedTitle)) {
+                        updatedTitle = updatedTitle.replace(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/, formatted);
+                      } else if (editingSession.channelType === 'ShopeeFood Live' && (!updatedTitle || updatedTitle.startsWith('ShopeeFood Live'))) {
+                        updatedTitle = `ShopeeFood Live ${formatted}`;
+                      }
                       setEditingSession({ 
                         ...editingSession, 
+                        title: updatedTitle,
                         dateISO: newISO,
                         dateFormatted: formatted,
                         startTime: `${formatted} ${timePart}`
@@ -5478,8 +5580,11 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">Durasi Live</label>
-                <input className="form-input" value={editingSession.duration} onChange={e => setEditingSession({ ...editingSession, duration: e.target.value })} />
+                <label className="form-label">
+                  Durasi Siaran Live
+                  {editingSession.avgWatchDuration && <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 'normal', marginLeft: 6 }}>(Rata-rata: {editingSession.avgWatchDuration})</span>}
+                </label>
+                <input className="form-input" placeholder="Contoh: 02:00:00" value={editingSession.duration} onChange={e => setEditingSession({ ...editingSession, duration: e.target.value })} />
               </div>
 
               <div className="form-group">
