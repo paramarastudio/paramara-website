@@ -5363,6 +5363,18 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     <input className="form-input" value={scannedPreview.title} onChange={e => setScannedPreview({ ...scannedPreview, title: e.target.value })} />
                   </div>
                   <div className="form-group">
+                    <label className="form-label">Tipe Channel</label>
+                    <select 
+                      className="form-input"
+                      value={scannedPreview.channelType || ((scannedPreview.title || '').toLowerCase().includes('shopeefood') ? 'ShopeeFood Live' : 'Shopee Live')}
+                      onChange={e => setScannedPreview({ ...scannedPreview, channelType: e.target.value })}
+                      style={{ fontWeight: 700, color: scannedPreview.channelType === 'ShopeeFood Live' ? '#EE4D2D' : 'var(--primary)' }}
+                    >
+                      <option value="Shopee Live">Shopee Live Regular</option>
+                      <option value="ShopeeFood Live">ShopeeFood Live</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
                     <label className="form-label">Durasi Live</label>
                     <input className="form-input" value={scannedPreview.duration} onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} />
                   </div>
@@ -6065,8 +6077,19 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             </div>
 
             <form onSubmit={(e) => { e.preventDefault(); handleSaveScannedSession(); }}>
-              <div style={{ background: 'rgba(238, 77, 45, 0.06)', padding: '10px 14px', borderRadius: '8px', marginBottom: '1.25rem', border: '1px solid rgba(238, 77, 45, 0.2)', fontSize: '0.8rem', color: 'var(--text-main)' }}>
-                <strong>ShopeeFood Live Analytics:</strong> Masukkan rincian metrik dari Dashboard Performa Live (ShopeeFood Channel) seperti GMV, Pesanan, Total Views, Rata-rata Durasi Menonton & Pengikut Baru.
+              <div style={{ background: 'rgba(238, 77, 45, 0.06)', padding: '12px 14px', borderRadius: '10px', marginBottom: '1.25rem', border: '1px solid rgba(238, 77, 45, 0.2)', fontSize: '0.8rem', color: 'var(--text-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                <div>
+                  <strong style={{ color: '#EE4D2D', display: 'block', marginBottom: 2 }}>Punya Foto Screenshot Dashboard?</strong>
+                  <span>Gunakan Scan AI untuk membaca angka GMV, Pesanan & Penonton otomatis dari screenshot HP.</span>
+                </div>
+                <button 
+                  type="button" 
+                  className="btn btn-sm" 
+                  onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }}
+                  style={{ background: '#EE4D2D', color: '#fff', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}
+                >
+                  <Sparkles style={{ width: 14, height: 14 }} /> Ekstrak via Scan AI
+                </button>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '10px' }}>
