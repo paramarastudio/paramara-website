@@ -2449,14 +2449,14 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     />
                   </div>
                 )}
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
-                  <Utensils style={{ width: 14, height: 14 }} /> Input ShopeeFood Live
+                <button className="btn btn-secondary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
+                  <Sparkles style={{ width: 14, height: 14 }} /> Scan AI ShopeeFood
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                  <Utensils style={{ width: 14, height: 14 }} /> Input Manual
                 </button>
                 <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (Regular)
                 </button>
               </div>
             )}
@@ -3065,14 +3065,14 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <span style={{ fontSize: '0.775rem', color: 'var(--text-muted)' }}>{sessions.length} sesi live terekam</span>
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
-                  <Utensils style={{ width: 14, height: 14 }} /> Input ShopeeFood Live
+                <button className="btn btn-secondary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
+                  <Sparkles style={{ width: 14, height: 14 }} /> Scan AI ShopeeFood
                 </button>
-                <button className="btn btn-secondary btn-sm" onClick={handleOpenManualLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <Edit3 style={{ width: 14, height: 14 }} /> Input Manual (Shopee Live)
+                <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <Utensils style={{ width: 14, height: 14 }} /> Input Manual
                 </button>
                 <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (2 Foto)
+                  <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (Regular)
                 </button>
               </div>
             </div>

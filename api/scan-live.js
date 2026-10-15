@@ -1,47 +1,48 @@
 export const GEMINI_PROMPT = `
-Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Shopee Live dari screenshot HP.
-Anda mungkin diberikan 1 atau 2 screenshot HP sekaligus (Screenshot Atas: Metrik Utama & Interaksi; Screenshot Bawah: Produk Terjual & Traffic Source).
+Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Shopee Live dan ShopeeFood Live dari screenshot aplikasi HP.
+Screenshot yang diberikan bisa berupa:
+1. Laporan Shopee Live Regular (Data Penjualan, Interaksi, Produk Terjual, Traffic Source).
+2. Laporan ShopeeFood Live (Logo ShopeeFood Live di latar/banner, Penjualan GMV besar, Penonton Aktif, Komentar, Pesanan / Pesanan Voucher Diskon, Persentase Klik, Pesanan per Klik, Penonton Terbanyak, Total Dilihat / Ditonton, Durasi Rata-rata Menonton, Total Suka, Total Dibagikan, serta Daftar Produk Makanan Terjual & Klik).
 
 Tugas Anda:
 Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
 
 {
-  "title": "string (Judul Sesi, contoh: APOTEK 24 JAM DISC UP TO 50%)",
-  "startTime": "string (Waktu mulai, contoh: 01-08-2026 21:37)",
-  "duration": "string (Durasi live, contoh: 01:27:11)",
-  "revenue": number (Penjualan Rp tanpa titik/koma, contoh: 232500),
-  "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 23250),
-  "activeViewers": number (Penonton Aktif, contoh: 7),
-  "commentsCount": number (Komentar, contoh: 1),
-  "cartAdditions": number (Masuk Keranjang, contoh: 5),
-  "clickRatePercent": number (Persentase Klik, contoh: 32.1),
-  "ordersPerClickPercent": number (Pesanan per Klik, contoh: 11.1),
-  "totalOrders": number (Pesanan, contoh: 1),
+  "title": "string (Jika terdeteksi logo/tulisan ShopeeFood atau produk makanan, beri judul 'ShopeeFood Live [Tanggal]', jika regular beri judul sesuai sesi)",
+  "channelType": "string ('ShopeeFood Live' jika terdapat logo/indikasi ShopeeFood Live atau produk makanan resto, atau 'Shopee Live' jika live toko biasa)",
+  "startTime": "string (Waktu mulai atau tanggal, contoh: 16-10-2026 14:30)",
+  "duration": "string (Durasi live atau Durasi Rata-rata Menonton jika durasi live tidak ada, contoh: 01:27:11 atau 00:00:21)",
+  "revenue": number (Penjualan / GMV Rp tanpa titik/koma/spasi, contoh dari 5.464.798 menjadi 5464798),
+  "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 546480),
+  "activeViewers": number (Penonton Aktif / Penonton >= 1 menit, contoh: 96),
+  "commentsCount": number (Komentar / Total Komentar, contoh: 1606),
+  "cartAdditions": number (Masuk Keranjang, jika tidak ada isi 0),
+  "clickRatePercent": number (Persentase Klik, contoh: 4.1),
+  "ordersPerClickPercent": number (Pesanan per Klik, contoh: 5.5),
+  "totalOrders": number (Pesanan / Pesanan Voucher Diskon, contoh dari 1.478 menjadi 1478),
   
-  "totalViews": number (Ditonton / Total Penonton, contoh: 28),
-  "avgWatchDuration": "string (Rata-Rata Durasi Menonton, contoh: 00:00:50)",
-  "commentRatePercent": number (Persentase Komentar, contoh: 3.6),
-  "peakConcurrentViewers": number (Penonton Terbanyak, contoh: 3),
-  "likes": number (Disukai, contoh: 76),
-  "shares": number (Dibagikan, contoh: 1),
+  "totalViews": number (Total Dilihat / Ditonton / Total Penonton, contoh dari 662.082 menjadi 662082),
+  "avgWatchDuration": "string (Durasi Rata-rata Menonton, contoh: 00:00:21)",
+  "commentRatePercent": number (Persentase Komentar, jika tidak tertera isi 0),
+  "peakConcurrentViewers": number (Penonton Terbanyak, contoh: 832),
+  "likes": number (Disukai / Total Suka, contoh dari 118.235 menjadi 118235),
+  "shares": number (Dibagikan / Total Dibagikan, contoh: 76),
 
   "trafficSources": [
-    { "name": "Video", "percent": 18.0 },
-    { "name": "Tab Live & Video", "percent": 14.0 },
-    { "name": "Beranda", "percent": 11.0 }
+    { "name": "string", "percent": 0.0 }
   ],
 
   "products": [
     {
-      "name": "string (Nama Lengkap Produk)",
-      "price": number (Harga Rp),
-      "revenue": number (Penjualan Rp),
-      "clicks": number (Klik),
-      "cartAdds": number (Masuk Keranjang)
+      "name": "string (Nama Lengkap Produk Makanan / Barang)",
+      "price": number (Harga Rp angka murni, contoh: 5000),
+      "revenue": number (Estimasi Penjualan Rp = Harga x Terjual, jika tidak tertera kalkulasikan price x Terjual),
+      "clicks": number (Klik, contoh: 3590),
+      "cartAdds": number (Terjual / Masuk Keranjang, contoh dari Terjual 268 isi 268)
     }
   ],
 
-  "aiSummary": "string (Format ringkasan AI persis: 'Sesi live berdurasi [durasi] menghasilkan Rp[revenue] ([nama produk terlaris]). CTR tinggi di [clickRatePercent]%. [totalViews] total penonton dengan rata-rata durasi [avgWatchDuration].')"
+  "aiSummary": "string (Format ringkasan AI persis: 'Sesi [channelType] menghasilkan Penjualan Rp[revenue] dengan [totalOrders] Pesanan dan [totalViews] views. Penonton terbanyak mencapai [peakConcurrentViewers].')"
 }
 `;
 
