@@ -223,8 +223,10 @@ export function normalizeSessionDate(s) {
   if (!s) return s;
   const title = s.title || '';
   const titleDateMatch = title.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
-  const timeMatch = (s.startTime || s.dateFormatted || '').match(/\b(\d{1,2}:\d{2}(?::\d{2})?)\b/);
-  const timePart = timeMatch ? timeMatch[1] : '14:30';
+  const startDateMatch = (s.startTime || s.dateFormatted || '').match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
+  const isoMatch = String(s.dateISO || '').match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+  const timeMatch = (s.startTime || s.dateFormatted || '').match(/\b(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\b/);
+  const timePart = timeMatch ? `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}` : '14:30';
 
   let resolved = { ...s };
 
@@ -235,18 +237,27 @@ export function normalizeSessionDate(s) {
     resolved.dateFormatted = `${d}-${m}-${y}`;
     resolved.dateISO = `${y}-${m}-${d}`;
     resolved.startTime = `${resolved.dateFormatted} ${timePart}`;
-  } else if (resolved.dateISO) {
-    const isoMatch = String(resolved.dateISO).match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
-    if (isoMatch) {
-      const y = isoMatch[1];
-      const m = isoMatch[2].padStart(2, '0');
-      const d = isoMatch[3].padStart(2, '0');
-      resolved.dateFormatted = `${d}-${m}-${y}`;
-      resolved.dateISO = `${y}-${m}-${d}`;
-      if (!resolved.startTime || !resolved.startTime.includes(resolved.dateFormatted)) {
-        resolved.startTime = `${resolved.dateFormatted} ${timePart}`;
-      }
-    }
+  } else if (isoMatch) {
+    const y = isoMatch[1];
+    const m = isoMatch[2].padStart(2, '0');
+    const d = isoMatch[3].padStart(2, '0');
+    resolved.dateFormatted = `${d}-${m}-${y}`;
+    resolved.dateISO = `${y}-${m}-${d}`;
+    resolved.startTime = `${resolved.dateFormatted} ${timePart}`;
+  } else if (startDateMatch) {
+    const d = startDateMatch[1].padStart(2, '0');
+    const m = startDateMatch[2].padStart(2, '0');
+    const y = startDateMatch[3];
+    resolved.dateFormatted = `${d}-${m}-${y}`;
+    resolved.dateISO = `${y}-${m}-${d}`;
+    resolved.startTime = `${resolved.dateFormatted} ${timePart}`;
+  }
+
+  // Ensure ShopeeFood Live sessions always keep title format: "ShopeeFood Live DD-MM-YYYY"
+  const isShopeeFood = resolved.channelType === 'ShopeeFood Live' || (resolved.title || '').toLowerCase().includes('shopeefood');
+  if (isShopeeFood && resolved.dateFormatted) {
+    resolved.channelType = 'ShopeeFood Live';
+    resolved.title = `ShopeeFood Live ${resolved.dateFormatted}`;
   }
 
   // Fix Duration vs avgWatchDuration:
@@ -397,6 +408,7 @@ export default function App() {
   
   // Multi-Step Upload & Scan State
   const [scanning, setScanning] = useState(false);
+  const [scanChannelPreset, setScanChannelPreset] = useState(null);
   const [scannedPreview, setScannedPreview] = useState(null);
   const [scannedVideoPreview, setScannedVideoPreview] = useState(null);
 
@@ -548,8 +560,11 @@ export default function App() {
               adminUsers: (cloudData.adminUsers && cloudData.adminUsers.length > 0) ? cloudData.adminUsers : (prev.adminUsers || []),
             };
 
-            // If local state had more sessions than cloud, push merged state back to cloud immediately
-            if ((prev.shopeeSessions || []).length > (cloudData.shopeeSessions || []).length) {
+            // If local state had more sessions than cloud, or sessions were normalized, push merged state back to cloud immediately
+            if (
+              (prev.shopeeSessions || []).length > (cloudData.shopeeSessions || []).length ||
+              JSON.stringify(mergedSessions) !== JSON.stringify(cloudData.shopeeSessions)
+            ) {
               saveFn(mergedData);
             }
 
@@ -1095,8 +1110,11 @@ export default function App() {
       // Analyze INSTANTLY with Gemini Vision AI via Vercel serverless proxy
       const result = await analyzeShopeeScreenshots(filesToProcess);
       result.grossCommission = "";
+      if (scanChannelPreset === 'ShopeeFood Live') {
+        result.channelType = 'ShopeeFood Live';
+      }
 
-      setScannedPreview(result);
+      setScannedPreview(normalizeSessionDate(result));
       remoteLog.info('AI Scan success (Shopee Live)', { revenue: result.revenue, orders: result.orders });
     } catch (err) {
       showToast('Gagal membaca screenshot: ' + err.message, 'error');
@@ -2496,13 +2514,13 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     />
                   </div>
                 )}
-                <button className="btn btn-secondary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
+                <button className="btn btn-secondary btn-sm" onClick={() => { setScanChannelPreset('ShopeeFood Live'); setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
                   <Sparkles style={{ width: 14, height: 14 }} /> Scan AI ShopeeFood
                 </button>
                 <button className="btn btn-secondary btn-sm" onClick={handleOpenShopeeFoodLiveInput} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <Utensils style={{ width: 14, height: 14 }} /> Input Manual
                 </button>
-                <button className="btn btn-primary btn-sm" onClick={() => { setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                <button className="btn btn-primary btn-sm" onClick={() => { setScanChannelPreset('Shopee Live'); setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                   <ImagePlus style={{ width: 14, height: 14 }} /> Scan AI (Regular)
                 </button>
               </div>

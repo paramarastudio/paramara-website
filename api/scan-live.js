@@ -212,6 +212,13 @@ export default async function handler(req, res) {
           parsed.dateISO = resolvedDateISO;
           parsed.startTime = `${resolvedDateFormatted} ${timeStr}`;
 
+          // Ensure ShopeeFood Live sessions always keep title format: "ShopeeFood Live DD-MM-YYYY"
+          const isShopeeFood = parsed.channelType === 'ShopeeFood Live' || (parsed.title || '').toLowerCase().includes('shopeefood');
+          if (isShopeeFood) {
+            parsed.channelType = 'ShopeeFood Live';
+            parsed.title = `ShopeeFood Live ${resolvedDateFormatted}`;
+          }
+
           // If duration was mistakenly populated with seconds (< 2 mins) like 00:00:21 or 00:00:14
           if (parsed.duration && /^00:0[0-1]:\d{2}$/.test(parsed.duration.trim())) {
             if (!parsed.avgWatchDuration) parsed.avgWatchDuration = parsed.duration;
