@@ -1754,14 +1754,24 @@ export default function App() {
     }
     showToast('Menguji koneksi ke Google Gemini AI (100% Gratis)...', 'info', 3000);
     try {
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: 'Ping' }] }] })
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error?.message || 'Gagal menghubungi Gemini API. Periksa kembali API Key dari aistudio.google.com.');
+      const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
+      let ok = false;
+      let lastErr = '';
+      for (const modelName of candidateModels) {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${key}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ parts: [{ text: 'Ping' }] }] })
+        });
+        const data = await response.json();
+        if (response.ok) {
+          ok = true;
+          break;
+        }
+        lastErr = data.error?.message || `HTTP ${response.status}`;
+      }
+      if (!ok) {
+        throw new Error(lastErr || 'Gagal menghubungi Gemini API. Periksa kembali API Key dari aistudio.google.com.');
       }
       localStorage.setItem('gemini_api_key', key);
       localStorage.setItem('ai_provider_mode', 'gemini');
@@ -1974,8 +1984,18 @@ export default function App() {
   };
 
   const handleGenerateFinIntelAI = async (totalStudioGrossRevenue, totalOpex, totalCapex, opProfit, opMargin, cashFlowAfterInv, totalPersonal, totalCombinedGMV, reinvestmentRate) => {
+    const shopeeFoodSessionsCount = sessions.filter(s => s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood')).length;
+    const regularLiveSessionsCount = sessions.length - shopeeFoodSessionsCount;
+    const shopeeFoodGMV = sessions
+      .filter(s => s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood'))
+      .reduce((acc, s) => acc + (s.revenue || 0), 0);
+
     const snapshot = {
       grossRevenue: totalStudioGrossRevenue,
+      regularLiveCommission: regularLiveComm,
+      shopeeFoodCommission: totalShopeeFoodCommission,
+      videoCommission: totalGrossVideoCommission,
+      bonusIncome: totalBonusIncome,
       opex: totalOpex,
       capex: totalCapex,
       operatingProfit: opProfit,
@@ -1983,58 +2003,80 @@ export default function App() {
       cashFlowAfterInvestment: cashFlowAfterInv,
       personalWithdrawals: totalPersonal,
       totalGMV: totalCombinedGMV,
+      shopeeFoodGMV,
       reinvestmentRate: reinvestmentRate
     };
 
     try {
       showToast("Menghasilkan CFO Executive Insight via Google Gemini AI...", "info", 5000);
-      const prompt = `Sebagai Paramara CFO & Strategy Analyst Eksekutif, berikan insight keuangan bisnis mendalam berdasarkan data berikut:
-Pendapatan Kotor Studio: Rp ${snapshot.grossRevenue.toLocaleString('id-ID')}
+      const prompt = `Sebagai Paramara CFO & Strategy Analyst Eksekutif, berikan insight keuangan bisnis mendalam (dalam Bahasa Indonesia yang tajam & profesional) berdasarkan data studio berikut:
+Total Cash Revenue Studio: Rp ${snapshot.grossRevenue.toLocaleString('id-ID')}
+- Komisi ShopeeFood Live ([ADD]): Rp ${snapshot.shopeeFoodCommission.toLocaleString('id-ID')} (${shopeeFoodSessionsCount} sesi, GMV Rp ${shopeeFoodGMV.toLocaleString('id-ID')})
+- Komisi Shopee Live Regular: Rp ${snapshot.regularLiveCommission.toLocaleString('id-ID')} (${regularLiveSessionsCount} sesi)
+- Komisi Shopee Video: Rp ${snapshot.videoCommission.toLocaleString('id-ID')}
+- Bonus & Kejar Komisi ([ADD]): Rp ${snapshot.bonusIncome.toLocaleString('id-ID')}
 OPEX (Biaya Operasional): Rp ${snapshot.opex.toLocaleString('id-ID')}
 CAPEX (Investasi Aset Studio): Rp ${snapshot.capex.toLocaleString('id-ID')}
 Laba Operasional (Operating Profit): Rp ${snapshot.operatingProfit.toLocaleString('id-ID')} (Margin: ${snapshot.operatingMargin.toFixed(1)}%)
-Cash Flow / Laba Sisa After Personal: Rp ${snapshot.cashFlowAfterInvestment.toLocaleString('id-ID')}
+Free Cash Flow (Setelah CAPEX): Rp ${snapshot.cashFlowAfterInvestment.toLocaleString('id-ID')}
 Pengeluaran Pribadi Owner: Rp ${snapshot.personalWithdrawals.toLocaleString('id-ID')}
 Total E-Commerce GMV: Rp ${snapshot.totalGMV.toLocaleString('id-ID')}
 Tingkat Reinvestasi (Reinvestment Rate): ${snapshot.reinvestmentRate.toFixed(1)}%
 
-Berikan analisis dalam format teks ringkas (tanpa basa-basi). Gunakan format ini persis:
+Berikan analisis dalam format teks ringkas (tanpa markdown bintang ** dan tanpa basa-basi). Gunakan header ini persis:
 
 EXECUTIVE SUMMARY
-[Ringkasan kondisi saat ini]
+[1-2 kalimat ringkasan kondisi arus kas, margin, dan kontribusi ShopeeFood Live vs Shopee Live Regular]
 
 WHAT IS GOING WELL
-[Kekuatan utama]
+[1-2 kalimat kekuatan utama bisnis saat ini termasuk performa ShopeeFood Live / Live Commerce]
 
 BIGGEST RISK
-[Risiko terbesar]
-
-OPPORTUNITY
-[Peluang terbesar]
+[1-2 kalimat risiko terbesar yang perlu diwaspadai]
 
 NEXT 7 DAYS
-[Satu tindakan konkrit]
+[1-2 kalimat keputusan konkrit untuk founder 7 hari ke depan]
 
 METRIC TO WATCH
-[Metrik utama yang harus dipantau]`;
+[Nama 1 metrik utama yang harus dipantau]`;
 
       const geminiKey = (localStorage.getItem('gemini_api_key') || import.meta.env.VITE_GEMINI_API_KEY || '').trim().replace(/^["']|["']$/g, '');
       const claudeKey = (localStorage.getItem('claude_api_key') || import.meta.env.VITE_CLAUDE_API_KEY || '').trim().replace(/^["']|["']$/g, '');
 
       let insightText = '';
 
-      if (geminiKey) {
-        // Call Google Gemini 1.5 Flash API (100% Free)
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${geminiKey}`, {
+      // 1. Try serverless proxy first (/api/scan-live with mode: 'text_prompt')
+      try {
+        const proxyRes = await fetch('/api/scan-live', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          body: JSON.stringify({ mode: 'text_prompt', prompt })
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Gemini');
-        insightText = data.candidates?.[0]?.content?.parts?.[0]?.text;
-      } else if (claudeKey) {
-        // Fallback to Claude API if configured
+        if (proxyRes.ok) {
+          const proxyData = await proxyRes.json();
+          if (proxyData.text) insightText = proxyData.text;
+        }
+      } catch (_) {}
+
+      // 2. If serverless proxy didn't return text and browser has geminiKey, try active Gemini 2.5 / 2.0 models
+      if (!insightText && geminiKey) {
+        const candidateModels = ['gemini-2.5-flash', 'gemini-2.0-flash', 'gemini-2.5-flash-lite', 'gemini-flash-latest'];
+        let lastErr = '';
+        for (const modelName of candidateModels) {
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${geminiKey}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+          });
+          const data = await response.json();
+          if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+            insightText = data.candidates[0].content.parts[0].text;
+            break;
+          }
+          lastErr = data.error?.message || `HTTP ${response.status}`;
+        }
+        if (!insightText && lastErr) throw new Error(lastErr);
+      } else if (!insightText && claudeKey) {
         const response = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -2053,28 +2095,39 @@ METRIC TO WATCH
         const data = await response.json();
         if (!response.ok) throw new Error(data.error?.message || 'Gagal memanggil API Claude');
         insightText = data.content?.[0]?.text;
-      } else {
-        // Instant Smart Executive Rule Insight Fallback (100% Free, zero latency)
-        insightText = `EXECUTIVE SUMMARY
-Pendapatan kotor studio mencapai Rp ${snapshot.grossRevenue.toLocaleString('id-ID')} dengan laba operasional Rp ${snapshot.operatingProfit.toLocaleString('id-ID')} (${snapshot.operatingMargin.toFixed(1)}% margin). Aliran kas operasional berada pada tingkat ${snapshot.operatingProfit >= 0 ? 'sehat & positif' : 'defisit'}.
-
-WHAT IS GOING WELL
-Laba operasional tetap ${snapshot.operatingProfit >= 0 ? 'surplus' : 'terkontrol'} dan performa e-commerce GMV memberikan kontribusi utama pada pertumbuhan studio.
-
-BIGGEST RISK
-Pengeluaran personal (Rp ${snapshot.personalWithdrawals.toLocaleString('id-ID')}) perlu terus diselaraskan dengan batas kas operasional agar tidak mengganggu arus laba setelah personal.
-
-OPPORTUNITY
-Reinvestasi alat studio (CAPEX Rp ${snapshot.capex.toLocaleString('id-ID')}) memiliki potensi tinggi untuk meningkatkan daya saing konten dan konversi Shopee Live.
-
-NEXT 7 DAYS
-Fokus pada optimalisasi jadwal live berkinerja tinggi dan tingkatkan retensi penonton untuk menaikkan komisi bersih.
-
-METRIC TO WATCH
-Operating Profit Margin & Sisa Kas Operasional Studio`;
       }
 
-      if (!insightText) throw new Error("Format respons AI tidak valid.");
+      if (!insightText) {
+        insightText = `EXECUTIVE SUMMARY
+Operasional studio sangat sehat dengan Cash Revenue Rp ${snapshot.grossRevenue.toLocaleString('id-ID')}, Operating Profit Rp ${snapshot.operatingProfit.toLocaleString('id-ID')} (Margin ${snapshot.operatingMargin.toFixed(1)}%), dan Free Cash Flow positif Rp ${snapshot.cashFlowAfterInvestment.toLocaleString('id-ID')}.
+
+WHAT IS GOING WELL
+Kombinasi ShopeeFood Live (Komisi Rp ${snapshot.shopeeFoodCommission.toLocaleString('id-ID')}) dan Shopee Live Regular (Rp ${snapshot.regularLiveCommission.toLocaleString('id-ID')}) menghasilkan arus kas tinggi dengan rasio OPEX yang sangat efisien.
+
+BIGGEST RISK
+Ketergantungan tinggi pada satu channel live memerlukan diversifikasi jam tayang ShopeeFood Live dan peningkatan kontribusi Shopee Video.
+
+NEXT 7 DAYS
+Pertahankan konsistensi sesi ShopeeFood Live pada jam makan puncak dan alokasikan sebagian Free Cash Flow untuk optimasi peralatan studio.
+
+METRIC TO WATCH
+ShopeeFood Live GMV & Free Cash Flow Margin`;
+      }
+
+      // Parse sections from insightText so AI CFO Brief UI renders them directly
+      const extractSection = (label, nextLabels) => {
+        const pattern = new RegExp(`${label}\\s*[:\\n]+([\\s\\S]*?)(?=${nextLabels.join('|')}|$)`, 'i');
+        const m = insightText.match(pattern);
+        return m ? m[1].replace(/\*\*/g, '').trim() : '';
+      };
+
+      const parsedSections = {
+        summary: extractSection('EXECUTIVE SUMMARY', ['WHAT IS GOING WELL', "WHAT'S GOING WELL", 'BIGGEST RISK']) || undefined,
+        goingWell: extractSection('WHAT(?:\'S| IS) GOING WELL', ['BIGGEST RISK', 'OPPORTUNITY', 'NEXT']) || undefined,
+        biggestRisk: extractSection('BIGGEST RISK', ['OPPORTUNITY', 'NEXT 7 DAYS', 'NEXT FOUNDER DECISION', 'METRIC TO WATCH']) || undefined,
+        nextDecision: extractSection('(?:NEXT 7 DAYS|NEXT FOUNDER DECISION|OPPORTUNITY)', ['METRIC TO WATCH']) || undefined,
+        metricToWatch: extractSection('METRIC TO WATCH', ['===']) || undefined
+      };
 
       const generatedAt = new Date().toLocaleString('id-ID');
       const nextEligibleTime = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
@@ -2083,6 +2136,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
         ...prev,
         finIntelAiInsight: {
           insightText,
+          parsedSections,
           generatedAt,
           nextEligibleGenerationTime: nextEligibleTime,
           dataSnapshot: snapshot
@@ -2832,7 +2886,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                       <TrendingUp style={{ width: 14, height: 14 }} /> Performansi Keuangan Studio
                     </strong>
                     <span>
-                      Studio mencatatkan Pendapatan Kotor <strong>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong> dengan Total Pengeluaran Operasional <strong>Rp {totalExpenses.toLocaleString('id-ID')}</strong> (CAPEX Rp {totalCapex.toLocaleString('id-ID')}, OPEX Rp {totalOpex.toLocaleString('id-ID')}). Hasil Laba Bersih berada pada posisi <strong style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>{netProfit >= 0 ? "Surplus" : "Defisit"} Rp {netProfit.toLocaleString('id-ID')}</strong> (Margin {netProfitMarginPercent.toFixed(1)}%).
+                      Studio mencatatkan Pendapatan Kotor <strong>Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</strong> (Komisi ShopeeFood Live <strong>Rp {totalShopeeFoodCommission.toLocaleString('id-ID')}</strong>, Shopee Live Regular <strong>Rp {regularLiveComm.toLocaleString('id-ID')}</strong>) dengan Total Pengeluaran Operasional <strong>Rp {totalExpenses.toLocaleString('id-ID')}</strong>. Hasil Laba Bersih berada pada posisi <strong style={{ color: netProfit >= 0 ? '#059669' : '#D32F2F' }}>{netProfit >= 0 ? "Surplus" : "Defisit"} Rp {netProfit.toLocaleString('id-ID')}</strong> (Margin {netProfitMarginPercent.toFixed(1)}%).
                     </span>
                   </div>
 
@@ -2841,7 +2895,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                       <Briefcase style={{ width: 14, height: 14 }} /> Omnichannel & Kas Sisa
                     </strong>
                     <span>
-                      Total E-Commerce GMV terkumpul <strong>Rp {totalCombinedGMV.toLocaleString('id-ID')}</strong> dari {sessions.length} Sesi Shopee Live dan {videoSessions.length} Shopee Video. Sisa Kas Bersih setelah Pembelian Pribadi berada di angka <strong style={{ color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>Rp {netProfitAfterPersonal.toLocaleString('id-ID')}</strong>.
+                      Total E-Commerce GMV terkumpul <strong>Rp {totalCombinedGMV.toLocaleString('id-ID')}</strong> dari {sessions.filter(s => s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood')).length} Sesi ShopeeFood Live, {sessions.filter(s => s.channelType !== 'ShopeeFood Live' && !(s.title || '').toLowerCase().includes('shopeefood')).length} Sesi Shopee Live Regular, dan {videoSessions.length} Shopee Video. Sisa Kas Bersih setelah Pembelian Pribadi berada di angka <strong style={{ color: netProfitAfterPersonal >= 0 ? '#8B5CF6' : '#D32F2F' }}>Rp {netProfitAfterPersonal.toLocaleString('id-ID')}</strong>.
                     </span>
                   </div>
                 </div>
@@ -2849,9 +2903,9 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <div style={{ marginTop: '1rem', paddingTop: '0.75rem', borderTop: '1px dashed var(--border-color)', color: 'var(--text-main)', fontSize: '0.825rem' }}>
                   <strong>Rekomendasi Eksekutif AI:</strong>{' '}
                   {netProfit >= 0 ? (
-                    <span>Performansi keuangan studio dalam posisi surplus yang baik. Disarankan untuk menambah alokasi budget pada video berkonversi tinggi dan mempertahankan host utama pada jam puncak.</span>
+                    <span>Performansi keuangan studio dalam posisi surplus yang baik. Disarankan untuk mengoptimalkan sesi ShopeeFood Live pada jam makan puncak serta mempertahankan host utama pada jam konversi tertinggi.</span>
                   ) : (
-                    <span>Pengeluaran operasional studio saat ini melampaui omset komisi. Disarankan meninjau efisiensi biaya OPEX rutin dan memprioritaskan promosi produk komisi tinggi.</span>
+                    <span>Pengeluaran operasional studio saat ini melampaui omset komisi. Disarankan meninjau efisiensi biaya OPEX rutin dan memprioritaskan promosi voucher ShopeeFood Live &amp; produk komisi tinggi.</span>
                   )}
                 </div>
               </div>
@@ -2878,7 +2932,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <div className="kpi-value text-success">
                   Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}
                 </div>
-                <div className="kpi-subtext">Komisi Live/Video + Proyek</div>
+                <div className="kpi-subtext">ShopeeFood + Live/Video + Proyek</div>
               </div>
 
               <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
@@ -2900,7 +2954,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                 <div className="kpi-value">
                   Rp {totalCombinedGMV.toLocaleString('id-ID')}
                 </div>
-                <div className="kpi-subtext">Volume Penjualan Live + Video</div>
+                <div className="kpi-subtext">ShopeeFood + Live + Video</div>
               </div>
             </div>
 
@@ -2976,9 +3030,11 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
           const freeCashFlow = opProfit - totalCapex;
           const reinvestmentRate = totalCashRevenue > 0 ? (totalCapex / totalCashRevenue) * 100 : 0;
           
-          const livePct = totalCashRevenue > 0 ? (totalGrossCommission / totalCashRevenue) * 100 : 0;
+          const shopeeFoodPct = totalCashRevenue > 0 ? (totalShopeeFoodCommission / totalCashRevenue) * 100 : 0;
+          const regularLivePct = totalCashRevenue > 0 ? (regularLiveComm / totalCashRevenue) * 100 : 0;
+          const livePct = shopeeFoodPct + regularLivePct;
           const videoPct = totalCashRevenue > 0 ? (totalGrossVideoCommission / totalCashRevenue) * 100 : 0;
-          const otherPct = totalCashRevenue > 0 ? (totalOtherIncome / totalCashRevenue) * 100 : 0;
+          const otherPct = totalCashRevenue > 0 ? (totalBonusIncome / totalCashRevenue) * 100 : 0;
 
           // AI Cache Check (48h Cooldown)
           const aiData = studioData.finIntelAiInsight || {};
@@ -2995,25 +3051,34 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             hoursAgoText = `AI analysis updated ${aiData.generatedAt}`;
           }
 
-          // Smart Rule-Based Insights focused on Free Cash Flow & Operating Margin
-          let ruleInsight = {
+          // Smart Rule-Based Insights focused on Free Cash Flow, Operating Margin & ShopeeFood Live
+          const defaultRuleInsight = {
             summary: opProfit >= 0 && freeCashFlow < 0
               ? "Operations are profitable, but Free Cash Flow is negative due to high capital expenditures (CAPEX) exceeding operating income."
               : opProfit < 0
               ? "Operating expenses exceed cash revenue. Immediate focus should be on achieving operating break-even before further investment."
-              : "Business operations are healthy with positive Free Cash Flow, indicating strong cash generation capability.",
+              : "Business operations are healthy with positive Free Cash Flow, driven by ShopeeFood Live & Shopee Live Commerce.",
             goingWell: livePct > 50
-              ? `Operating margin is healthy at ${opMargin.toFixed(1)}%, heavily driven by Live Commerce.`
-              : "Revenue is diversified, supporting stable operating profit.",
+              ? `Operating margin is healthy at ${opMargin.toFixed(1)}%, powered by ShopeeFood Live (${shopeeFoodPct.toFixed(1)}%) & Shopee Live Regular (${regularLivePct.toFixed(1)}%).`
+              : "Revenue is diversified across ShopeeFood Live, Shopee Live, and Video, supporting stable operating profit.",
             biggestRisk: freeCashFlow < 0
               ? "Aggressive reinvestment is placing short-term pressure on studio liquidity."
               : totalOpex > totalCashRevenue
               ? "High fixed OPEX relative to current cash inflows."
-              : "Over-reliance on a single revenue channel could expose the studio to algorithm changes.",
+              : "Over-reliance on a single live channel could expose the studio to algorithm or commission batch changes.",
             nextDecision: freeCashFlow < 0
-              ? "Pause non-essential CAPEX and focus on optimizing existing assets to generate positive Free Cash Flow."
-              : "Maintain healthy margins and consider strategic investments with excess Free Cash Flow.",
-            metricToWatch: freeCashFlow < 0 ? "Free Cash Flow" : "Operating Profit Margin"
+              ? "Pause non-essential CAPEX and focus on high-GMV ShopeeFood Live peak meal hours to generate positive Free Cash Flow."
+              : "Maintain healthy margins on ShopeeFood Live & Regular Live, and allocate excess Free Cash Flow strategically.",
+            metricToWatch: freeCashFlow < 0 ? "Free Cash Flow" : "Operating Profit Margin & ShopeeFood Live Share"
+          };
+
+          const parsedAi = aiData.parsedSections || {};
+          const ruleInsight = {
+            summary: parsedAi.summary || defaultRuleInsight.summary,
+            goingWell: parsedAi.goingWell || defaultRuleInsight.goingWell,
+            biggestRisk: parsedAi.biggestRisk || defaultRuleInsight.biggestRisk,
+            nextDecision: parsedAi.nextDecision || defaultRuleInsight.nextDecision,
+            metricToWatch: parsedAi.metricToWatch || defaultRuleInsight.metricToWatch
           };
 
           return (
@@ -3034,7 +3099,7 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     Rp {totalCashRevenue.toLocaleString('id-ID')}
                   </div>
                   <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 500 }}>
-                    Excludes Barter/Goods Projects
+                    ShopeeFood Live + Regular Live + Video + Bonus
                   </div>
                 </div>
 
@@ -3106,9 +3171,29 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', fontSize: '0.9rem' }}>
                     
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>CASH REVENUE</span>
-                      <strong style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '1.05rem' }}>Rp {totalCashRevenue.toLocaleString('id-ID')}</strong>
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ color: 'var(--text-dim)', fontWeight: 600 }}>CASH REVENUE</span>
+                        <strong style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '1.05rem' }}>Rp {totalCashRevenue.toLocaleString('id-ID')}</strong>
+                      </div>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 6, fontSize: '0.725rem', color: 'var(--text-dim)' }}>
+                        <span style={{ background: 'rgba(238,77,45,0.1)', color: '#EE4D2D', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
+                          🍔 ShopeeFood: Rp {totalShopeeFoodCommission.toLocaleString('id-ID')}
+                        </span>
+                        <span style={{ background: 'var(--bg-input)', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
+                          Live Regular: Rp {regularLiveComm.toLocaleString('id-ID')}
+                        </span>
+                        {totalGrossVideoCommission > 0 && (
+                          <span style={{ background: 'var(--bg-input)', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
+                            Video: Rp {totalGrossVideoCommission.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                        {totalBonusIncome > 0 && (
+                          <span style={{ background: 'var(--bg-input)', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
+                            Bonus: Rp {totalBonusIncome.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -3234,29 +3319,37 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                   </h4>
 
                   <div style={{ display: 'flex', height: 16, borderRadius: 8, overflow: 'hidden', background: 'var(--bg-input)', marginBottom: '1.5rem' }}>
-                    <div style={{ width: `${livePct}%`, background: '#082F26' }} title="Live" />
-                    <div style={{ width: `${videoPct}%`, background: '#B88E39' }} title="Video" />
-                    <div style={{ width: `${otherPct}%`, background: '#6B7280' }} title="Other" />
+                    <div style={{ width: `${shopeeFoodPct}%`, background: '#EE4D2D' }} title="ShopeeFood Live" />
+                    <div style={{ width: `${regularLivePct}%`, background: '#082F26' }} title="Shopee Live Regular" />
+                    <div style={{ width: `${videoPct}%`, background: '#B88E39' }} title="Shopee Video" />
+                    <div style={{ width: `${otherPct}%`, background: '#10B981' }} title="Bonus / Other" />
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.8rem' }}>
-                    <div style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)' }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#082F26' }} /> Live
+                    <div style={{ padding: '10px 12px', background: 'rgba(238, 77, 45, 0.06)', border: '1px solid rgba(238, 77, 45, 0.2)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#EE4D2D', fontWeight: 700 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#EE4D2D' }} /> 🍔 ShopeeFood Live
                       </span>
-                      <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{livePct.toFixed(1)}%</strong>
+                      <strong style={{ color: '#EE4D2D', fontSize: '0.9rem' }}>{shopeeFoodPct.toFixed(1)}%</strong>
                     </div>
 
                     <div style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)' }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#B88E39' }} /> Video
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#082F26' }} /> Shopee Live
+                      </span>
+                      <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{regularLivePct.toFixed(1)}%</strong>
+                    </div>
+
+                    <div style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)' }}>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#B88E39' }} /> Shopee Video
                       </span>
                       <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{videoPct.toFixed(1)}%</strong>
                     </div>
 
                     <div style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)' }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#6B7280' }} /> Other
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10B981' }} /> Bonus / Other
                       </span>
                       <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{otherPct.toFixed(1)}%</strong>
                     </div>

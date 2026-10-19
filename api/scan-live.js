@@ -120,12 +120,11 @@ function parseCommissionBatchPeriod(label = '', periodText = '', year = new Date
 
 async function getSupportedGeminiModels(apiKey) {
   const fallbackModels = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash-002",
-    "gemini-1.5-flash-001"
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest",
+    "gemini-2.0-flash-lite"
   ];
 
   try {
@@ -146,20 +145,30 @@ async function getSupportedGeminiModels(apiKey) {
           .filter(Boolean);
 
         if (validModels.length > 0) {
-          // Filter out non-vision/deprecated models (TTS, Audio, Embedding, 2.5 legacy, Gemma)
           const visionModels = validModels.filter(name => {
             const lower = name.toLowerCase();
-            return !lower.includes("tts") && !lower.includes("audio") && !lower.includes("embedding") && !lower.includes("2.5") && !lower.includes("gemma");
+            return (
+              lower.startsWith("gemini-") &&
+              !lower.includes("tts") &&
+              !lower.includes("audio") &&
+              !lower.includes("embedding") &&
+              !lower.includes("gemma") &&
+              !lower.includes("imagen") &&
+              !lower.includes("veo") &&
+              !lower.includes("robotics") &&
+              !lower.includes("computer-use")
+            );
           });
 
-          // Sort models: gemini-1.5-flash > gemini-2.0-flash > others
           visionModels.sort((a, b) => {
             const rank = (name) => {
               const lower = name.toLowerCase();
-              if (lower === "gemini-1.5-flash" || lower === "gemini-1.5-flash-latest") return 1;
-              if (lower.includes("1.5-flash")) return 2;
-              if (lower.includes("2.0-flash")) return 3;
-              if (lower.includes("1.5-pro")) return 4;
+              if (lower === "gemini-2.5-flash") return 1;
+              if (lower === "gemini-2.0-flash") return 2;
+              if (lower === "gemini-2.5-flash-lite") return 3;
+              if (lower === "gemini-flash-latest") return 4;
+              if (lower.includes("2.5-flash")) return 5;
+              if (lower.includes("2.0-flash")) return 6;
               return 10;
             };
             return rank(a) - rank(b);
@@ -195,7 +204,47 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Gemini API Key tidak terpasang di server Vercel. Harap tambahkan VITE_GEMINI_API_KEY di settings environment variables.' });
   }
 
-  const { images, mode } = req.body || {};
+  const { images, mode, prompt } = req.body || {};
+
+  // Text-only prompt mode (for AI CFO Brief / Executive Analysis)
+  if (mode === 'text_prompt' && prompt) {
+    const availableModels = await getSupportedGeminiModels(apiKey);
+    const apiVersions = ["v1beta", "v1"];
+    let lastErr = "";
+
+    for (const model of availableModels) {
+      for (const apiVer of apiVersions) {
+        try {
+          const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+          const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-goog-api-key': apiKey
+            },
+            body: JSON.stringify({
+              contents: [{ parts: [{ text: prompt }] }],
+              generationConfig: { temperature: 0.3 }
+            })
+          });
+          if (!response.ok) {
+            const errTxt = await response.text();
+            lastErr = errTxt;
+            continue;
+          }
+          const data = await response.json();
+          const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+          if (text) {
+            return res.status(200).json({ text, model });
+          }
+        } catch (e) {
+          lastErr = e.message;
+        }
+      }
+    }
+    return res.status(500).json({ error: `Gagal menghasilkan analisis AI: ${lastErr}` });
+  }
+
   if (!images || !Array.isArray(images) || images.length === 0) {
     return res.status(400).json({ error: 'Mohon kirimkan setidaknya satu gambar screenshot.' });
   }

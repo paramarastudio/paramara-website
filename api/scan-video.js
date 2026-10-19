@@ -28,12 +28,11 @@ Bacalah seluruh teks, angka, metrik interaksi, dan penjualan dari SEMUA gambar y
 
 async function getSupportedGeminiModels(apiKey) {
   const fallbackModels = [
-    "gemini-1.5-flash",
-    "gemini-1.5-flash-latest",
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-1.5-pro",
-    "gemini-1.5-flash-002",
-    "gemini-1.5-flash-001"
+    "gemini-2.5-flash-lite",
+    "gemini-flash-latest",
+    "gemini-2.0-flash-lite"
   ];
 
   try {
@@ -54,26 +53,35 @@ async function getSupportedGeminiModels(apiKey) {
           .filter(Boolean);
 
         if (validModels.length > 0) {
-          // Filter out non-vision/deprecated models (TTS, Audio, Embedding, 2.5 legacy, Gemma)
           const visionModels = validModels.filter(name => {
             const lower = name.toLowerCase();
-            return !lower.includes("tts") && !lower.includes("audio") && !lower.includes("embedding") && !lower.includes("2.5") && !lower.includes("gemma");
+            return (
+              lower.startsWith("gemini-") &&
+              !lower.includes("tts") &&
+              !lower.includes("audio") &&
+              !lower.includes("embedding") &&
+              !lower.includes("gemma") &&
+              !lower.includes("imagen") &&
+              !lower.includes("veo") &&
+              !lower.includes("robotics") &&
+              !lower.includes("computer-use")
+            );
           });
 
-          // Sort models: gemini-1.5-flash > gemini-2.0-flash > others
           visionModels.sort((a, b) => {
             const rank = (name) => {
               const lower = name.toLowerCase();
-              if (lower === "gemini-1.5-flash" || lower === "gemini-1.5-flash-latest") return 1;
-              if (lower.includes("1.5-flash")) return 2;
-              if (lower.includes("2.0-flash")) return 3;
-              if (lower.includes("1.5-pro")) return 4;
+              if (lower === "gemini-2.5-flash") return 1;
+              if (lower === "gemini-2.0-flash") return 2;
+              if (lower === "gemini-2.5-flash-lite") return 3;
+              if (lower === "gemini-flash-latest") return 4;
+              if (lower.includes("2.5-flash")) return 5;
+              if (lower.includes("2.0-flash")) return 6;
               return 10;
             };
             return rank(a) - rank(b);
           });
           return visionModels.length > 0 ? visionModels : fallbackModels;
-          return validModels;
         }
       }
     }
