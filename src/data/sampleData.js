@@ -49,7 +49,55 @@ export const INITIAL_STUDIO_DATA = {
   capexList: [],
   opexList: [],
   personalList: [],
-  otherIncomeList: [],
+  otherIncomeList: [
+    {
+      id: "comm_amz_2026_10_18",
+      name: "Amazon Associates US (abdumalikh-20) • Sep 19 - Oct 18 2026 ($1.08)",
+      category: "Amazon Associates (Pinterest US)",
+      type: "amazon_associates",
+      amount: 17604,
+      amountUsd: 1.08,
+      orderedRevenueUsd: 35.99,
+      exchangeRate: 16300,
+      clicks: 49,
+      orderedItems: 1,
+      shippedItems: 1,
+      conversionRate: 2.04,
+      storeId: "abdumalikh-20",
+      periodStart: "2026-09-19",
+      periodEnd: "2026-10-18",
+      date: "2026-10-18",
+      frequency: "Periode Affiliate"
+    }
+  ],
+
+  // 4d. Amazon Associates Reports (Connected with Pinterest US @productijustfound)
+  amazonAssociatesReports: [
+    {
+      id: "amz_2026_10_18",
+      storeId: "abdumalikh-20",
+      country: "US",
+      dateRange: "Sep 19 2026 - Oct 18 2026",
+      periodStart: "2026-09-19",
+      periodEnd: "2026-10-18",
+      date: "2026-10-18",
+      clicks: 49,
+      orderedItems: 1,
+      shippedItems: 1,
+      returnedItems: 0,
+      conversionRate: 2.04,
+      orderedRevenueUsd: 35.99,
+      shippedRevenueUsd: 35.99,
+      totalRevenueUsd: 35.99,
+      bountiesUsd: 0.00,
+      bonusUsd: 0.00,
+      totalEarningsUsd: 1.08,
+      exchangeRate: 16300,
+      earningsIdr: 17604,
+      trafficChannel: "Pinterest US (@productijustfound)",
+      aiSummary: "Amazon Associates (abdumalikh-20) periode Sep 19 2026 - Oct 18 2026 menghasilkan 49 klik dari trafik Pinterest US, 1 item terjual (2.04% Conversion Rate), GMV $35.99, dan komisi $1.08 (Rp 17.604)."
+    }
+  ],
 
   // 4c. Planning Expense & Budget Limit
   monthlyBudgetLimit: 2500000,

@@ -70,6 +70,37 @@ Kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backtick
 }
 `;
 
+export const GEMINI_AMAZON_ASSOCIATES_PROMPT = `
+Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Amazon Associates (Amazon Affiliate US / Global) dari screenshot dashboard.
+Bacalah seluruh teks dan angka pada gambar screenshot Amazon Associates yang diberikan, termasuk:
+- Store ID / Tracking ID (contoh: "abdumalikh-20") dan Negara (contoh: "US")
+- Rentang Tanggal Laporan (contoh: "Sep 19 2026 - Oct 18 2026")
+- Summary for This Period: Shipped Items, Total Earnings ($), Total Ordered Items, Clicks, Conversion (%)
+- Fee Summary / Earnings Overview: Shipped Items Revenue ($), Total Revenue ($), Ordered Revenue ($), Bounties ($), Bonus ($), Returned Items.
+
+Kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
+{
+  "storeId": "string (Store ID Amazon Associates, contoh: 'abdumalikh-20')",
+  "country": "string (Negara program affiliate, contoh: 'US')",
+  "dateRange": "string (Rentang tanggal persis di screenshot, contoh: 'Sep 19 2026 - Oct 18 2026')",
+  "periodStart": "string (Tanggal mulai format YYYY-MM-DD, contoh: '2026-09-19')",
+  "periodEnd": "string (Tanggal akhir format YYYY-MM-DD, contoh: '2026-10-18')",
+  "clicks": number (Total Clicks angka bulat, contoh: 49),
+  "orderedItems": number (Total Ordered Items angka bulat, contoh: 1),
+  "shippedItems": number (Total Shipped Items angka bulat, contoh: 1),
+  "returnedItems": number (Total Returned Items angka bulat, contoh: 0),
+  "conversionRate": number (Conversion dalam persen desimal tanpa '%', contoh: 2.04),
+  "orderedRevenueUsd": number (Ordered Revenue dalam USD desimal tanpa '$', contoh: 35.99),
+  "shippedRevenueUsd": number (Shipped Items Revenue dalam USD desimal tanpa '$', contoh: 35.99),
+  "totalRevenueUsd": number (Total Revenue / GMV dalam USD desimal tanpa '$', contoh: 35.99),
+  "bountiesUsd": number (Bounties dalam USD desimal, contoh: 0),
+  "bonusUsd": number (Bonus dalam USD desimal, contoh: 0),
+  "totalEarningsUsd": number (Total Earnings / Komisi Affiliate dalam USD desimal tanpa '$', contoh: 1.08),
+  "aiSummary": "string (Ringkasan singkat performa Amazon Associates via Pinterest US)"
+}
+`;
+
+
 const MONTH_MAP = {
   jan: '01', januari: '01',
   feb: '02', februari: '02',
@@ -249,7 +280,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Mohon kirimkan setidaknya satu gambar screenshot.' });
   }
 
-  const promptToUse = mode === 'commission_report' ? GEMINI_COMMISSION_REPORT_PROMPT : GEMINI_PROMPT;
+  const promptToUse = mode === 'commission_report'
+    ? GEMINI_COMMISSION_REPORT_PROMPT
+    : mode === 'amazon_associates'
+    ? GEMINI_AMAZON_ASSOCIATES_PROMPT
+    : GEMINI_PROMPT;
 
   const imageParts = images.map((base64) => ({
     inline_data: {
@@ -298,6 +333,49 @@ export default async function handler(req, res) {
         if (text) {
           const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(cleanJson);
+
+          if (mode === 'amazon_associates') {
+            const todayISO = new Date().toISOString().split('T')[0];
+            const periodEnd = parsed.periodEnd || todayISO;
+            const periodStart = parsed.periodStart || periodEnd;
+            const storeId = (parsed.storeId || 'abdumalikh-20').trim();
+            const dateRange = (parsed.dateRange || `${periodStart} - ${periodEnd}`).trim();
+            const totalEarningsUsd = Number(parsed.totalEarningsUsd) || 0;
+            const orderedRevenueUsd = Number(parsed.orderedRevenueUsd || parsed.totalRevenueUsd) || 0;
+            const totalRevenueUsd = Number(parsed.totalRevenueUsd || parsed.orderedRevenueUsd) || 0;
+            const clicks = Number(parsed.clicks) || 0;
+            const orderedItems = Number(parsed.orderedItems) || 0;
+            const shippedItems = Number(parsed.shippedItems) || 0;
+            const returnedItems = Number(parsed.returnedItems) || 0;
+            const conversionRate = Number(parsed.conversionRate) || (clicks > 0 ? Number(((orderedItems / clicks) * 100).toFixed(2)) : 0);
+            const defaultExchangeRate = 16300;
+            const earningsIdr = Math.round(totalEarningsUsd * defaultExchangeRate);
+
+            return res.status(200).json({
+              id: `amz_${periodEnd.replace(/[^0-9]/g, '_')}`,
+              storeId,
+              country: parsed.country || 'US',
+              dateRange,
+              periodStart,
+              periodEnd,
+              date: periodEnd,
+              clicks,
+              orderedItems,
+              shippedItems,
+              returnedItems,
+              conversionRate,
+              orderedRevenueUsd,
+              shippedRevenueUsd: Number(parsed.shippedRevenueUsd ?? totalRevenueUsd) || 0,
+              totalRevenueUsd,
+              bountiesUsd: Number(parsed.bountiesUsd) || 0,
+              bonusUsd: Number(parsed.bonusUsd) || 0,
+              totalEarningsUsd,
+              exchangeRate: defaultExchangeRate,
+              earningsIdr,
+              trafficChannel: 'Pinterest US (@productijustfound)',
+              aiSummary: parsed.aiSummary || `Amazon Associates (${storeId}) periode ${dateRange} menghasilkan ${clicks} klik, ${orderedItems} pesanan (${conversionRate}% CR), GMV $${totalRevenueUsd.toFixed(2)}, dan komisi $${totalEarningsUsd.toFixed(2)}.`
+            });
+          }
 
           if (mode === 'commission_report') {
             const currentYear = new Date().getFullYear();

@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
-import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots, analyzeShopeeCommissionReport } from './services/geminiService';
+import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots, analyzeShopeeCommissionReport, analyzeAmazonAssociatesScreenshot } from './services/geminiService';
 import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage, saveStudioDataToFirestore, loadStudioDataFromFirestore, subscribeToStudioData, isFirebaseConfigured } from './services/firebaseService';
 import { isSupabaseConfigured, loadStudioDataFromSupabase, saveStudioDataToSupabase, subscribeToStudioDataSupabase, uploadScreenshotToSupabase, saveSessionToSupabase } from './services/supabaseService';
 import { remoteLog } from './services/remoteLogger';
@@ -345,6 +345,31 @@ export function allocateBatchCommissionsToSessions(sessions, otherIncomeList) {
   return updated;
 }
 
+export function ensureAmazonAssociatesSynced(data) {
+  if (!data) return data;
+  const defaultReport = INITIAL_STUDIO_DATA.amazonAssociatesReports?.[0];
+  const defaultIncome = INITIAL_STUDIO_DATA.otherIncomeList?.[0];
+
+  let reports = Array.isArray(data.amazonAssociatesReports) ? [...data.amazonAssociatesReports] : [];
+  if (reports.length === 0 && defaultReport) {
+    reports = [defaultReport];
+  }
+
+  let incomeList = Array.isArray(data.otherIncomeList) ? [...data.otherIncomeList] : [];
+  const hasAmazonIncome = incomeList.some(
+    i => i && (i.category === 'Amazon Associates (Pinterest US)' || i.id === 'comm_amz_2026_10_18')
+  );
+  if (!hasAmazonIncome && defaultIncome) {
+    incomeList = [defaultIncome, ...incomeList];
+  }
+
+  return {
+    ...data,
+    amazonAssociatesReports: reports,
+    otherIncomeList: incomeList
+  };
+}
+
 export default function App() {
   // URL-based View Mode State ('public' at '/' vs 'admin' at '/admin')
   const [viewMode, setViewModeState] = useState(() => {
@@ -436,10 +461,11 @@ export default function App() {
     if (saved) {
       try { rawData = JSON.parse(saved); } catch (e) {}
     }
+    const syncedData = ensureAmazonAssociatesSynced(rawData);
     return {
-      ...rawData,
-      shopeeSessions: allocateBatchCommissionsToSessions(rawData.shopeeSessions, rawData.otherIncomeList),
-      shopeeVideoSessions: deduplicateSessions(rawData.shopeeVideoSessions)
+      ...syncedData,
+      shopeeSessions: allocateBatchCommissionsToSessions(syncedData.shopeeSessions, syncedData.otherIncomeList),
+      shopeeVideoSessions: deduplicateSessions(syncedData.shopeeVideoSessions)
     };
   });
   
@@ -453,7 +479,7 @@ export default function App() {
   const isInitialLoad = useRef(true);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'scan_video' | 'scan_commission' | 'finance' | 'project' | 'schedule' | 'editSession' | 'editVideoSession' | 'addAdmin' | 'editAdmin'
+  const [modalType, setModalType] = useState(null); // 'scan' | 'scan_video' | 'scan_commission' | 'scan_amazon' | 'finance' | 'project' | 'schedule' | 'editSession' | 'editVideoSession' | 'addAdmin' | 'editAdmin'
   const [editingSession, setEditingSession] = useState(null);
   const [editingVideoSession, setEditingVideoSession] = useState(null);
   const [editingAdminUser, setEditingAdminUser] = useState(null);
@@ -471,6 +497,12 @@ export default function App() {
   const [commissionPreviewUrl1, setCommissionPreviewUrl1] = useState(null);
   const [commissionPreviewUrl2, setCommissionPreviewUrl2] = useState(null);
   const [scannedCommissionReport, setScannedCommissionReport] = useState(null);
+
+  // Amazon Associates AI Scanner State
+  const [amazonFileSlot, setAmazonFileSlot] = useState(null);
+  const [amazonPreviewUrl, setAmazonPreviewUrl] = useState(null);
+  const [scannedAmazonReport, setScannedAmazonReport] = useState(null);
+  const [amazonExchangeRate, setAmazonExchangeRate] = useState(16300);
 
   // Admin User Form State
   const [newAdminUsername, setNewAdminUsername] = useState("");
@@ -611,19 +643,20 @@ export default function App() {
             );
             const mergedVideoSessions = deduplicateSessions([...(prev.shopeeVideoSessions || []), ...(cloudData.shopeeVideoSessions || [])]);
             
-            const mergedData = {
+            const mergedData = ensureAmazonAssociatesSynced({
               ...prev,
               ...cloudData,
               shopeeSessions: mergedSessions,
               shopeeVideoSessions: mergedVideoSessions,
               otherIncomeList: mergedOtherIncome,
+              amazonAssociatesReports: (cloudData.amazonAssociatesReports && cloudData.amazonAssociatesReports.length > 0) ? cloudData.amazonAssociatesReports : (prev.amazonAssociatesReports || []),
               clientProjects: (cloudData.clientProjects && cloudData.clientProjects.length > 0) ? cloudData.clientProjects : (prev.clientProjects || []),
               liveSchedules: (cloudData.liveSchedules && cloudData.liveSchedules.length > 0) ? cloudData.liveSchedules : (prev.liveSchedules || []),
               capexList: (cloudData.capexList && cloudData.capexList.length > 0) ? cloudData.capexList : (prev.capexList || []),
               opexList: (cloudData.opexList && cloudData.opexList.length > 0) ? cloudData.opexList : (prev.opexList || []),
               personalList: (cloudData.personalList && cloudData.personalList.length > 0) ? cloudData.personalList : (prev.personalList || []),
               adminUsers: (cloudData.adminUsers && cloudData.adminUsers.length > 0) ? cloudData.adminUsers : (prev.adminUsers || []),
-            };
+            });
 
             // If local state had more sessions than cloud, or sessions were normalized, push merged state back to cloud immediately
             if (
@@ -664,7 +697,7 @@ export default function App() {
         isRemoteUpdate.current = true;
         setStudioData(prev => {
           const nextOtherIncome = remoteData.otherIncomeList || prev.otherIncomeList || [];
-          return {
+          return ensureAmazonAssociatesSynced({
             ...prev,
             ...remoteData,
             shopeeSessions: allocateBatchCommissionsToSessions(
@@ -673,13 +706,14 @@ export default function App() {
             ),
             shopeeVideoSessions: deduplicateSessions([...(prev.shopeeVideoSessions || []), ...(remoteData.shopeeVideoSessions || [])]),
             otherIncomeList: nextOtherIncome,
+            amazonAssociatesReports: remoteData.amazonAssociatesReports || prev.amazonAssociatesReports || [],
             clientProjects: remoteData.clientProjects || prev.clientProjects || [],
             liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
             capexList: remoteData.capexList || prev.capexList || [],
             opexList: remoteData.opexList || prev.opexList || [],
             personalList: remoteData.personalList || prev.personalList || [],
             adminUsers: remoteData.adminUsers || prev.adminUsers || [],
-          };
+          });
         });
         setCloudSyncStatus('synced');
       });
@@ -884,6 +918,7 @@ export default function App() {
   const allProjects = studioData.clientProjects || [];
   const adminUsers = studioData.adminUsers || INITIAL_STUDIO_DATA.adminUsers;
   const allPinterestReports = studioData.pinterestAnalytics || INITIAL_STUDIO_DATA.pinterestAnalytics;
+  const allAmazonReports = studioData.amazonAssociatesReports || INITIAL_STUDIO_DATA.amazonAssociatesReports || [];
 
   // Helper to render pagination controls
   const renderPaginationControls = (currentPage, setCurrentPage, totalItems, pageSize = 10) => {
@@ -966,6 +1001,7 @@ export default function App() {
 
   const projects = allProjects; // Projects don't have date field yet
   const pinterestReports = allPinterestReports;
+  const amazonReports = allAmazonReports;
 
   const [pinterestSubTab, setPinterestSubTab] = useState('overview'); // 'overview' | 'audience' | 'files'
 
@@ -1097,20 +1133,28 @@ export default function App() {
   const totalVideoRev = videoSessions.reduce((acc, v) => acc + (v.revenue || 0), 0);
   const totalGrossVideoCommission = videoSessions.reduce((acc, v) => acc + (v.grossCommission || 0), 0);
 
+  // Amazon Associates (Pinterest US Affiliate Channel)
+  const amazonIncomeItems = otherIncomeList.filter(i => i.category === 'Amazon Associates (Pinterest US)');
+  const totalAmazonCommission = amazonIncomeItems.reduce((acc, i) => acc + (Number(i.amount) || 0), 0);
+  const totalAmazonEarningsUsd = amazonIncomeItems.reduce((acc, i) => acc + (Number(i.amountUsd) || 0), 0) || amazonReports.reduce((acc, r) => acc + (Number(r.totalEarningsUsd) || 0), 0);
+  const totalAmazonGmvUsd = amazonIncomeItems.reduce((acc, i) => acc + (Number(i.orderedRevenueUsd) || 0), 0) || amazonReports.reduce((acc, r) => acc + (Number(r.orderedRevenueUsd) || 0), 0);
+  const totalAmazonClicks = amazonIncomeItems.reduce((acc, i) => acc + (Number(i.clicks) || 0), 0) || amazonReports.reduce((acc, r) => acc + (Number(r.clicks) || 0), 0);
+  const totalAmazonOrderedItems = amazonIncomeItems.reduce((acc, i) => acc + (Number(i.orderedItems) || 0), 0) || amazonReports.reduce((acc, r) => acc + (Number(r.orderedItems) || 0), 0);
+
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
   const totalBonusIncome = otherIncomeList
-    .filter(i => i.category !== 'Komisi ShopeeFood')
+    .filter(i => i.category !== 'Komisi ShopeeFood' && i.category !== 'Amazon Associates (Pinterest US)')
     .reduce((acc, i) => acc + (i.amount || 0), 0);
   const totalOtherIncome = otherIncomeList.reduce((acc, i) => acc + (i.amount || 0), 0);
 
   // Total GMV / Transaction Volume (Shopee Live + Shopee Video)
   const totalCombinedGMV = totalShopeeRev + totalVideoRev;
 
-  // Actual Studio Gross Revenue (Live Comm + ShopeeFood Comm + Video Comm + Project Income + Bonus)
-  const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalProjectRev + totalBonusIncome;
+  // Actual Studio Gross Revenue (Live Comm + ShopeeFood Comm + Video Comm + Amazon Associates + Project Income + Bonus)
+  const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalAmazonCommission + totalProjectRev + totalBonusIncome;
 
   // Cash Revenue Only (Excludes Non-Cash Project Barter/Goods Value)
-  const totalCashRevenue = totalGrossCommission + totalGrossVideoCommission + totalBonusIncome;
+  const totalCashRevenue = totalGrossCommission + totalGrossVideoCommission + totalAmazonCommission + totalBonusIncome;
 
   // Expenses
   const totalCapex = capexList.reduce((acc, c) => acc + (c.amount || 0), 0);
@@ -1371,6 +1415,138 @@ export default function App() {
     setModalType(null);
 
     showToast(`${validItems.length} Batch Rincian Komisi berhasil masuk Keuangan & disinkronkan ke Sesi Live!`);
+  };
+
+  // Amazon Associates (Pinterest US) AI Scanner Handlers
+  const handleAmazonFileSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAmazonFileSlot(file);
+    setAmazonPreviewUrl(URL.createObjectURL(file));
+  };
+
+  const handleAnalyzeAmazonReport = async () => {
+    if (!amazonFileSlot) {
+      showToast('Mohon pilih screenshot dashboard Amazon Associates terlebih dahulu!', 'error');
+      return;
+    }
+
+    setScanning(true);
+    remoteLog.info('AI Scan started (Amazon Associates)', { fileName: amazonFileSlot.name });
+
+    try {
+      const result = await analyzeAmazonAssociatesScreenshot([amazonFileSlot]);
+      const rate = Number(amazonExchangeRate) || 16300;
+      const earningsUsd = Number(result.totalEarningsUsd) || 0;
+      setScannedAmazonReport({
+        ...result,
+        exchangeRate: rate,
+        earningsIdr: Math.round(earningsUsd * rate)
+      });
+      remoteLog.info('AI Scan success (Amazon Associates)', { earningsUsd, clicks: result.clicks });
+    } catch (err) {
+      showToast('Gagal membaca screenshot Amazon Associates: ' + err.message, 'error');
+      remoteLog.error('AI Scan failed (Amazon Associates)', { error: err.message });
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleSaveAmazonReport = () => {
+    if (!scannedAmazonReport) return;
+
+    const rate = Number(scannedAmazonReport.exchangeRate || amazonExchangeRate) || 16300;
+    const earningsUsd = Number(scannedAmazonReport.totalEarningsUsd) || 0;
+    const orderedRevenueUsd = Number(scannedAmazonReport.orderedRevenueUsd || scannedAmazonReport.totalRevenueUsd) || 0;
+    const amountIdr = Math.round(earningsUsd * rate);
+    const periodEnd = scannedAmazonReport.periodEnd || scannedAmazonReport.date || new Date().toISOString().split('T')[0];
+    const periodStart = scannedAmazonReport.periodStart || periodEnd;
+    const storeId = (scannedAmazonReport.storeId || 'abdumalikh-20').trim();
+    const dateRange = (scannedAmazonReport.dateRange || `${periodStart} - ${periodEnd}`).trim();
+    const cleanPeriodSlug = periodEnd.replace(/[^0-9]/g, '_');
+
+    const reportEntry = {
+      ...scannedAmazonReport,
+      id: scannedAmazonReport.id || `amz_${cleanPeriodSlug}`,
+      storeId,
+      dateRange,
+      periodStart,
+      periodEnd,
+      date: periodEnd,
+      clicks: Number(scannedAmazonReport.clicks) || 0,
+      orderedItems: Number(scannedAmazonReport.orderedItems) || 0,
+      shippedItems: Number(scannedAmazonReport.shippedItems) || 0,
+      returnedItems: Number(scannedAmazonReport.returnedItems) || 0,
+      conversionRate: Number(scannedAmazonReport.conversionRate) || 0,
+      orderedRevenueUsd,
+      totalRevenueUsd: Number(scannedAmazonReport.totalRevenueUsd || orderedRevenueUsd) || 0,
+      totalEarningsUsd: earningsUsd,
+      exchangeRate: rate,
+      earningsIdr: amountIdr,
+      trafficChannel: 'Pinterest US (@productijustfound)'
+    };
+
+    const incomeEntry = {
+      id: `comm_${reportEntry.id}`,
+      name: `Amazon Associates US (${storeId}) • ${dateRange} ($${earningsUsd.toFixed(2)})`,
+      category: 'Amazon Associates (Pinterest US)',
+      type: 'amazon_associates',
+      amount: amountIdr,
+      amountUsd: earningsUsd,
+      orderedRevenueUsd,
+      exchangeRate: rate,
+      clicks: reportEntry.clicks,
+      orderedItems: reportEntry.orderedItems,
+      shippedItems: reportEntry.shippedItems,
+      conversionRate: reportEntry.conversionRate,
+      storeId,
+      periodStart,
+      periodEnd,
+      date: periodEnd,
+      frequency: 'Periode Affiliate'
+    };
+
+    setStudioData(prev => {
+      const existingReports = [...(prev.amazonAssociatesReports || [])];
+      const repIdx = existingReports.findIndex(r => r.id === reportEntry.id || r.dateRange === reportEntry.dateRange);
+      if (repIdx >= 0) {
+        existingReports[repIdx] = { ...existingReports[repIdx], ...reportEntry };
+      } else {
+        existingReports.unshift(reportEntry);
+      }
+
+      const existingIncome = [...(prev.otherIncomeList || [])];
+      const incIdx = existingIncome.findIndex(
+        i => i.id === incomeEntry.id || (i.category === 'Amazon Associates (Pinterest US)' && i.periodStart === periodStart && i.periodEnd === periodEnd)
+      );
+      if (incIdx >= 0) {
+        existingIncome[incIdx] = { ...existingIncome[incIdx], ...incomeEntry };
+      } else {
+        existingIncome.unshift(incomeEntry);
+      }
+
+      return {
+        ...prev,
+        amazonAssociatesReports: existingReports,
+        otherIncomeList: existingIncome
+      };
+    });
+
+    setScannedAmazonReport(null);
+    setAmazonFileSlot(null);
+    setAmazonPreviewUrl(null);
+    setModalType(null);
+    showToast(`Laporan Amazon Associates ($${earningsUsd.toFixed(2)} = Rp ${amountIdr.toLocaleString('id-ID')}) berhasil masuk Keuangan & Pinterest Analytics!`);
+  };
+
+  const handleDeleteAmazonReport = (reportId) => {
+    if (!confirm('Hapus laporan periode Amazon Associates ini dari Pinterest Analytics & Keuangan?')) return;
+    setStudioData(prev => ({
+      ...prev,
+      amazonAssociatesReports: (prev.amazonAssociatesReports || []).filter(r => r.id !== reportId),
+      otherIncomeList: (prev.otherIncomeList || []).filter(i => i.id !== `comm_${reportId}` && i.id !== reportId)
+    }));
+    showToast('Laporan Amazon Associates dihapus.');
   };
 
   // Shopee Video Analysis
@@ -1995,6 +2171,8 @@ export default function App() {
       regularLiveCommission: regularLiveComm,
       shopeeFoodCommission: totalShopeeFoodCommission,
       videoCommission: totalGrossVideoCommission,
+      amazonCommission: totalAmazonCommission,
+      amazonEarningsUsd: totalAmazonEarningsUsd,
       bonusIncome: totalBonusIncome,
       opex: totalOpex,
       capex: totalCapex,
@@ -2014,6 +2192,7 @@ Total Cash Revenue Studio: Rp ${snapshot.grossRevenue.toLocaleString('id-ID')}
 - Komisi ShopeeFood Live ([ADD]): Rp ${snapshot.shopeeFoodCommission.toLocaleString('id-ID')} (${shopeeFoodSessionsCount} sesi, GMV Rp ${shopeeFoodGMV.toLocaleString('id-ID')})
 - Komisi Shopee Live Regular: Rp ${snapshot.regularLiveCommission.toLocaleString('id-ID')} (${regularLiveSessionsCount} sesi)
 - Komisi Shopee Video: Rp ${snapshot.videoCommission.toLocaleString('id-ID')}
+- Amazon Associates (Pinterest US Affiliate): Rp ${snapshot.amazonCommission.toLocaleString('id-ID')} ($${snapshot.amazonEarningsUsd.toFixed(2)} USD dari ${totalAmazonClicks} klik & ${totalAmazonOrderedItems} pesanan)
 - Bonus & Kejar Komisi ([ADD]): Rp ${snapshot.bonusIncome.toLocaleString('id-ID')}
 OPEX (Biaya Operasional): Rp ${snapshot.opex.toLocaleString('id-ID')}
 CAPEX (Investasi Aset Studio): Rp ${snapshot.capex.toLocaleString('id-ID')}
@@ -2704,6 +2883,10 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   <Receipt style={{ width: 14, height: 14 }} />
                   <span className="btn-label">Scan AI Rincian Komisi</span>
                 </button>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center', flexShrink: 0, borderColor: 'rgba(255, 153, 0, 0.45)', color: '#D97706', background: 'rgba(255, 153, 0, 0.1)' }} onClick={() => { setAmazonFileSlot(null); setAmazonPreviewUrl(null); setScannedAmazonReport(null); setModalType('scan_amazon'); }}>
+                  <Globe style={{ width: 14, height: 14 }} />
+                  <span className="btn-label">Scan AI Amazon ($)</span>
+                </button>
                 <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} onClick={handleExportFinanceToExcel}>
                   <FileText style={{ width: 14, height: 14, color: '#059669' }} />
                   <span className="btn-label">Ekspor Excel</span>
@@ -2813,11 +2996,17 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
             )}
 
             {activeTab === 'tabPinterest' && (
-              <label className="btn btn-primary" style={{ cursor: 'pointer', margin: 0 }}>
-                <PlusCircle style={{ width: 15, height: 15 }} />
-                <span className="btn-label">Upload CSV Pinterest</span>
-                <input type="file" accept=".csv, .txt" onChange={handlePinterestCsvUpload} style={{ display: 'none' }} />
-              </label>
+              <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center', borderColor: 'rgba(255, 153, 0, 0.45)', color: '#D97706', background: 'rgba(255, 153, 0, 0.1)' }} onClick={() => { setAmazonFileSlot(null); setAmazonPreviewUrl(null); setScannedAmazonReport(null); setModalType('scan_amazon'); }}>
+                  <Sparkles style={{ width: 14, height: 14 }} />
+                  <span className="btn-label">Scan AI Amazon Associates ($)</span>
+                </button>
+                <label className="btn btn-primary" style={{ cursor: 'pointer', margin: 0 }}>
+                  <PlusCircle style={{ width: 15, height: 15 }} />
+                  <span className="btn-label">Upload CSV Pinterest</span>
+                  <input type="file" accept=".csv, .txt" onChange={handlePinterestCsvUpload} style={{ display: 'none' }} />
+                </label>
+              </div>
             )}
 
             {activeTab === 'tabProjects' && (
@@ -3034,6 +3223,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
           const regularLivePct = totalCashRevenue > 0 ? (regularLiveComm / totalCashRevenue) * 100 : 0;
           const livePct = shopeeFoodPct + regularLivePct;
           const videoPct = totalCashRevenue > 0 ? (totalGrossVideoCommission / totalCashRevenue) * 100 : 0;
+          const amazonPct = totalCashRevenue > 0 ? (totalAmazonCommission / totalCashRevenue) * 100 : 0;
           const otherPct = totalCashRevenue > 0 ? (totalBonusIncome / totalCashRevenue) * 100 : 0;
 
           // AI Cache Check (48h Cooldown)
@@ -3057,10 +3247,10 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
               ? "Operations are profitable, but Free Cash Flow is negative due to high capital expenditures (CAPEX) exceeding operating income."
               : opProfit < 0
               ? "Operating expenses exceed cash revenue. Immediate focus should be on achieving operating break-even before further investment."
-              : "Business operations are healthy with positive Free Cash Flow, driven by ShopeeFood Live & Shopee Live Commerce.",
+              : "Business operations are healthy with positive Free Cash Flow, driven by ShopeeFood Live, Shopee Live, & Amazon Associates (Pinterest US).",
             goingWell: livePct > 50
-              ? `Operating margin is healthy at ${opMargin.toFixed(1)}%, powered by ShopeeFood Live (${shopeeFoodPct.toFixed(1)}%) & Shopee Live Regular (${regularLivePct.toFixed(1)}%).`
-              : "Revenue is diversified across ShopeeFood Live, Shopee Live, and Video, supporting stable operating profit.",
+              ? `Operating margin is healthy at ${opMargin.toFixed(1)}%, powered by ShopeeFood Live (${shopeeFoodPct.toFixed(1)}%), Shopee Live Regular (${regularLivePct.toFixed(1)}%), and Amazon Associates US ($${totalAmazonEarningsUsd.toFixed(2)}).`
+              : "Revenue is diversified across ShopeeFood Live, Shopee Live, Video, and Amazon Associates US, supporting stable operating profit.",
             biggestRisk: freeCashFlow < 0
               ? "Aggressive reinvestment is placing short-term pressure on studio liquidity."
               : totalOpex > totalCashRevenue
@@ -3068,8 +3258,8 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
               : "Over-reliance on a single live channel could expose the studio to algorithm or commission batch changes.",
             nextDecision: freeCashFlow < 0
               ? "Pause non-essential CAPEX and focus on high-GMV ShopeeFood Live peak meal hours to generate positive Free Cash Flow."
-              : "Maintain healthy margins on ShopeeFood Live & Regular Live, and allocate excess Free Cash Flow strategically.",
-            metricToWatch: freeCashFlow < 0 ? "Free Cash Flow" : "Operating Profit Margin & ShopeeFood Live Share"
+              : "Maintain healthy margins on ShopeeFood Live & Regular Live, and scale US Pinterest Pin output to grow USD Amazon Associates revenue.",
+            metricToWatch: freeCashFlow < 0 ? "Free Cash Flow" : "Operating Profit Margin, ShopeeFood Live & Amazon US Conversion"
           };
 
           const parsedAi = aiData.parsedSections || {};
@@ -3099,7 +3289,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     Rp {totalCashRevenue.toLocaleString('id-ID')}
                   </div>
                   <div style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 500 }}>
-                    ShopeeFood Live + Regular Live + Video + Bonus
+                    ShopeeFood + Live + Video + Amazon US + Bonus
                   </div>
                 </div>
 
@@ -3186,6 +3376,11 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                         {totalGrossVideoCommission > 0 && (
                           <span style={{ background: 'var(--bg-input)', padding: '2px 8px', borderRadius: 999, fontWeight: 600 }}>
                             Video: Rp {totalGrossVideoCommission.toLocaleString('id-ID')}
+                          </span>
+                        )}
+                        {totalAmazonCommission > 0 && (
+                          <span style={{ background: 'rgba(255, 153, 0, 0.12)', color: '#D97706', padding: '2px 8px', borderRadius: 999, fontWeight: 700 }}>
+                            🌎 Amazon US: Rp {totalAmazonCommission.toLocaleString('id-ID')} (${totalAmazonEarningsUsd.toFixed(2)})
                           </span>
                         )}
                         {totalBonusIncome > 0 && (
@@ -3322,10 +3517,11 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     <div style={{ width: `${shopeeFoodPct}%`, background: '#EE4D2D' }} title="ShopeeFood Live" />
                     <div style={{ width: `${regularLivePct}%`, background: '#082F26' }} title="Shopee Live Regular" />
                     <div style={{ width: `${videoPct}%`, background: '#B88E39' }} title="Shopee Video" />
+                    <div style={{ width: `${amazonPct}%`, background: '#D97706' }} title="Amazon Associates (Pinterest US)" />
                     <div style={{ width: `${otherPct}%`, background: '#10B981' }} title="Bonus / Other" />
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', fontSize: '0.8rem' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', fontSize: '0.8rem' }}>
                     <div style={{ padding: '10px 12px', background: 'rgba(238, 77, 45, 0.06)', border: '1px solid rgba(238, 77, 45, 0.2)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#EE4D2D', fontWeight: 700 }}>
                         <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#EE4D2D' }} /> 🍔 ShopeeFood Live
@@ -3347,9 +3543,16 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                       <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{videoPct.toFixed(1)}%</strong>
                     </div>
 
-                    <div style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ padding: '10px 12px', background: 'rgba(255, 153, 0, 0.08)', border: '1px solid rgba(255, 153, 0, 0.25)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#D97706', fontWeight: 700 }}>
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#D97706' }} /> 🌎 Amazon US ($)
+                      </span>
+                      <strong style={{ color: '#D97706', fontSize: '0.9rem' }}>{amazonPct.toFixed(1)}%</strong>
+                    </div>
+
+                    <div style={{ padding: '10px 12px', background: 'var(--bg-input)', borderRadius: 10, display: 'flex', justifyContent: 'space-between', alignItems: 'center', gridColumn: '1 / -1' }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: 8, color: 'var(--text-dim)' }}>
-                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10B981' }} /> Bonus / Other
+                        <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#10B981' }} /> Bonus &amp; Kejar Komisi ([ADD])
                       </span>
                       <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{otherPct.toFixed(1)}%</strong>
                     </div>
@@ -4165,7 +4368,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     </div>
                     <div className="kpi-title">Pendapatan Kotor Studio</div>
                     <div className="kpi-value text-success">Rp {totalStudioGrossRevenue.toLocaleString('id-ID')}</div>
-                    <div className="kpi-subtext">Live (10%) + Video (10%) + Proyek (Barang)</div>
+                    <div className="kpi-subtext">Live + ShopeeFood + Video + Amazon US + Proyek</div>
                   </div>
 
                   <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
@@ -4269,6 +4472,31 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                           </div>
                           <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
                             <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalGrossVideoCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
+                          </div>
+                        </div>
+                        <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(255, 153, 0, 0.35)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem', marginBottom: 4 }}>
+                            <span style={{ fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 6, color: 'var(--text-main)' }}>
+                              🌎 Amazon Associates (Pinterest US)
+                              <button
+                                type="button"
+                                onClick={() => setActiveTab('tabPinterest')}
+                                style={{ background: 'rgba(230,0,35,0.1)', color: '#E60023', border: '1px solid rgba(230,0,35,0.25)', borderRadius: 999, padding: '1px 7px', fontSize: '0.65rem', fontWeight: 700, cursor: 'pointer' }}
+                                title="Buka Funnel Pinterest Analytics -> Amazon Associates"
+                              >
+                                @productijustfound ↗
+                              </button>
+                            </span>
+                            <strong style={{ color: '#D97706' }}>
+                              Rp {totalAmazonCommission.toLocaleString('id-ID')} <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 600 }}>(${totalAmazonEarningsUsd.toFixed(2)})</span>
+                            </strong>
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Store: abdumalikh-20 • {totalAmazonClicks} Klik • {totalAmazonOrderedItems} Order (GMV ${totalAmazonGmvUsd.toFixed(2)})</span>
+                            <span>{totalStudioGrossRevenue > 0 ? ((totalAmazonCommission / totalStudioGrossRevenue) * 100).toFixed(1) : 0}% share</span>
+                          </div>
+                          <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                            <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalAmazonCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#D97706', borderRadius: 2 }} />
                           </div>
                         </div>
                         <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
@@ -4915,18 +5143,31 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   <Compass style={{ width: 26, height: 26 }} />
                 </div>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: 800 }}>Pinterest US Affiliate Channel</h3>
                     <span className="brand-badge" style={{ background: 'rgba(230,0,35,0.1)', color: '#E60023', border: '1px solid rgba(230,0,35,0.2)' }}>@productijustfound</span>
+                    <span className="brand-badge" style={{ background: 'rgba(255,153,0,0.12)', color: '#D97706', border: '1px solid rgba(255,153,0,0.3)' }}>Amazon StoreID: abdumalikh-20</span>
                   </div>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: 2 }}>
-                    Kanal kurasi produk viral & media afiliasi Amazon (US Market) • Periode Laporan: {pinterestReports.length > 0 ? pinterestReports[0].dateRange : "Jul 2026"}
+                    Kanal kurasi produk viral &amp; media afiliasi Amazon Associates (US Market) • Periode Pinterest: {pinterestReports.length > 0 ? pinterestReports[0].dateRange : "Jul 2026"}
                   </p>
                 </div>
               </div>
 
-              <div>
-                <label className="btn btn-primary" style={{ cursor: 'pointer', gap: 8, margin: 0, padding: '10px 20px', fontSize: '0.875rem' }}>
+              <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                <button
+                  className="btn"
+                  style={{ background: 'linear-gradient(135deg, #FF9900, #E47911)', color: '#fff', border: 'none', boxShadow: '0 4px 12px rgba(255, 153, 0, 0.25)', padding: '10px 18px', fontSize: '0.85rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}
+                  onClick={() => {
+                    setAmazonFileSlot(null);
+                    setAmazonPreviewUrl(null);
+                    setScannedAmazonReport(null);
+                    setModalType('scan_amazon');
+                  }}
+                >
+                  <Sparkles style={{ width: 16, height: 16 }} /> Scan AI Amazon Associates ($)
+                </button>
+                <label className="btn btn-primary" style={{ cursor: 'pointer', gap: 8, margin: 0, padding: '10px 18px', fontSize: '0.85rem' }}>
                   <PlusCircle style={{ width: 16, height: 16 }} />
                   <span>Upload Data Pinterest (CSV / Excel)</span>
                   <input type="file" accept=".csv, .txt" onChange={(e) => handlePinterestCsvUpload(e)} style={{ display: 'none' }} />
@@ -4936,7 +5177,9 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
             {pinterestReports.length > 0 ? (
               <div>
-                {pinterestReports.slice(0, 1).map(report => (
+                {pinterestReports.slice(0, 1).map(report => {
+                  const syncedOutboundClicks = Math.max(report.outboundClicks || 0, totalAmazonClicks);
+                  return (
                   <div key={report.id}>
                     
                     {/* 6 EXECUTIVE PINTEREST KPI CARDS */}
@@ -4956,16 +5199,16 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                         </div>
                         <div className="kpi-title">Engagements</div>
                         <div className="kpi-value text-success">{(report.engagements || 0).toLocaleString('id-ID')}</div>
-                        <div className="kpi-subtext">Klik Pin, Simpan & Interaksi</div>
+                        <div className="kpi-subtext">Klik Pin, Simpan &amp; Interaksi</div>
                       </div>
 
-                      <div className="glass-card kpi-card" style={{ '--kpi-accent': '#B88E39' }}>
-                        <div className="kpi-icon" style={{ background: 'rgba(184,142,57,0.1)', color: '#B88E39' }}>
+                      <div className="glass-card kpi-card" style={{ '--kpi-accent': '#FF9900' }}>
+                        <div className="kpi-icon" style={{ background: 'rgba(255,153,0,0.12)', color: '#D97706' }}>
                           <ExternalLink style={{ width: 18, height: 18 }} />
                         </div>
-                        <div className="kpi-title">Outbound Clicks</div>
-                        <div className="kpi-value text-warning">{(report.outboundClicks || 0).toLocaleString('id-ID')}</div>
-                        <div className="kpi-subtext">Traffic Klik ke Link Amazon</div>
+                        <div className="kpi-title">Outbound / Amazon Clicks</div>
+                        <div className="kpi-value" style={{ color: '#D97706' }}>{syncedOutboundClicks.toLocaleString('id-ID')}</div>
+                        <div className="kpi-subtext">Traffic Klik ke Amazon (Store: abdumalikh-20)</div>
                       </div>
 
                       <div className="glass-card kpi-card" style={{ '--kpi-accent': '#8B5CF6' }}>
@@ -4993,6 +5236,140 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                         <div className="kpi-title">Engaged Audience</div>
                         <div className="kpi-value" style={{ color: '#EC4899' }}>{(report.engagedAudience || 64).toLocaleString('id-ID')}</div>
                         <div className="kpi-subtext">Pengguna Berinteraksi Aktif</div>
+                      </div>
+                    </div>
+
+                    {/* AMAZON ASSOCIATES MONETIZATION & CROSS-CHANNEL AFFILIATE FUNNEL */}
+                    <div className="glass-card" style={{ padding: '1.5rem', marginBottom: '1.5rem', border: '1px solid rgba(255, 153, 0, 0.35)', background: 'linear-gradient(135deg, rgba(255, 153, 0, 0.05), rgba(230, 0, 35, 0.03))' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12, marginBottom: '1.25rem' }}>
+                        <div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontSize: '1.1rem' }}>🌎</span>
+                            <h3 style={{ fontSize: '1.05rem', fontWeight: 800 }}>Hubungan Funnel: Pinterest (@productijustfound) ➔ Amazon Associates (abdumalikh-20)</h3>
+                            <span style={{ fontSize: '0.68rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(5, 150, 105, 0.12)', color: '#059669' }}>
+                              ✓ Tersinkron ke Keuangan P&amp;L
+                            </span>
+                          </div>
+                          <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: 4 }}>
+                            Melacak konversi traffic Pin organik US menjadi klik afiliasi Amazon, pembelian produk (Ordered/Shipped), dan komisi USD yang otomatis dikonversi ke Rupiah di laporan Keuangan.
+                          </p>
+                        </div>
+                        <div style={{ display: 'flex', gap: 8 }}>
+                          <button
+                            className="btn btn-sm btn-secondary"
+                            style={{ fontSize: '0.75rem', padding: '6px 12px' }}
+                            onClick={() => setActiveTab('tabFinance')}
+                          >
+                            Lihat di Keuangan (P&amp;L) ↗
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* 5-STAGE CROSS-CHANNEL FUNNEL */}
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(175px, 1fr))', gap: '0.85rem', marginBottom: '1.25rem' }}>
+                        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--bg-card)', border: '1px solid var(--border-color)' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#E60023', textTransform: 'uppercase' }}>1. Pinterest Traffic</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: 4 }}>{(report.impressions || 0).toLocaleString('id-ID')} <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-dim)' }}>Impr</span></div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 2 }}>{(report.engagements || 0)} Engagements • {(report.saves || 0)} Saves</div>
+                        </div>
+
+                        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--bg-card)', border: '1px solid rgba(255, 153, 0, 0.3)' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#D97706', textTransform: 'uppercase' }}>2. Amazon Link Clicks</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#D97706', marginTop: 4 }}>{totalAmazonClicks.toLocaleString('id-ID')} <span style={{ fontSize: '0.72rem', fontWeight: 600 }}>Clicks</span></div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                            CTR Pin ➔ Amazon: {report.impressions > 0 ? ((totalAmazonClicks / report.impressions) * 100).toFixed(2) : '0.00'}%
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--bg-card)', border: '1px solid rgba(255, 153, 0, 0.3)' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#D97706', textTransform: 'uppercase' }}>3. Conversion &amp; Orders</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: 4 }}>
+                            {totalAmazonOrderedItems} <span style={{ fontSize: '0.72rem', fontWeight: 600, color: 'var(--text-dim)' }}>Ordered</span>
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 700, marginTop: 2 }}>
+                            Conversion Rate: {totalAmazonClicks > 0 ? ((totalAmazonOrderedItems / totalAmazonClicks) * 100).toFixed(2) : '0.00'}%
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'var(--bg-card)', border: '1px solid rgba(255, 153, 0, 0.3)' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#D97706', textTransform: 'uppercase' }}>4. Amazon GMV (USD)</div>
+                          <div style={{ fontSize: '1.25rem', fontWeight: 800, marginTop: 4 }}>
+                            ${totalAmazonGmvUsd.toFixed(2)}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginTop: 2 }}>
+                            Total Ordered &amp; Shipped Revenue
+                          </div>
+                        </div>
+
+                        <div style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.3)' }}>
+                          <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase' }}>5. Komisi Masuk P&amp;L</div>
+                          <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669', marginTop: 4 }}>
+                            {formatIDR(totalAmazonCommission)}
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 700, marginTop: 2 }}>
+                            ${totalAmazonEarningsUsd.toFixed(2)} USD (Earnings)
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* RECORDED AMAZON ASSOCIATES REPORTS TABLE */}
+                      <div style={{ background: 'var(--bg-card)', borderRadius: 10, border: '1px solid var(--border-color)', overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.78rem' }}>
+                          <thead>
+                            <tr style={{ borderBottom: '1px solid var(--border-color)', background: 'var(--bg-input)', color: 'var(--text-dim)', fontSize: '0.7rem', textTransform: 'uppercase' }}>
+                              <th style={{ textAlign: 'left', padding: '8px 12px' }}>Periode Amazon Associates</th>
+                              <th style={{ textAlign: 'left', padding: '8px 12px' }}>Store ID / Channel</th>
+                              <th style={{ textAlign: 'center', padding: '8px 12px' }}>Clicks</th>
+                              <th style={{ textAlign: 'center', padding: '8px 12px' }}>Ordered / Shipped</th>
+                              <th style={{ textAlign: 'center', padding: '8px 12px' }}>Conv. Rate</th>
+                              <th style={{ textAlign: 'right', padding: '8px 12px' }}>GMV (USD)</th>
+                              <th style={{ textAlign: 'right', padding: '8px 12px' }}>Earnings (USD)</th>
+                              <th style={{ textAlign: 'right', padding: '8px 12px' }}>Masuk P&amp;L (IDR)</th>
+                              <th style={{ textAlign: 'center', padding: '8px 12px' }}>Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {(studioData.amazonAssociatesReports || []).length > 0 ? (
+                              (studioData.amazonAssociatesReports || []).map((amz) => (
+                                <tr key={amz.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                  <td style={{ padding: '10px 12px', fontWeight: 700 }}>{amz.dateRange || `${amz.periodStart} - ${amz.periodEnd}`}</td>
+                                  <td style={{ padding: '10px 12px' }}>
+                                    <span style={{ fontSize: '0.7rem', fontWeight: 700, padding: '2px 8px', borderRadius: 999, background: 'rgba(255,153,0,0.12)', color: '#D97706' }}>
+                                      {amz.storeId || 'abdumalikh-20'}
+                                    </span>
+                                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', marginLeft: 6 }}>via {amz.pinterestHandle || '@productijustfound'}</span>
+                                  </td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'center', fontWeight: 700 }}>{amz.clicks || 0}</td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'center' }}>{amz.orderedItems || 0} / {amz.shippedItems || 0}</td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'center', color: '#059669', fontWeight: 700 }}>{Number(amz.conversionRate || 0).toFixed(2)}%</td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>${Number(amz.orderedRevenueUsd || 0).toFixed(2)}</td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800, color: '#D97706' }}>${Number(amz.totalEarningsUsd || 0).toFixed(2)}</td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>
+                                    {formatIDR(amz.earningsIdr || Math.round((amz.totalEarningsUsd || 0) * (amz.exchangeRate || 16300)))}
+                                    <div style={{ fontSize: '0.64rem', color: 'var(--text-dim)', fontWeight: 500 }}>Kurs Rp {(amz.exchangeRate || 16300).toLocaleString('id-ID')}</div>
+                                  </td>
+                                  <td style={{ padding: '10px 12px', textAlign: 'center' }}>
+                                    <button
+                                      type="button"
+                                      className="btn btn-sm btn-secondary"
+                                      style={{ color: '#D32F2F', padding: '4px 8px' }}
+                                      onClick={() => handleDeleteAmazonReport(amz.id)}
+                                      title="Hapus laporan Amazon"
+                                    >
+                                      <Trash2 style={{ width: 13, height: 13 }} />
+                                    </button>
+                                  </td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={9} style={{ padding: '14px', textAlign: 'center', color: 'var(--text-dim)' }}>
+                                  Belum ada laporan Amazon Associates. Klik tombol <strong>Scan AI Amazon Associates ($)</strong> di atas untuk memindai screenshot dashboard Amazon.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
                       </div>
                     </div>
 
@@ -5273,7 +5650,8 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     </div>
 
                   </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="glass-card" style={{ padding: '3.5rem 1.5rem', textAlign: 'center' }}>
@@ -7017,6 +7395,211 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     onClick={handleSaveCommissionReport}
                   >
                     <Save /> Simpan ke Keuangan &amp; Alokasikan ke Sesi Live
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Modal: AI SCAN AMAZON ASSOCIATES (PINTEREST US AFFILIATE) */}
+      {modalType === 'scan_amazon' && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 680 }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Sparkles style={{ color: '#FF9900' }} /> Scan AI Amazon Associates (Pinterest US)
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            <div className="ai-dropzone" style={{ borderColor: 'rgba(255, 153, 0, 0.45)', background: 'rgba(255, 153, 0, 0.04)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '0.5rem' }}>
+                <Compass style={{ color: '#FF9900', width: 20, height: 20 }} />
+                <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Upload Screenshot Dashboard Amazon Associates</span>
+              </div>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '0.75rem' }}>
+                AI Vision akan mengekstrak <strong>Store ID</strong> (misal <code>abdumalikh-20</code>), <strong>Rentang Tanggal</strong>, <strong>Clicks</strong>, <strong>Ordered/Shipped Items</strong>, <strong>Conversion Rate</strong>, <strong>Total Revenue ($)</strong>, dan <strong>Total Earnings ($)</strong> lalu mengonversinya otomatis ke Rupiah untuk masuk ke <strong>Keuangan P&amp;L</strong> &amp; <strong>Pinterest Analytics (@productijustfound)</strong>.
+              </p>
+
+              <label
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '1.25rem',
+                  border: amazonPreviewUrl ? '2px solid #FF9900' : '2px dashed var(--border-color)',
+                  borderRadius: 12,
+                  background: 'var(--bg-card)',
+                  cursor: 'pointer',
+                  minHeight: 150,
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+              >
+                <input type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAmazonFileSelect} />
+                {amazonPreviewUrl ? (
+                  <img src={amazonPreviewUrl} alt="Preview Amazon Associates" style={{ maxHeight: 220, objectFit: 'contain', borderRadius: 8 }} />
+                ) : (
+                  <>
+                    <UploadCloud style={{ width: 32, height: 32, color: '#FF9900', marginBottom: 8 }} />
+                    <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>Klik untuk Pilih Screenshot Amazon Associates</span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: 4 }}>Mendukung screenshot halaman Reports / Earnings Overview Amazon Associates</span>
+                  </>
+                )}
+              </label>
+
+              {amazonFileSlot && !scannedAmazonReport && (
+                <button
+                  type="button"
+                  className="btn"
+                  style={{ width: '100%', marginTop: '0.85rem', justifyContent: 'center', background: 'linear-gradient(135deg, #FF9900, #E47911)', color: '#fff', fontWeight: 700 }}
+                  onClick={handleAnalyzeAmazonReport}
+                  disabled={isAnalyzingAI}
+                >
+                  <Sparkles /> {isAnalyzingAI ? 'Mengekstrak Data Amazon Associates dengan AI...' : 'Ekstrak Laporan Amazon Associates dengan AI'}
+                </button>
+              )}
+            </div>
+
+            {scannedAmazonReport && (
+              <div style={{ marginTop: '1rem' }}>
+                <div style={{
+                  padding: '12px 14px',
+                  borderRadius: 12,
+                  background: 'rgba(255, 153, 0, 0.08)',
+                  border: '1px solid rgba(255, 153, 0, 0.3)',
+                  marginBottom: '1rem',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: 10
+                }}>
+                  <div>
+                    <div style={{ fontSize: '0.72rem', color: '#D97706', fontWeight: 700, textTransform: 'uppercase' }}>
+                      Store ID: {scannedAmazonReport.storeId || 'abdumalikh-20'} • Pinterest @productijustfound
+                    </div>
+                    <div style={{ fontSize: '0.9rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                      Periode: {scannedAmazonReport.dateRange || `${scannedAmazonReport.periodStart} s/d ${scannedAmazonReport.periodEnd}`}
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700 }}>KONVERSI KOMISI KE RUPIAH (P&amp;L)</div>
+                    <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#059669' }}>
+                      {formatIDR(Math.round((Number(scannedAmazonReport.totalEarningsUsd) || 0) * (Number(amazonExchangeRate) || 16300)))}
+                    </div>
+                    <div style={{ fontSize: '0.7rem', color: '#D97706', fontWeight: 700 }}>
+                      (${Number(scannedAmazonReport.totalEarningsUsd || 0).toFixed(2)} USD × Rp {(Number(amazonExchangeRate) || 16300).toLocaleString('id-ID')})
+                    </div>
+                  </div>
+                </div>
+
+                <div className="form-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(145px, 1fr))', gap: '0.75rem', marginBottom: '1rem' }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Store ID</label>
+                    <input
+                      className="form-input"
+                      value={scannedAmazonReport.storeId || ''}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, storeId: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Rentang Tanggal</label>
+                    <input
+                      className="form-input"
+                      value={scannedAmazonReport.dateRange || ''}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, dateRange: e.target.value })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Amazon Clicks</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={scannedAmazonReport.clicks ?? 0}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, clicks: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Ordered Items</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={scannedAmazonReport.orderedItems ?? 0}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, orderedItems: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Shipped Items</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      value={scannedAmazonReport.shippedItems ?? 0}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, shippedItems: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Conversion Rate (%)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="form-input"
+                      value={scannedAmazonReport.conversionRate ?? 0}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, conversionRate: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Ordered GMV ($ USD)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="form-input"
+                      value={scannedAmazonReport.orderedRevenueUsd ?? 0}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, orderedRevenueUsd: parseFloat(e.target.value) || 0, totalRevenueUsd: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Total Earnings ($ USD)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      className="form-input"
+                      style={{ fontWeight: 800, color: '#D97706' }}
+                      value={scannedAmazonReport.totalEarningsUsd ?? 0}
+                      onChange={e => setScannedAmazonReport({ ...scannedAmazonReport, totalEarningsUsd: parseFloat(e.target.value) || 0 })}
+                    />
+                  </div>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label">Kurs USD ke IDR (Rp)</label>
+                    <input
+                      type="number"
+                      className="form-input"
+                      style={{ fontWeight: 800, color: '#059669' }}
+                      value={amazonExchangeRate}
+                      onChange={e => setAmazonExchangeRate(parseInt(e.target.value) || 16300)}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => setScannedAmazonReport(null)}
+                  >
+                    Scan Ulang Foto
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{ flex: 2, justifyContent: 'center', background: 'linear-gradient(135deg, #FF9900, #E47911)', color: '#fff', fontWeight: 700 }}
+                    onClick={handleSaveAmazonReport}
+                  >
+                    <Save /> Simpan ke Pinterest Analytics &amp; Keuangan P&amp;L
                   </button>
                 </div>
               </div>
