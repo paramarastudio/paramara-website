@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 import { INITIAL_STUDIO_DATA } from './data/sampleData';
-import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots } from './services/geminiService';
+import { analyzeShopeeScreenshots, analyzeShopeeVideoScreenshots, analyzeShopeeCommissionReport } from './services/geminiService';
 import { uploadScreenshotToFirebase, saveSessionToFirebase, fetchSessionsFromFirebase, storage as firebaseStorage, saveStudioDataToFirestore, loadStudioDataFromFirestore, subscribeToStudioData, isFirebaseConfigured } from './services/firebaseService';
 import { isSupabaseConfigured, loadStudioDataFromSupabase, saveStudioDataToSupabase, subscribeToStudioDataSupabase, uploadScreenshotToSupabase, saveSessionToSupabase } from './services/supabaseService';
 import { remoteLog } from './services/remoteLogger';
@@ -292,6 +292,59 @@ export function deduplicateSessions(sessions) {
   return result;
 }
 
+// ====== AUTO-ALLOCATE MULTI-DAY [ADD] SHOPEEFOOD COMMISSION BATCHES TO SESSIONS ======
+export function allocateBatchCommissionsToSessions(sessions, otherIncomeList) {
+  if (!Array.isArray(sessions)) return [];
+  const normalizedSessions = deduplicateSessions(sessions);
+  if (!Array.isArray(otherIncomeList) || otherIncomeList.length === 0) return normalizedSessions;
+
+  const shopeeFoodBatches = otherIncomeList.filter(
+    item => item && item.category === 'Komisi ShopeeFood' && item.periodStart && item.periodEnd && Number(item.amount) > 0
+  );
+  if (shopeeFoodBatches.length === 0) return normalizedSessions;
+
+  const updated = normalizedSessions.map(s => ({ ...s }));
+
+  for (const batch of shopeeFoodBatches) {
+    const matchingIndices = [];
+    updated.forEach((s, idx) => {
+      const isShopeeFood = s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood');
+      if (isShopeeFood && s.dateISO && s.dateISO >= batch.periodStart && s.dateISO <= batch.periodEnd) {
+        matchingIndices.push(idx);
+      }
+    });
+
+    if (matchingIndices.length > 0) {
+      const totalPeriodGMV = matchingIndices.reduce((acc, idx) => acc + (Number(updated[idx].revenue) || 0), 0);
+      let allocatedSum = 0;
+
+      matchingIndices.forEach((sessionIdx, i) => {
+        const s = updated[sessionIdx];
+        let allocatedAmt = 0;
+        if (i === matchingIndices.length - 1) {
+          allocatedAmt = Math.max(0, Number(batch.amount) - allocatedSum);
+        } else if (totalPeriodGMV > 0) {
+          allocatedAmt = Math.round(Number(batch.amount) * ((Number(s.revenue) || 0) / totalPeriodGMV));
+          allocatedSum += allocatedAmt;
+        } else {
+          allocatedAmt = Math.round(Number(batch.amount) / matchingIndices.length);
+          allocatedSum += allocatedAmt;
+        }
+
+        updated[sessionIdx] = {
+          ...s,
+          grossCommission: allocatedAmt,
+          commissionBatchId: batch.id,
+          allocatedFromBatch: batch.name,
+          batchTotalAmount: Number(batch.amount)
+        };
+      });
+    }
+  }
+
+  return updated;
+}
+
 export default function App() {
   // URL-based View Mode State ('public' at '/' vs 'admin' at '/admin')
   const [viewMode, setViewModeState] = useState(() => {
@@ -385,7 +438,7 @@ export default function App() {
     }
     return {
       ...rawData,
-      shopeeSessions: deduplicateSessions(rawData.shopeeSessions),
+      shopeeSessions: allocateBatchCommissionsToSessions(rawData.shopeeSessions, rawData.otherIncomeList),
       shopeeVideoSessions: deduplicateSessions(rawData.shopeeVideoSessions)
     };
   });
@@ -400,7 +453,7 @@ export default function App() {
   const isInitialLoad = useRef(true);
   
   // Modals state
-  const [modalType, setModalType] = useState(null); // 'scan' | 'scan_video' | 'finance' | 'project' | 'schedule' | 'editSession' | 'editVideoSession' | 'addAdmin' | 'editAdmin'
+  const [modalType, setModalType] = useState(null); // 'scan' | 'scan_video' | 'scan_commission' | 'finance' | 'project' | 'schedule' | 'editSession' | 'editVideoSession' | 'addAdmin' | 'editAdmin'
   const [editingSession, setEditingSession] = useState(null);
   const [editingVideoSession, setEditingVideoSession] = useState(null);
   const [editingAdminUser, setEditingAdminUser] = useState(null);
@@ -411,6 +464,13 @@ export default function App() {
   const [scanChannelPreset, setScanChannelPreset] = useState(null);
   const [scannedPreview, setScannedPreview] = useState(null);
   const [scannedVideoPreview, setScannedVideoPreview] = useState(null);
+
+  // Commission Report AI Scanner State
+  const [commissionFileSlot1, setCommissionFileSlot1] = useState(null);
+  const [commissionFileSlot2, setCommissionFileSlot2] = useState(null);
+  const [commissionPreviewUrl1, setCommissionPreviewUrl1] = useState(null);
+  const [commissionPreviewUrl2, setCommissionPreviewUrl2] = useState(null);
+  const [scannedCommissionReport, setScannedCommissionReport] = useState(null);
 
   // Admin User Form State
   const [newAdminUsername, setNewAdminUsername] = useState("");
@@ -544,7 +604,11 @@ export default function App() {
         if (cloudData) {
           isRemoteUpdate.current = true;
           setStudioData(prev => {
-            const mergedSessions = deduplicateSessions([...(prev.shopeeSessions || []), ...(cloudData.shopeeSessions || [])]);
+            const mergedOtherIncome = (cloudData.otherIncomeList && cloudData.otherIncomeList.length > 0) ? cloudData.otherIncomeList : (prev.otherIncomeList || []);
+            const mergedSessions = allocateBatchCommissionsToSessions(
+              [...(prev.shopeeSessions || []), ...(cloudData.shopeeSessions || [])],
+              mergedOtherIncome
+            );
             const mergedVideoSessions = deduplicateSessions([...(prev.shopeeVideoSessions || []), ...(cloudData.shopeeVideoSessions || [])]);
             
             const mergedData = {
@@ -552,6 +616,7 @@ export default function App() {
               ...cloudData,
               shopeeSessions: mergedSessions,
               shopeeVideoSessions: mergedVideoSessions,
+              otherIncomeList: mergedOtherIncome,
               clientProjects: (cloudData.clientProjects && cloudData.clientProjects.length > 0) ? cloudData.clientProjects : (prev.clientProjects || []),
               liveSchedules: (cloudData.liveSchedules && cloudData.liveSchedules.length > 0) ? cloudData.liveSchedules : (prev.liveSchedules || []),
               capexList: (cloudData.capexList && cloudData.capexList.length > 0) ? cloudData.capexList : (prev.capexList || []),
@@ -597,18 +662,25 @@ export default function App() {
         }
 
         isRemoteUpdate.current = true;
-        setStudioData(prev => ({
-          ...prev,
-          ...remoteData,
-          shopeeSessions: deduplicateSessions([...(prev.shopeeSessions || []), ...(remoteData.shopeeSessions || [])]),
-          shopeeVideoSessions: deduplicateSessions([...(prev.shopeeVideoSessions || []), ...(remoteData.shopeeVideoSessions || [])]),
-          clientProjects: remoteData.clientProjects || prev.clientProjects || [],
-          liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
-          capexList: remoteData.capexList || prev.capexList || [],
-          opexList: remoteData.opexList || prev.opexList || [],
-          personalList: remoteData.personalList || prev.personalList || [],
-          adminUsers: remoteData.adminUsers || prev.adminUsers || [],
-        }));
+        setStudioData(prev => {
+          const nextOtherIncome = remoteData.otherIncomeList || prev.otherIncomeList || [];
+          return {
+            ...prev,
+            ...remoteData,
+            shopeeSessions: allocateBatchCommissionsToSessions(
+              [...(prev.shopeeSessions || []), ...(remoteData.shopeeSessions || [])],
+              nextOtherIncome
+            ),
+            shopeeVideoSessions: deduplicateSessions([...(prev.shopeeVideoSessions || []), ...(remoteData.shopeeVideoSessions || [])]),
+            otherIncomeList: nextOtherIncome,
+            clientProjects: remoteData.clientProjects || prev.clientProjects || [],
+            liveSchedules: remoteData.liveSchedules || prev.liveSchedules || [],
+            capexList: remoteData.capexList || prev.capexList || [],
+            opexList: remoteData.opexList || prev.opexList || [],
+            personalList: remoteData.personalList || prev.personalList || [],
+            adminUsers: remoteData.adminUsers || prev.adminUsers || [],
+          };
+        });
         setCloudSyncStatus('synced');
       });
     }
@@ -1008,24 +1080,37 @@ export default function App() {
     reader.readAsText(file);
   };
 
-  // Revenue
+  // Revenue (Anti-Double-Counting between [ADD] ShopeeFood Batches in otherIncomeList and Allocated Sessions)
   const totalShopeeRev = sessions.reduce((acc, s) => acc + (s.revenue || 0), 0);
-  const totalGrossCommission = sessions.reduce((acc, s) => acc + (s.grossCommission || 0), 0);
+  const regularLiveComm = sessions
+    .filter(s => s.channelType !== 'ShopeeFood Live' && !(s.title || '').toLowerCase().includes('shopeefood'))
+    .reduce((acc, s) => acc + (s.grossCommission || 0), 0);
+  const unbatchedShopeeFoodSessionComm = sessions
+    .filter(s => (s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood')) && !s.commissionBatchId)
+    .reduce((acc, s) => acc + (s.grossCommission || 0), 0);
+  const batchedShopeeFoodComm = otherIncomeList
+    .filter(i => i.category === 'Komisi ShopeeFood')
+    .reduce((acc, i) => acc + (i.amount || 0), 0);
+  const totalShopeeFoodCommission = batchedShopeeFoodComm + unbatchedShopeeFoodSessionComm;
+  const totalGrossCommission = regularLiveComm + totalShopeeFoodCommission;
   
   const totalVideoRev = videoSessions.reduce((acc, v) => acc + (v.revenue || 0), 0);
   const totalGrossVideoCommission = videoSessions.reduce((acc, v) => acc + (v.grossCommission || 0), 0);
 
   const totalProjectRev = projects.reduce((acc, p) => acc + (p.budget || 0), 0);
+  const totalBonusIncome = otherIncomeList
+    .filter(i => i.category !== 'Komisi ShopeeFood')
+    .reduce((acc, i) => acc + (i.amount || 0), 0);
   const totalOtherIncome = otherIncomeList.reduce((acc, i) => acc + (i.amount || 0), 0);
 
   // Total GMV / Transaction Volume (Shopee Live + Shopee Video)
   const totalCombinedGMV = totalShopeeRev + totalVideoRev;
 
-  // Actual Studio Gross Revenue (Live Comm + Video Comm + Project Income + Other Income/Bonus)
-  const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalProjectRev + totalOtherIncome;
+  // Actual Studio Gross Revenue (Live Comm + ShopeeFood Comm + Video Comm + Project Income + Bonus)
+  const totalStudioGrossRevenue = totalGrossCommission + totalGrossVideoCommission + totalProjectRev + totalBonusIncome;
 
   // Cash Revenue Only (Excludes Non-Cash Project Barter/Goods Value)
-  const totalCashRevenue = totalGrossCommission + totalGrossVideoCommission + totalOtherIncome;
+  const totalCashRevenue = totalGrossCommission + totalGrossVideoCommission + totalBonusIncome;
 
   // Expenses
   const totalCapex = capexList.reduce((acc, c) => acc + (c.amount || 0), 0);
@@ -1131,7 +1216,7 @@ export default function App() {
       grossCommission: parseInt(scannedPreview.grossCommission) || 0
     };
 
-    // 1. Immediately Save to Local State so UI updates instantly (with deduplication)!
+    // 1. Immediately Save to Local State so UI updates instantly (with deduplication & batch commission sync)!
     setStudioData(prev => {
       const list = prev.shopeeSessions || [];
       const normTitle = (sessionToSave.title || '').trim().toLowerCase();
@@ -1151,7 +1236,7 @@ export default function App() {
 
       return {
         ...prev,
-        shopeeSessions: deduplicateSessions(updatedList)
+        shopeeSessions: allocateBatchCommissionsToSessions(updatedList, prev.otherIncomeList)
       };
     });
 
@@ -1188,11 +1273,104 @@ export default function App() {
     const normalized = normalizeSessionDate(editingSession);
     setStudioData(prev => ({
       ...prev,
-      shopeeSessions: prev.shopeeSessions.map(s => s.id === normalized.id ? normalized : s)
+      shopeeSessions: allocateBatchCommissionsToSessions(
+        prev.shopeeSessions.map(s => s.id === normalized.id ? normalized : s),
+        prev.otherIncomeList
+      )
     }));
     setEditingSession(null);
     setModalType(null);
     showToast('Perubahan data sesi berhasil disimpan!');
+  };
+
+  // ====== AI COMMISSION REPORT (RINCIAN KOMISI SHOPEEFOOD & BONUS) HANDLERS ======
+  const handleCommissionFile1Select = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCommissionFileSlot1(file);
+    setCommissionPreviewUrl1(URL.createObjectURL(file));
+  };
+
+  const handleCommissionFile2Select = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setCommissionFileSlot2(file);
+    setCommissionPreviewUrl2(URL.createObjectURL(file));
+  };
+
+  const handleAnalyzeCommissionReport = async () => {
+    const filesToProcess = [commissionFileSlot1, commissionFileSlot2].filter(Boolean);
+    if (filesToProcess.length === 0) {
+      showToast('Mohon pilih minimal 1 screenshot Rincian Komisi!', 'error');
+      return;
+    }
+
+    setScanning(true);
+    remoteLog.info('AI Scan started (Commission Report)', { fileCount: filesToProcess.length });
+
+    try {
+      const result = await analyzeShopeeCommissionReport(filesToProcess);
+      setScannedCommissionReport(result);
+      remoteLog.info('AI Scan success (Commission Report)', { itemCount: result?.items?.length || 0 });
+    } catch (err) {
+      showToast('Gagal membaca Rincian Komisi: ' + err.message, 'error');
+      remoteLog.error('AI Scan failed (Commission Report)', { error: err.message });
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const handleSaveCommissionReport = () => {
+    if (!scannedCommissionReport || !Array.isArray(scannedCommissionReport.items)) return;
+
+    const validItems = scannedCommissionReport.items.filter(item => item && Number(item.amount) > 0);
+    if (validItems.length === 0) {
+      showToast('Tidak ada item komisi untuk disimpan.', 'error');
+      return;
+    }
+
+    setStudioData(prev => {
+      const existingIncome = [...(prev.otherIncomeList || [])];
+
+      for (const item of validItems) {
+        const entry = {
+          id: item.id || `comm_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          name: item.name,
+          category: item.category || (item.type === 'shopeefood_batch' ? 'Komisi ShopeeFood' : 'Bonus Kejar Komisi'),
+          amount: Number(item.amount) || 0,
+          date: item.date || new Date().toISOString().split('T')[0],
+          periodStart: item.periodStart || item.date,
+          periodEnd: item.periodEnd || item.date,
+          periodText: item.periodText || ''
+        };
+
+        const existingIdx = existingIncome.findIndex(
+          ex => ex.id === entry.id || (ex.name || '').trim().toLowerCase() === (entry.name || '').trim().toLowerCase()
+        );
+        if (existingIdx >= 0) {
+          existingIncome[existingIdx] = { ...existingIncome[existingIdx], ...entry };
+        } else {
+          existingIncome.unshift(entry);
+        }
+      }
+
+      const updatedSessions = allocateBatchCommissionsToSessions(prev.shopeeSessions || [], existingIncome);
+
+      return {
+        ...prev,
+        otherIncomeList: existingIncome,
+        shopeeSessions: updatedSessions
+      };
+    });
+
+    setScannedCommissionReport(null);
+    setCommissionFileSlot1(null);
+    setCommissionFileSlot2(null);
+    setCommissionPreviewUrl1(null);
+    setCommissionPreviewUrl2(null);
+    setModalType(null);
+
+    showToast(`${validItems.length} Batch Rincian Komisi berhasil masuk Keuangan & disinkronkan ke Sesi Live!`);
   };
 
   // Shopee Video Analysis
@@ -2468,6 +2646,10 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                   </div>
                 )}
 
+                <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center', flexShrink: 0, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }} onClick={() => { setCommissionFileSlot1(null); setCommissionFileSlot2(null); setCommissionPreviewUrl1(null); setCommissionPreviewUrl2(null); setScannedCommissionReport(null); setModalType('scan_commission'); }}>
+                  <Receipt style={{ width: 14, height: 14 }} />
+                  <span className="btn-label">Scan AI Rincian Komisi</span>
+                </button>
                 <button className="btn btn-secondary btn-sm" style={{ gap: 6, display: 'inline-flex', alignItems: 'center', flexShrink: 0 }} onClick={handleExportFinanceToExcel}>
                   <FileText style={{ width: 14, height: 14, color: '#059669' }} />
                   <span className="btn-label">Ekspor Excel</span>
@@ -2514,6 +2696,9 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                     />
                   </div>
                 )}
+                <button className="btn btn-secondary btn-sm" onClick={() => { setCommissionFileSlot1(null); setCommissionFileSlot2(null); setCommissionPreviewUrl1(null); setCommissionPreviewUrl2(null); setScannedCommissionReport(null); setModalType('scan_commission'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, borderColor: 'rgba(184, 142, 57, 0.45)', color: '#B88E39', background: 'rgba(184, 142, 57, 0.1)' }}>
+                  <Receipt style={{ width: 14, height: 14 }} /> Scan AI Rincian Komisi
+                </button>
                 <button className="btn btn-secondary btn-sm" onClick={() => { setScanChannelPreset('ShopeeFood Live'); setFileSlot1(null); setFileSlot2(null); setPreviewUrl1(null); setPreviewUrl2(null); setScannedPreview(null); setModalType('scan'); }} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, flexShrink: 0, borderColor: 'rgba(238, 77, 45, 0.4)', color: '#EE4D2D', background: 'rgba(238, 77, 45, 0.08)' }}>
                   <Sparkles style={{ width: 14, height: 14 }} /> Scan AI ShopeeFood
                 </button>
@@ -3235,6 +3420,11 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                           <div style={{ background: 'rgba(184, 142, 57, 0.08)', padding: '4px 8px', borderRadius: 6, border: '1px solid var(--accent-gold-border)' }}>
                             <span style={{ fontSize: '0.7rem', color: 'var(--accent-gold)', textTransform: 'uppercase', letterSpacing: '0.04em', fontWeight: 700 }}>Komisi Kotor</span>
                             <div style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--accent-gold)' }}>Rp {(s.grossCommission || 0).toLocaleString('id-ID')}</div>
+                            {s.allocatedFromBatch && (
+                              <div style={{ fontSize: '0.65rem', color: '#EE4D2D', fontWeight: 600, marginTop: 2 }} title={`Alokasi proporsional dari ${s.allocatedFromBatch}`}>
+                                ⚡ {s.allocatedFromBatch}
+                              </div>
+                            )}
                           </div>
 
                           <div>
@@ -3949,15 +4139,30 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
                         <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
-                            <span style={{ fontWeight: 600 }}>Komisi Shopee Live</span>
-                            <strong style={{ color: '#059669' }}>Rp {totalGrossCommission.toLocaleString('id-ID')}</strong>
+                            <span style={{ fontWeight: 600 }}>Komisi Shopee Live (Regular)</span>
+                            <strong style={{ color: '#059669' }}>Rp {regularLiveComm.toLocaleString('id-ID')}</strong>
                           </div>
                           <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
-                            <span>Dari GMV Rp {totalShopeeRev.toLocaleString('id-ID')}</span>
-                            <span>{totalStudioGrossRevenue > 0 ? ((totalGrossCommission / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
+                            <span>Total GMV Live Rp {totalShopeeRev.toLocaleString('id-ID')}</span>
+                            <span>{totalStudioGrossRevenue > 0 ? ((regularLiveComm / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
                           </div>
                           <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
-                            <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalGrossCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
+                            <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (regularLiveComm / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
+                          </div>
+                        </div>
+                        <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid rgba(238, 77, 45, 0.3)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                            <span style={{ fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                              🍔 Komisi ShopeeFood Live ([ADD])
+                            </span>
+                            <strong style={{ color: '#EE4D2D' }}>Rp {totalShopeeFoodCommission.toLocaleString('id-ID')}</strong>
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>{otherIncomeList.filter(i => i.category === 'Komisi ShopeeFood').length} batch multi-hari terekam</span>
+                            <span>{totalStudioGrossRevenue > 0 ? ((totalShopeeFoodCommission / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
+                          </div>
+                          <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                            <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalShopeeFoodCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#EE4D2D', borderRadius: 2 }} />
                           </div>
                         </div>
                         <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
@@ -3971,6 +4176,19 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
                           </div>
                           <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
                             <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalGrossVideoCommission / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#059669', borderRadius: 2 }} />
+                          </div>
+                        </div>
+                        <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
+                          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', marginBottom: 4 }}>
+                            <span style={{ fontWeight: 600 }}>Bonus &amp; Kejar Komisi ([ADD])</span>
+                            <strong style={{ color: '#059669' }}>Rp {totalBonusIncome.toLocaleString('id-ID')}</strong>
+                          </div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'flex', justifyContent: 'space-between' }}>
+                            <span>Insentif Target &amp; Pendapatan Lain</span>
+                            <span>{totalStudioGrossRevenue > 0 ? ((totalBonusIncome / totalStudioGrossRevenue) * 100).toFixed(0) : 0}% share</span>
+                          </div>
+                          <div style={{ width: '100%', height: 4, background: 'var(--border-color)', borderRadius: 2, marginTop: 6, overflow: 'hidden' }}>
+                            <div style={{ width: `${totalStudioGrossRevenue > 0 ? Math.min(100, (totalBonusIncome / totalStudioGrossRevenue) * 100) : 0}%`, height: '100%', background: '#10B981', borderRadius: 2 }} />
                           </div>
                         </div>
                         <div style={{ background: 'var(--bg-card)', padding: '10px 14px', borderRadius: 8, border: '1px solid var(--border-color)' }}>
@@ -6481,6 +6699,235 @@ Operating Profit Margin & Sisa Kas Operasional Studio`;
             <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveEditedVideoSession}>
               <Save /> Simpan Perubahan Data Video
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: AI SCAN RINCIAN KOMISI SHOPEEFOOD & BONUS ([ADD]) */}
+      {modalType === 'scan_commission' && (
+        <div className="modal-overlay active">
+          <div className="modal-card" style={{ maxWidth: 740, maxHeight: '90vh', overflowY: 'auto' }}>
+            <div className="modal-header">
+              <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#EE4D2D' }}>
+                <Receipt style={{ color: '#EE4D2D' }} /> Scan AI Rincian Komisi ShopeeFood &amp; Bonus ([ADD])
+              </h3>
+              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+            </div>
+
+            {!scannedCommissionReport && !scanning && (
+              <div>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+                  Unggah screenshot halaman <strong>Rincian Komisi Shopee</strong> yang menampilkan daftar <strong>[ADD] ShopeeFood (gabungan beberapa hari)</strong> maupun <strong>[ADD] Kejar Komisi</strong>. AI akan otomatis memasukkan komisi ke <strong>Keuangan (P&amp;L)</strong> sekaligus <strong>membagi komisi secara proporsional ke sesi ShopeeFood Live</strong> pada rentang tanggal yang cocok tanpa terhitung ganda.
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.25rem' }}>
+                  <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: commissionFileSlot1 ? 'rgba(238, 77, 45, 0.05)' : 'var(--bg-input)', borderColor: commissionFileSlot1 ? '#EE4D2D' : 'var(--border-color)' }}>
+                    {commissionPreviewUrl1 ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <img src={commissionPreviewUrl1} alt="Rincian Komisi 1" style={{ height: 100, borderRadius: 8, border: '1px solid #EE4D2D', objectFit: 'cover', marginBottom: 8 }} />
+                        <div style={{ fontSize: '0.8rem', color: '#EE4D2D', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Screenshot 1 Terpilih
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{commissionFileSlot1.name}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                          <Receipt style={{ width: 32, height: 32, color: '#EE4D2D' }} />
+                        </div>
+                        <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>1. Screenshot Rincian Komisi</strong>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Daftar [ADD] ShopeeFood &amp; Kejar Komisi</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleCommissionFile1Select} style={{ display: 'none' }} />
+                  </label>
+
+                  <label className="dropzone" style={{ display: 'block', padding: '1.25rem 1rem', background: commissionFileSlot2 ? 'rgba(238, 77, 45, 0.05)' : 'var(--bg-input)', borderColor: commissionFileSlot2 ? '#EE4D2D' : 'var(--border-color)' }}>
+                    {commissionPreviewUrl2 ? (
+                      <div style={{ textAlign: 'center' }}>
+                        <img src={commissionPreviewUrl2} alt="Rincian Komisi 2" style={{ height: 100, borderRadius: 8, border: '1px solid #EE4D2D', objectFit: 'cover', marginBottom: 8 }} />
+                        <div style={{ fontSize: '0.8rem', color: '#EE4D2D', fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                          <CheckCircle style={{ width: 14, height: 14 }} /> Screenshot 2 Terpilih
+                        </div>
+                        <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{commissionFileSlot2.name}</span>
+                      </div>
+                    ) : (
+                      <>
+                        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.5rem' }}>
+                          <ImagePlus style={{ width: 32, height: 32, color: 'var(--text-dim)' }} />
+                        </div>
+                        <strong style={{ fontSize: '0.875rem', display: 'block', marginBottom: 4 }}>2. Screenshot Lanjutan (Opsional)</strong>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>Jika daftar komisi panjang / 2 halaman</span>
+                      </>
+                    )}
+                    <input type="file" accept="image/*" onChange={handleCommissionFile2Select} style={{ display: 'none' }} />
+                  </label>
+                </div>
+
+                <button
+                  className="btn"
+                  style={{ width: '100%', justifyContent: 'center', padding: '12px', background: '#EE4D2D', color: '#fff', fontWeight: 700 }}
+                  onClick={handleAnalyzeCommissionReport}
+                  disabled={(!commissionFileSlot1 && !commissionFileSlot2) || scanning}
+                >
+                  <Sparkles /> Ekstrak AI Rincian Komisi ({[commissionFileSlot1, commissionFileSlot2].filter(Boolean).length} Foto)
+                </button>
+              </div>
+            )}
+
+            {scanning && (
+              <div style={{ textAlign: 'center', padding: '3rem 1rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1.25rem' }}>
+                  <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(238, 77, 45, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(238, 77, 45, 0.3)' }}>
+                    <Sparkles style={{ width: 36, height: 36, color: '#EE4D2D', animation: 'spin 2s linear infinite' }} />
+                  </div>
+                </div>
+                <h3 style={{ fontSize: '1.15rem', color: '#EE4D2D', marginBottom: 6 }}>AI Vision Membaca Rincian Komisi...</h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Mengekstrak seluruh batch [ADD] ShopeeFood multi-hari &amp; bonus Kejar Komisi secara otomatis.
+                </p>
+              </div>
+            )}
+
+            {scannedCommissionReport && !scanning && (
+              <div>
+                <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.25)', padding: '12px 16px', borderRadius: 10, marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#059669' }}>
+                    <CheckCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
+                    <div>
+                      <strong style={{ fontSize: '0.9rem', display: 'block' }}>
+                        {(scannedCommissionReport.items || []).length} Item Rincian Komisi Berhasil Diekstrak!
+                      </strong>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                        Otomatis masuk Keuangan (P&amp;L) &amp; proporsional ke Sesi ShopeeFood Live yang cocok tanggalnya.
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', display: 'block', textTransform: 'uppercase', fontWeight: 700 }}>Total Batch Terdeteksi</span>
+                    <strong style={{ fontSize: '1.1rem', color: '#059669', fontWeight: 800 }}>
+                      Rp {(scannedCommissionReport.items || []).reduce((acc, it) => acc + (Number(it.amount) || 0), 0).toLocaleString('id-ID')}
+                    </strong>
+                  </div>
+                </div>
+
+                <div className="table-wrapper" style={{ maxHeight: 340, overflowY: 'auto', marginBottom: '1rem', border: '1px solid var(--border-color)', borderRadius: 10 }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
+                    <thead>
+                      <tr style={{ background: 'var(--bg-table-header)', borderBottom: '1px solid var(--border-color)' }}>
+                        <th style={{ textAlign: 'left', padding: '8px 10px' }}>Nama Batch Komisi</th>
+                        <th style={{ textAlign: 'left', padding: '8px 10px' }}>Kategori</th>
+                        <th style={{ textAlign: 'left', padding: '8px 10px' }}>Rentang Tanggal</th>
+                        <th style={{ textAlign: 'center', padding: '8px 10px' }}>Sesi Cocok</th>
+                        <th style={{ textAlign: 'right', padding: '8px 10px' }}>Nominal (Rp)</th>
+                        <th style={{ textAlign: 'center', padding: '8px 10px' }}>Hapus</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(scannedCommissionReport.items || []).map((item, idx) => {
+                        const matchedCount = (studioData.shopeeSessions || []).filter(s => {
+                          const isSF = s.channelType === 'ShopeeFood Live' || (s.title || '').toLowerCase().includes('shopeefood');
+                          return isSF && item.category === 'Komisi ShopeeFood' && s.dateISO && item.periodStart && item.periodEnd && s.dateISO >= item.periodStart && s.dateISO <= item.periodEnd;
+                        }).length;
+
+                        return (
+                          <tr key={item.id || idx} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                            <td style={{ padding: '8px 10px' }}>
+                              <input
+                                className="form-input"
+                                style={{ padding: '4px 8px', fontSize: '0.775rem' }}
+                                value={item.name || ''}
+                                onChange={e => {
+                                  const nextItems = [...scannedCommissionReport.items];
+                                  nextItems[idx] = { ...nextItems[idx], name: e.target.value };
+                                  setScannedCommissionReport({ ...scannedCommissionReport, items: nextItems });
+                                }}
+                              />
+                            </td>
+                            <td style={{ padding: '8px 10px' }}>
+                              <span style={{
+                                fontSize: '0.7rem',
+                                padding: '2px 8px',
+                                borderRadius: 999,
+                                fontWeight: 700,
+                                background: item.category === 'Komisi ShopeeFood' ? 'rgba(238, 77, 45, 0.12)' : 'rgba(5, 150, 105, 0.12)',
+                                color: item.category === 'Komisi ShopeeFood' ? '#EE4D2D' : '#059669'
+                              }}>
+                                {item.category}
+                              </span>
+                            </td>
+                            <td style={{ padding: '8px 10px', fontSize: '0.75rem', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                              {item.periodStart === item.periodEnd ? item.date : `${item.periodStart} s/d ${item.periodEnd}`}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                              {item.category === 'Komisi ShopeeFood' ? (
+                                <span style={{
+                                  fontSize: '0.7rem',
+                                  fontWeight: 700,
+                                  padding: '2px 8px',
+                                  borderRadius: 999,
+                                  background: matchedCount > 0 ? 'rgba(5, 150, 105, 0.12)' : 'var(--bg-input)',
+                                  color: matchedCount > 0 ? '#059669' : 'var(--text-dim)'
+                                }}>
+                                  {matchedCount > 0 ? `${matchedCount} sesi live` : 'Masuk P&L'}
+                                </span>
+                              ) : (
+                                <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>Bonus P&amp;L</span>
+                              )}
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'right' }}>
+                              <input
+                                className="form-input"
+                                type="number"
+                                style={{ padding: '4px 8px', fontSize: '0.8rem', fontWeight: 700, textAlign: 'right', width: 120 }}
+                                value={item.amount || 0}
+                                onChange={e => {
+                                  const nextItems = [...scannedCommissionReport.items];
+                                  nextItems[idx] = { ...nextItems[idx], amount: parseInt(e.target.value) || 0 };
+                                  setScannedCommissionReport({ ...scannedCommissionReport, items: nextItems });
+                                }}
+                              />
+                            </td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center' }}>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-secondary"
+                                style={{ color: '#D32F2F', padding: '4px 8px' }}
+                                onClick={() => {
+                                  const nextItems = scannedCommissionReport.items.filter((_, i) => i !== idx);
+                                  setScannedCommissionReport({ ...scannedCommissionReport, items: nextItems });
+                                }}
+                              >
+                                <Trash2 style={{ width: 13, height: 13 }} />
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ flex: 1, justifyContent: 'center' }}
+                    onClick={() => setScannedCommissionReport(null)}
+                  >
+                    Scan Ulang Foto
+                  </button>
+                  <button
+                    type="button"
+                    className="btn"
+                    style={{ flex: 2, justifyContent: 'center', background: '#EE4D2D', color: '#fff', fontWeight: 700 }}
+                    onClick={handleSaveCommissionReport}
+                  >
+                    <Save /> Simpan ke Keuangan &amp; Alokasikan ke Sesi Live
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

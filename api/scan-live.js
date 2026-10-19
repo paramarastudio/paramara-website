@@ -46,6 +46,78 @@ Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gamb
 }
 `;
 
+export const GEMINI_COMMISSION_REPORT_PROMPT = `
+Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data halaman "Rincian Komisi" Shopee Affiliate / Shopee Live / ShopeeFood.
+Bacalah seluruh baris pada gambar screenshot "Rincian Komisi" yang diberikan, termasuk:
+- Total Komisi Shopee Live, Komisi XTRA (Kanal Eksplorasi, Kanal Konversi), Komisi Tambahan, Biaya Layanan, dan Shopee Video.
+- SELURUH baris rincian di bawah Komisi Tambahan seperti "[ADD] ShopeeFood 6-9 Okt", "[ADD] ShopeeFood 3-5 Okt", "[ADD] IN Kejar Komisi 600RB", "[ADD] Kejar Komisi Live 500RB", dst.
+
+Kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
+{
+  "totalShopeeLiveCommission": number (angka murni tanpa titik/Rp, contoh: 11087821),
+  "komisiXtra": number (angka murni, contoh: 896635),
+  "komisiTambahanTotal": number (angka murni, contoh: 10248339),
+  "biayaLayanan": number (angka positif murni dari potongan biaya layanan, contoh dari -Rp57.153 isi 57153),
+  "shopeeVideoCommission": number (angka murni komisi Shopee Video jika terlihat, contoh: 1352065),
+  "items": [
+    {
+      "label": "string (Teks persis baris item, contoh: '[ADD] ShopeeFood 6-9 Okt' atau '[ADD] IN Kejar Komisi 600RB')",
+      "type": "string ('shopeefood_batch' jika mengandung kata ShopeeFood, atau 'bonus' jika Kejar Komisi / insentif lainnya)",
+      "periodText": "string (Rentang tanggal yang tertulis, contoh: '6-9 Okt' atau '29-30 Sep' atau '' jika tidak ada tanggal)",
+      "amount": number (Nominal Rupiah angka murni tanpa titik/koma, contoh dari 866.989 menjadi 866989)
+    }
+  ]
+}
+`;
+
+const MONTH_MAP = {
+  jan: '01', januari: '01',
+  feb: '02', februari: '02',
+  mar: '03', maret: '03',
+  apr: '04', april: '04',
+  mei: '05', may: '05',
+  jun: '06', juni: '06',
+  jul: '07', juli: '07',
+  ags: '08', agu: '08', agust: '08', agustus: '08', aug: '08',
+  sep: '09', sept: '09', september: '09',
+  okt: '10', oct: '10', oktober: '10',
+  nov: '11', nop: '11', november: '11',
+  des: '12', dec: '12', desember: '12'
+};
+
+function parseCommissionBatchPeriod(label = '', periodText = '', year = new Date().getFullYear()) {
+  const source = `${label} ${periodText}`;
+  // Match "6-9 Okt" or "29 Ags - 1 Sep"
+  const rangeMatch = source.match(/\b(\d{1,2})\s*([a-zA-Z]{3,9})?\s*[-–/]\s*(\d{1,2})\s+([a-zA-Z]{3,9})\b/i);
+  if (rangeMatch) {
+    const d1 = rangeMatch[1].padStart(2, '0');
+    const m1Raw = (rangeMatch[2] || rangeMatch[4] || '').toLowerCase();
+    const d2 = rangeMatch[3].padStart(2, '0');
+    const m2Raw = (rangeMatch[4] || '').toLowerCase();
+    const m2 = MONTH_MAP[m2Raw] || MONTH_MAP[m2Raw.slice(0, 3)] || '10';
+    const m1 = MONTH_MAP[m1Raw] || MONTH_MAP[m1Raw.slice(0, 3)] || m2;
+    return {
+      periodStart: `${year}-${m1}-${d1}`,
+      periodEnd: `${year}-${m2}-${d2}`,
+      date: `${year}-${m2}-${d2}`
+    };
+  }
+  const singleMatch = source.match(/\b(\d{1,2})\s+([a-zA-Z]{3,9})\b/i);
+  if (singleMatch) {
+    const d = singleMatch[1].padStart(2, '0');
+    const mRaw = singleMatch[2].toLowerCase();
+    const m = MONTH_MAP[mRaw] || MONTH_MAP[mRaw.slice(0, 3)];
+    if (m) {
+      return {
+        periodStart: `${year}-${m}-${d}`,
+        periodEnd: `${year}-${m}-${d}`,
+        date: `${year}-${m}-${d}`
+      };
+    }
+  }
+  return null;
+}
+
 async function getSupportedGeminiModels(apiKey) {
   const fallbackModels = [
     "gemini-1.5-flash",
@@ -93,7 +165,6 @@ async function getSupportedGeminiModels(apiKey) {
             return rank(a) - rank(b);
           });
           return visionModels.length > 0 ? visionModels : fallbackModels;
-          return validModels;
         }
       }
     }
@@ -124,10 +195,12 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: 'Gemini API Key tidak terpasang di server Vercel. Harap tambahkan VITE_GEMINI_API_KEY di settings environment variables.' });
   }
 
-  const { images } = req.body || {};
+  const { images, mode } = req.body || {};
   if (!images || !Array.isArray(images) || images.length === 0) {
     return res.status(400).json({ error: 'Mohon kirimkan setidaknya satu gambar screenshot.' });
   }
+
+  const promptToUse = mode === 'commission_report' ? GEMINI_COMMISSION_REPORT_PROMPT : GEMINI_PROMPT;
 
   const imageParts = images.map((base64) => ({
     inline_data: {
@@ -144,7 +217,7 @@ export default async function handler(req, res) {
     for (const apiVer of apiVersions) {
       try {
         const url = `https://generativelanguage.googleapis.com/${apiVer}/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        console.log(`[SERVERLESS] Attempting scan on: ${model} (${apiVer})`);
+        console.log(`[SERVERLESS] Attempting scan (${mode || 'live'}) on: ${model} (${apiVer})`);
         
         const response = await fetch(url, {
           method: 'POST',
@@ -153,7 +226,7 @@ export default async function handler(req, res) {
             'x-goog-api-key': apiKey
           },
           body: JSON.stringify({
-            contents: [{ parts: [{ text: GEMINI_PROMPT }, ...imageParts] }],
+            contents: [{ parts: [{ text: promptToUse }, ...imageParts] }],
             generationConfig: { temperature: 0.1, response_mime_type: 'application/json' }
           })
         });
@@ -176,6 +249,39 @@ export default async function handler(req, res) {
         if (text) {
           const cleanJson = text.replace(/```json/g, '').replace(/```/g, '').trim();
           const parsed = JSON.parse(cleanJson);
+
+          if (mode === 'commission_report') {
+            const currentYear = new Date().getFullYear();
+            const todayISO = new Date().toISOString().split('T')[0];
+            let lastKnownDate = todayISO;
+
+            const normalizedItems = (Array.isArray(parsed.items) ? parsed.items : []).map((item, idx) => {
+              const label = (item.label || '').trim();
+              const isShopeeFood = item.type === 'shopeefood_batch' || label.toLowerCase().includes('shopeefood');
+              const periodInfo = parseCommissionBatchPeriod(label, item.periodText || '', currentYear);
+              if (periodInfo && periodInfo.date) {
+                lastKnownDate = periodInfo.date;
+              }
+              const cleanSlug = label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
+              return {
+                id: `comm_${cleanSlug || idx}`,
+                name: label || `Komisi Tambahan #${idx + 1}`,
+                category: isShopeeFood ? 'Komisi ShopeeFood' : 'Bonus Kejar Komisi',
+                type: isShopeeFood ? 'shopeefood_batch' : 'bonus',
+                amount: Number(item.amount) || 0,
+                periodStart: periodInfo ? periodInfo.periodStart : lastKnownDate,
+                periodEnd: periodInfo ? periodInfo.periodEnd : lastKnownDate,
+                date: periodInfo ? periodInfo.date : lastKnownDate,
+                frequency: isShopeeFood ? 'Batch Periode' : 'Once'
+              };
+            });
+
+            return res.status(200).json({
+              ...parsed,
+              items: normalizedItems
+            });
+          }
+
           parsed.id = 'session_' + Date.now();
 
           // Intelligent Date Alignment: check title, startTime, or current date

@@ -159,3 +159,31 @@ export async function analyzeShopeeVideoScreenshots(files) {
   return await response.json();
 }
 
+export async function analyzeShopeeCommissionReport(files) {
+  const fileArray = Array.isArray(files) ? files : [files];
+
+  const imageParts = await Promise.all(
+    fileArray.map(async (file) => {
+      const base64 = await fileToBase64(file);
+      return base64;
+    })
+  );
+
+  const response = await fetch('/api/scan-live', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ images: imageParts, mode: 'commission_report' })
+  });
+
+  if (!response.ok) {
+    let errMsg = response.statusText;
+    try {
+      const errJson = await response.json();
+      if (errJson.error) errMsg = errJson.error;
+    } catch (_) {}
+    throw new Error(errMsg || `HTTP ${response.status}`);
+  }
+
+  return await response.json();
+}
+
