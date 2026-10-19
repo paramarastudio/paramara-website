@@ -5304,7 +5304,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                         <div style={{ padding: '12px 14px', borderRadius: 12, background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.3)' }}>
                           <div style={{ fontSize: '0.68rem', fontWeight: 700, color: '#059669', textTransform: 'uppercase' }}>5. Komisi Masuk P&amp;L</div>
                           <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#059669', marginTop: 4 }}>
-                            {formatIDR(totalAmazonCommission)}
+                            Rp {(totalAmazonCommission || 0).toLocaleString('id-ID')}
                           </div>
                           <div style={{ fontSize: '0.7rem', color: '#059669', fontWeight: 700, marginTop: 2 }}>
                             ${totalAmazonEarningsUsd.toFixed(2)} USD (Earnings)
@@ -5345,7 +5345,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                                   <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 600 }}>${Number(amz.orderedRevenueUsd || 0).toFixed(2)}</td>
                                   <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800, color: '#D97706' }}>${Number(amz.totalEarningsUsd || 0).toFixed(2)}</td>
                                   <td style={{ padding: '10px 12px', textAlign: 'right', fontWeight: 800, color: '#059669' }}>
-                                    {formatIDR(amz.earningsIdr || Math.round((amz.totalEarningsUsd || 0) * (amz.exchangeRate || 16300)))}
+                                    Rp {(amz.earningsIdr || Math.round((amz.totalEarningsUsd || 0) * (amz.exchangeRate || 16300))).toLocaleString('id-ID')}
                                     <div style={{ fontSize: '0.64rem', color: 'var(--text-dim)', fontWeight: 500 }}>Kurs Rp {(amz.exchangeRate || 16300).toLocaleString('id-ID')}</div>
                                   </td>
                                   <td style={{ padding: '10px 12px', textAlign: 'center' }}>
@@ -7444,7 +7444,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   <img src={amazonPreviewUrl} alt="Preview Amazon Associates" style={{ maxHeight: 220, objectFit: 'contain', borderRadius: 8 }} />
                 ) : (
                   <>
-                    <UploadCloud style={{ width: 32, height: 32, color: '#FF9900', marginBottom: 8 }} />
+                    <ImagePlus style={{ width: 32, height: 32, color: '#FF9900', marginBottom: 8 }} />
                     <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>Klik untuk Pilih Screenshot Amazon Associates</span>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: 4 }}>Mendukung screenshot halaman Reports / Earnings Overview Amazon Associates</span>
                   </>
@@ -7457,9 +7457,9 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   className="btn"
                   style={{ width: '100%', marginTop: '0.85rem', justifyContent: 'center', background: 'linear-gradient(135deg, #FF9900, #E47911)', color: '#fff', fontWeight: 700 }}
                   onClick={handleAnalyzeAmazonReport}
-                  disabled={isAnalyzingAI}
+                  disabled={scanning}
                 >
-                  <Sparkles /> {isAnalyzingAI ? 'Mengekstrak Data Amazon Associates dengan AI...' : 'Ekstrak Laporan Amazon Associates dengan AI'}
+                  <Sparkles /> {scanning ? 'Mengekstrak Data Amazon Associates dengan AI...' : 'Ekstrak Laporan Amazon Associates dengan AI'}
                 </button>
               )}
             </div>
@@ -7489,7 +7489,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 700 }}>KONVERSI KOMISI KE RUPIAH (P&amp;L)</div>
                     <div style={{ fontSize: '1.2rem', fontWeight: 900, color: '#059669' }}>
-                      {formatIDR(Math.round((Number(scannedAmazonReport.totalEarningsUsd) || 0) * (Number(amazonExchangeRate) || 16300)))}
+                      Rp {Math.round((Number(scannedAmazonReport.totalEarningsUsd) || 0) * (Number(amazonExchangeRate) || 16300)).toLocaleString('id-ID')}
                     </div>
                     <div style={{ fontSize: '0.7rem', color: '#D97706', fontWeight: 700 }}>
                       (${Number(scannedAmazonReport.totalEarningsUsd || 0).toFixed(2)} USD × Rp {(Number(amazonExchangeRate) || 16300).toLocaleString('id-ID')})
