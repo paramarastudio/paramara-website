@@ -270,7 +270,10 @@ export function normalizeSessionDate(s) {
   }
 
   // Sync commentsCount and chatCount (AI Vision returns commentsCount, while session card also checks chatCount)
-  const resolvedComments = Number(resolved.commentsCount ?? resolved.chatCount ?? resolved.comments) || 0;
+  const c1 = Number(resolved.commentsCount);
+  const c2 = Number(resolved.chatCount);
+  const c3 = Number(resolved.comments);
+  const resolvedComments = (!isNaN(c1) && c1 > 0) ? c1 : (!isNaN(c2) && c2 > 0) ? c2 : (!isNaN(c3) && c3 > 0) ? c3 : 0;
   resolved.commentsCount = resolvedComments;
   resolved.chatCount = resolvedComments;
 
@@ -668,6 +671,7 @@ export default function App() {
               (prev.shopeeSessions || []).length > (cloudData.shopeeSessions || []).length ||
               JSON.stringify(mergedSessions) !== JSON.stringify(cloudData.shopeeSessions)
             ) {
+              lastSaveTimestamp.current = Date.now();
               saveFn(mergedData);
             }
 
@@ -1319,14 +1323,51 @@ export default function App() {
 
   const handleSaveEditedSession = () => {
     if (!editingSession) return;
-    const normalized = normalizeSessionDate(editingSession);
-    setStudioData(prev => ({
-      ...prev,
-      shopeeSessions: allocateBatchCommissionsToSessions(
-        prev.shopeeSessions.map(s => s.id === normalized.id ? normalized : s),
+    const editedComments = parseInt(editingSession.commentsCount ?? editingSession.chatCount ?? editingSession.comments, 10) || 0;
+    const cleanedSession = {
+      ...editingSession,
+      revenue: parseInt(editingSession.revenue, 10) || 0,
+      grossCommission: parseInt(editingSession.grossCommission, 10) || 0,
+      totalOrders: parseInt(editingSession.totalOrders, 10) || 0,
+      clickRatePercent: parseFloat(editingSession.clickRatePercent) || 0,
+      activeViewers: parseInt(editingSession.activeViewers, 10) || 0,
+      commentsCount: editedComments,
+      chatCount: editedComments,
+      comments: editedComments,
+      totalViews: parseInt(editingSession.totalViews, 10) || 0,
+      cartAdditions: parseInt(editingSession.cartAdditions, 10) || 0,
+      likes: parseInt(editingSession.likes ?? editingSession.likeCount, 10) || 0,
+      likeCount: parseInt(editingSession.likes ?? editingSession.likeCount, 10) || 0,
+      ordersPerClickPercent: parseFloat(editingSession.ordersPerClickPercent ?? editingSession.conversionRatePercent) || 0,
+      conversionRatePercent: parseFloat(editingSession.ordersPerClickPercent ?? editingSession.conversionRatePercent) || 0
+    };
+    const normalized = normalizeSessionDate(cleanedSession);
+    isRemoteUpdate.current = false;
+
+    setStudioData(prev => {
+      const updatedSessions = allocateBatchCommissionsToSessions(
+        (prev.shopeeSessions || []).map(s => {
+          if (s.id && normalized.id && s.id === normalized.id) return normalized;
+          const sameTitle = (s.title || '').trim().toLowerCase() === (normalized.title || '').trim().toLowerCase();
+          const sameDate = (s.dateISO || s.dateFormatted) && (s.dateISO || s.dateFormatted) === (normalized.dateISO || normalized.dateFormatted);
+          return (sameTitle && sameDate) ? normalized : s;
+        }),
         prev.otherIncomeList
-      )
-    }));
+      );
+      const nextData = {
+        ...prev,
+        shopeeSessions: updatedSessions
+      };
+      try {
+        localStorage.setItem("paramara_studio_admin_data_v2", JSON.stringify(nextData));
+      } catch (e) {}
+      if (isSupabaseConfigured || isFirebaseConfigured) {
+        lastSaveTimestamp.current = Date.now();
+        const saveFn = isSupabaseConfigured ? saveStudioDataToSupabase : saveStudioDataToFirestore;
+        saveFn(nextData);
+      }
+      return nextData;
+    });
     setEditingSession(null);
     setModalType(null);
     showToast('Perubahan data sesi berhasil disimpan!');
@@ -6191,7 +6232,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
                   <div className="form-group">
                     <label className="form-label">Penjualan GMV (Rp)</label>
-                    <input className="form-input" type="number" value={scannedPreview.revenue} onChange={e => setScannedPreview({ ...scannedPreview, revenue: parseInt(e.target.value) || 0 })} />
+                    <input className="form-input" type="number" value={scannedPreview.revenue ?? ''} onChange={e => setScannedPreview({ ...scannedPreview, revenue: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
                   </div>
 
                   {/* GROSS COMMISSION INPUT */}
@@ -6202,7 +6243,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
                   <div className="form-group">
                     <label className="form-label">Total Pesanan</label>
-                    <input className="form-input" type="number" value={scannedPreview.totalOrders} onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: parseInt(e.target.value) || 0 })} />
+                    <input className="form-input" type="number" value={scannedPreview.totalOrders ?? ''} onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
                   </div>
 
                   <div className="form-group">
@@ -6210,10 +6251,11 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     <input
                       className="form-input"
                       type="number"
-                      value={scannedPreview.commentsCount ?? scannedPreview.chatCount ?? 0}
+                      value={scannedPreview.commentsCount !== undefined && scannedPreview.commentsCount !== null ? scannedPreview.commentsCount : (scannedPreview.chatCount ?? '')}
                       onChange={e => {
-                        const val = parseInt(e.target.value) || 0;
-                        setScannedPreview({ ...scannedPreview, commentsCount: val, chatCount: val });
+                        const raw = e.target.value;
+                        const val = raw === '' ? '' : parseInt(raw, 10);
+                        setScannedPreview({ ...scannedPreview, commentsCount: val, chatCount: val, comments: val });
                       }}
                     />
                   </div>
@@ -6223,8 +6265,8 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     <input
                       className="form-input"
                       type="number"
-                      value={scannedPreview.activeViewers ?? 0}
-                      onChange={e => setScannedPreview({ ...scannedPreview, activeViewers: parseInt(e.target.value) || 0 })}
+                      value={scannedPreview.activeViewers ?? ''}
+                      onChange={e => setScannedPreview({ ...scannedPreview, activeViewers: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
                     />
                   </div>
 
@@ -6233,8 +6275,8 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     <input
                       className="form-input"
                       type="number"
-                      value={scannedPreview.totalViews ?? 0}
-                      onChange={e => setScannedPreview({ ...scannedPreview, totalViews: parseInt(e.target.value) || 0 })}
+                      value={scannedPreview.totalViews ?? ''}
+                      onChange={e => setScannedPreview({ ...scannedPreview, totalViews: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
                     />
                   </div>
                 </div>
@@ -6254,7 +6296,12 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
           <div className="modal-card" style={{ maxWidth: 680 }}>
             <div className="modal-header">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Edit3 style={{ color: 'var(--primary)' }} /> Edit Data Sesi Shopee Live</h3>
-              <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <button type="button" className="btn btn-primary btn-sm" style={{ padding: '6px 14px', fontSize: '0.8rem' }} onClick={handleSaveEditedSession}>
+                  <Save style={{ width: 14, height: 14 }} /> Simpan Perubahan
+                </button>
+                <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
+              </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
@@ -6338,27 +6385,27 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
               <div className="form-group">
                 <label className="form-label">Penjualan GMV (Rp)</label>
-                <input className="form-input" type="number" value={editingSession.revenue} onChange={e => setEditingSession({ ...editingSession, revenue: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.revenue ?? ''} onChange={e => setEditingSession({ ...editingSession, revenue: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
               <div className="form-group">
                 <label className="form-label" style={{ color: 'var(--accent-gold)' }}>Komisi Kotor Studio (Rp)</label>
-                <input className="form-input" type="number" value={editingSession.grossCommission || 0} onChange={e => setEditingSession({ ...editingSession, grossCommission: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.grossCommission ?? ''} onChange={e => setEditingSession({ ...editingSession, grossCommission: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Total Pesanan</label>
-                <input className="form-input" type="number" value={editingSession.totalOrders} onChange={e => setEditingSession({ ...editingSession, totalOrders: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.totalOrders ?? ''} onChange={e => setEditingSession({ ...editingSession, totalOrders: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Persentase Klik (CTR %)</label>
-                <input className="form-input" type="number" step="0.1" value={editingSession.clickRatePercent} onChange={e => setEditingSession({ ...editingSession, clickRatePercent: parseFloat(e.target.value) || 0 })} />
+                <input className="form-input" type="number" step="0.1" value={editingSession.clickRatePercent ?? ''} onChange={e => setEditingSession({ ...editingSession, clickRatePercent: e.target.value === '' ? '' : e.target.value })} />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Penonton Aktif</label>
-                <input className="form-input" type="number" value={editingSession.activeViewers ?? 0} onChange={e => setEditingSession({ ...editingSession, activeViewers: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.activeViewers ?? ''} onChange={e => setEditingSession({ ...editingSession, activeViewers: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
               <div className="form-group">
@@ -6366,32 +6413,33 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                 <input
                   className="form-input"
                   type="number"
-                  value={editingSession.commentsCount ?? editingSession.chatCount ?? 0}
+                  value={editingSession.commentsCount !== undefined && editingSession.commentsCount !== null ? editingSession.commentsCount : (editingSession.chatCount ?? '')}
                   onChange={e => {
-                    const val = parseInt(e.target.value) || 0;
-                    setEditingSession({ ...editingSession, commentsCount: val, chatCount: val });
+                    const raw = e.target.value;
+                    const val = raw === '' ? '' : parseInt(raw, 10);
+                    setEditingSession({ ...editingSession, commentsCount: val, chatCount: val, comments: val });
                   }}
                 />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Total Views</label>
-                <input className="form-input" type="number" value={editingSession.totalViews ?? 0} onChange={e => setEditingSession({ ...editingSession, totalViews: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.totalViews ?? ''} onChange={e => setEditingSession({ ...editingSession, totalViews: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Masuk Keranjang</label>
-                <input className="form-input" type="number" value={editingSession.cartAdditions ?? 0} onChange={e => setEditingSession({ ...editingSession, cartAdditions: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.cartAdditions ?? ''} onChange={e => setEditingSession({ ...editingSession, cartAdditions: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Total Suka</label>
-                <input className="form-input" type="number" value={editingSession.likes ?? editingSession.likeCount ?? 0} onChange={e => setEditingSession({ ...editingSession, likes: parseInt(e.target.value) || 0, likeCount: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.likes !== undefined && editingSession.likes !== null ? editingSession.likes : (editingSession.likeCount ?? '')} onChange={e => { const val = e.target.value === '' ? '' : parseInt(e.target.value, 10); setEditingSession({ ...editingSession, likes: val, likeCount: val }); }} />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Tingkat Konversi (%)</label>
-                <input className="form-input" type="number" step="0.1" value={editingSession.ordersPerClickPercent ?? editingSession.conversionRatePercent ?? 0} onChange={e => setEditingSession({ ...editingSession, ordersPerClickPercent: parseFloat(e.target.value) || 0, conversionRatePercent: parseFloat(e.target.value) || 0 })} />
+                <input className="form-input" type="number" step="0.1" value={editingSession.ordersPerClickPercent !== undefined && editingSession.ordersPerClickPercent !== null ? editingSession.ordersPerClickPercent : (editingSession.conversionRatePercent ?? '')} onChange={e => { const val = e.target.value === '' ? '' : e.target.value; setEditingSession({ ...editingSession, ordersPerClickPercent: val, conversionRatePercent: val }); }} />
               </div>
 
               <div className="form-group" style={{ gridColumn: 'span 3', marginTop: '6px' }}>
