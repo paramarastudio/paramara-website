@@ -469,6 +469,15 @@ export default async function handler(req, res) {
           parsed.commentsCount = resolvedComments;
           parsed.chatCount = resolvedComments;
 
+          if (!Number(parsed.cartAdditions)) {
+            const productCartSum = Array.isArray(parsed.products)
+              ? parsed.products.reduce((acc, p) => acc + (Number(p.cartAdds) || 0), 0)
+              : 0;
+            parsed.cartAdditions = productCartSum > 0
+              ? productCartSum
+              : (isShopeeFood ? (Number(parsed.totalOrders) || 0) : 0);
+          }
+
           console.log(`[SERVERLESS SUCCESS] Scanned successfully using ${model} (${apiVer})`);
           return res.status(200).json(parsed);
         } else {

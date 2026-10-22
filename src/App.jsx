@@ -277,6 +277,17 @@ export function normalizeSessionDate(s) {
   resolved.commentsCount = resolvedComments;
   resolved.chatCount = resolvedComments;
 
+  // In ShopeeFood Live there is no separate "Masuk Keranjang" top metric (viewers buy food vouchers directly).
+  // Fallback cartAdditions to sum of product cartAdds (Terjual) or totalOrders when 0.
+  if (!Number(resolved.cartAdditions)) {
+    const productCartSum = Array.isArray(resolved.products)
+      ? resolved.products.reduce((acc, p) => acc + (Number(p.cartAdds) || 0), 0)
+      : 0;
+    resolved.cartAdditions = productCartSum > 0
+      ? productCartSum
+      : (isShopeeFood ? (Number(resolved.totalOrders) || 0) : 0);
+  }
+
   return resolved;
 }
 
@@ -3787,7 +3798,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
                           <div>
                             <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Keranjang</span>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{s.cartAdditions || 0} item</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{(s.cartAdditions || 0).toLocaleString('id-ID')} item</div>
                           </div>
 
                           <div>
@@ -6277,6 +6288,16 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                       type="number"
                       value={scannedPreview.totalViews ?? ''}
                       onChange={e => setScannedPreview({ ...scannedPreview, totalViews: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Masuk Keranjang / Item</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      value={scannedPreview.cartAdditions ?? ''}
+                      onChange={e => setScannedPreview({ ...scannedPreview, cartAdditions: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
                     />
                   </div>
                 </div>
