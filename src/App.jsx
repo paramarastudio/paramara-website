@@ -269,6 +269,11 @@ export function normalizeSessionDate(s) {
     resolved.duration = '01:30:00';
   }
 
+  // Sync commentsCount and chatCount (AI Vision returns commentsCount, while session card also checks chatCount)
+  const resolvedComments = Number(resolved.commentsCount ?? resolved.chatCount ?? resolved.comments) || 0;
+  resolved.commentsCount = resolvedComments;
+  resolved.chatCount = resolvedComments;
+
   return resolved;
 }
 
@@ -2353,6 +2358,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
         "Total Views": s.totalViews || 0,
         "CTR Klik (%)": s.clickRatePercent || 0,
         "Penonton Aktif": s.activeViewers || 0,
+        "Total Komentar": s.commentsCount ?? s.chatCount ?? s.comments ?? 0,
         "Masuk Keranjang": s.cartAdditions || 0,
         "Total Suka": s.likes ?? s.likeCount ?? 0,
         "Tingkat Konversi (%)": s.ordersPerClickPercent ?? s.conversionRatePercent ?? 0,
@@ -3735,7 +3741,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
                           <div>
                             <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Komentar</span>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{s.chatCount || 0} chat</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{(s.commentsCount ?? s.chatCount ?? s.comments ?? 0).toLocaleString('id-ID')} chat</div>
                           </div>
 
                           <div>
@@ -3752,7 +3758,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
                           <div>
                             <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Views</span>
-                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{s.totalViews || 0} views</div>
+                            <div style={{ fontSize: '0.95rem', fontWeight: 700 }}>{(s.totalViews || 0).toLocaleString('id-ID')} views</div>
                           </div>
                         </div>
 
@@ -3817,7 +3823,10 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                             <div>
                               <h4 style={{ fontSize: '0.875rem', color: 'var(--primary)', marginBottom: 8 }}>Interaksi & Traffic:</h4>
                               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                                <div>Total Komentar: <strong>{(s.commentsCount ?? s.chatCount ?? s.comments ?? 0).toLocaleString('id-ID')}</strong></div>
                                 <div>Total Suka: <strong>{(s.likes ?? s.likeCount ?? 0).toLocaleString('id-ID')}</strong></div>
+                                {s.peakConcurrentViewers > 0 && <div>Penonton Terbanyak: <strong>{s.peakConcurrentViewers.toLocaleString('id-ID')}</strong></div>}
+                                {s.shares > 0 && <div>Total Dibagikan: <strong>{s.shares.toLocaleString('id-ID')}</strong></div>}
                                 <div>Tingkat Konversi: <strong>{s.ordersPerClickPercent ?? s.conversionRatePercent ?? s.clickRatePercent ?? 0}%</strong></div>
                               </div>
                             </div>
@@ -6195,6 +6204,39 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     <label className="form-label">Total Pesanan</label>
                     <input className="form-input" type="number" value={scannedPreview.totalOrders} onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: parseInt(e.target.value) || 0 })} />
                   </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Total Komentar (Chat)</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      value={scannedPreview.commentsCount ?? scannedPreview.chatCount ?? 0}
+                      onChange={e => {
+                        const val = parseInt(e.target.value) || 0;
+                        setScannedPreview({ ...scannedPreview, commentsCount: val, chatCount: val });
+                      }}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Penonton Aktif</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      value={scannedPreview.activeViewers ?? 0}
+                      onChange={e => setScannedPreview({ ...scannedPreview, activeViewers: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Total Views</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      value={scannedPreview.totalViews ?? 0}
+                      onChange={e => setScannedPreview({ ...scannedPreview, totalViews: parseInt(e.target.value) || 0 })}
+                    />
+                  </div>
                 </div>
 
                 <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveScannedSession}>
@@ -6316,12 +6358,30 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
               <div className="form-group">
                 <label className="form-label">Penonton Aktif</label>
-                <input className="form-input" type="number" value={editingSession.activeViewers || 7} onChange={e => setEditingSession({ ...editingSession, activeViewers: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.activeViewers ?? 0} onChange={e => setEditingSession({ ...editingSession, activeViewers: parseInt(e.target.value) || 0 })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Total Komentar (Chat)</label>
+                <input
+                  className="form-input"
+                  type="number"
+                  value={editingSession.commentsCount ?? editingSession.chatCount ?? 0}
+                  onChange={e => {
+                    const val = parseInt(e.target.value) || 0;
+                    setEditingSession({ ...editingSession, commentsCount: val, chatCount: val });
+                  }}
+                />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Total Views</label>
+                <input className="form-input" type="number" value={editingSession.totalViews ?? 0} onChange={e => setEditingSession({ ...editingSession, totalViews: parseInt(e.target.value) || 0 })} />
               </div>
 
               <div className="form-group">
                 <label className="form-label">Masuk Keranjang</label>
-                <input className="form-input" type="number" value={editingSession.cartAdditions || 5} onChange={e => setEditingSession({ ...editingSession, cartAdditions: parseInt(e.target.value) || 0 })} />
+                <input className="form-input" type="number" value={editingSession.cartAdditions ?? 0} onChange={e => setEditingSession({ ...editingSession, cartAdditions: parseInt(e.target.value) || 0 })} />
               </div>
 
               <div className="form-group">

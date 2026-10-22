@@ -15,7 +15,8 @@ Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gamb
   "revenue": number (Penjualan / GMV Rp tanpa titik/koma/spasi, contoh dari 5.464.798 menjadi 5464798),
   "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 546480),
   "activeViewers": number (Penonton Aktif / Penonton >= 1 menit, contoh: 96),
-  "commentsCount": number (Komentar / Total Komentar, contoh: 1606),
+  "commentsCount": number (Total Komentar / Komentar angka murni tanpa titik, contoh: 768 atau 1606. Jika ada 'Komentar' di bagian atas dan 'Total Komentar' di bagian tengah, ambil angka Total Komentar terbesar),
+  "chatCount": number (Sama dengan commentsCount: Total Komentar / Komentar angka murni, contoh: 768),
   "cartAdditions": number (Masuk Keranjang, jika tidak ada isi 0),
   "clickRatePercent": number (Persentase Klik, contoh: 4.1),
   "ordersPerClickPercent": number (Pesanan per Klik, contoh: 5.5),
@@ -463,6 +464,10 @@ export default async function handler(req, res) {
           if (!parsed.grossCommission && parsed.revenue) {
             parsed.grossCommission = 0;
           }
+
+          const resolvedComments = Number(parsed.commentsCount ?? parsed.chatCount ?? parsed.comments) || 0;
+          parsed.commentsCount = resolvedComments;
+          parsed.chatCount = resolvedComments;
 
           console.log(`[SERVERLESS SUCCESS] Scanned successfully using ${model} (${apiVer})`);
           return res.status(200).json(parsed);
