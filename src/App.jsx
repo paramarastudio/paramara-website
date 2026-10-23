@@ -384,6 +384,10 @@ export function ensureAmazonAssociatesSynced(data) {
 
   return {
     ...data,
+    studioInfo: {
+      ...(data.studioInfo || INITIAL_STUDIO_DATA.studioInfo),
+      name: "Paramara Group"
+    },
     amazonAssociatesReports: reports,
     otherIncomeList: incomeList
   };
@@ -2539,9 +2543,9 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
           <div className="public-header-container" style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'nowrap' }}>
             
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--accent-gold-border)', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
+              <img src="/assets/logo.png" alt="Paramara Group" style={{ width: 36, height: 36, borderRadius: 10, border: '1px solid var(--accent-gold-border)', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
               <div>
-                <h1 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.1 }}>Paramara Studio</h1>
+                <h1 style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.1 }}>Paramara Group</h1>
                 <span style={{ fontSize: '0.625rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.03em' }}>DIGITAL VENTURES</span>
               </div>
             </div>
@@ -2571,13 +2575,13 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
         {/* HERO SECTION */}
         <section className="public-hero-section" style={{ padding: '4rem 1.5rem 3rem', textAlign: 'center', maxWidth: 900, margin: '0 auto' }}>
           <div className="brand-badge" style={{ marginBottom: '1rem', padding: '6px 14px', fontSize: '0.75rem', display: 'inline-flex' }}>
-            <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Paramara Studio Ecosystem
+            <Sparkles style={{ width: 14, height: 14, verticalAlign: 'middle', marginRight: 6 }} /> Paramara Group Ecosystem
           </div>
           <h1 className="public-hero-title" style={{ fontSize: '2.3rem', fontWeight: 800, color: 'var(--primary)', lineHeight: 1.3, marginBottom: '1rem', letterSpacing: '-0.02em' }}>
             Digital Venture Building & Data-Driven Operations.
           </h1>
           <p className="public-hero-desc" style={{ fontSize: '1.05rem', color: 'var(--text-muted)', lineHeight: 1.65, marginBottom: '2rem', maxWidth: 740, margin: '0 auto 2rem' }}>
-            <strong>Paramara Studio</strong> operates an integrated portfolio of specialized media and technology ventures: Shopee Live & Video Commerce management, the <em>Lestari</em> Indonesian cultural edu-tech platform, and US-market product discovery media.
+            <strong>Paramara Group</strong> operates an integrated portfolio of specialized media and technology ventures: Shopee Live & Video Commerce management, the <em>Lestari</em> Indonesian cultural edu-tech platform, and US-market product discovery media.
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '0.875rem', flexWrap: 'wrap' }}>
@@ -2590,7 +2594,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
         {/* VENTURES GRID SECTION */}
         <section id="ventures" style={{ maxWidth: 1140, margin: '0 auto', padding: '1.5rem 1.25rem 5rem' }}>
           <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
-            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Paramara Studio Core Operations</h2>
+            <h2 style={{ fontSize: '1.75rem', fontWeight: 800, color: 'var(--primary)', marginBottom: 6 }}>Paramara Group Core Operations</h2>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>E-commerce operations, cultural edu-tech, and international media hubs.</p>
           </div>
 
@@ -2691,11 +2695,11 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
         <footer style={{ background: 'var(--bg-sidebar)', borderTop: '1px solid var(--border-color)', padding: '2rem 1.25rem', textAlign: 'center' }}>
           <div style={{ maxWidth: 1200, margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 30, height: 30, borderRadius: 8 }} onError={(e) => { e.target.src = '/logo.png'; }} />
-              <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>Paramara Studio</strong>
+              <img src="/assets/logo.png" alt="Paramara Group" style={{ width: 30, height: 30, borderRadius: 8 }} onError={(e) => { e.target.src = '/logo.png'; }} />
+              <strong style={{ color: 'var(--primary)', fontSize: '0.95rem' }}>Paramara Group</strong>
             </div>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
-              © 2026 <strong>Paramara Studio</strong>. All rights reserved. Operating Digital Commerce & Media Ecosystem.
+              © 2026 <strong>Paramara Group</strong>. All rights reserved. Operating Digital Commerce & Media Ecosystem.
             </p>
           </div>
         </footer>
@@ -2715,8 +2719,8 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
         <div className="glass-card" style={{ maxWidth: 420, width: '100%', padding: '2rem 1.5rem' }}>
           
           <div style={{ textAlign: 'center', marginBottom: '1.75rem' }}>
-            <img src="/assets/logo.png" alt="Paramara Studio" style={{ width: 52, height: 52, borderRadius: 14, border: '2px solid var(--accent-gold)', marginBottom: '0.75rem', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
-            <h2 style={{ fontSize: '1.3rem', color: 'var(--primary)', fontWeight: 800 }}>Paramara Studio</h2>
+            <img src="/assets/logo.png" alt="Paramara Group" style={{ width: 52, height: 52, borderRadius: 14, border: '2px solid var(--accent-gold)', marginBottom: '0.75rem', objectFit: 'cover' }} onError={(e) => { e.target.src = '/logo.png'; }} />
+            <h2 style={{ fontSize: '1.3rem', color: 'var(--primary)', fontWeight: 800 }}>Paramara Group</h2>
             <span style={{ fontSize: '0.725rem', color: 'var(--text-dim)', fontWeight: 700, letterSpacing: '0.04em' }}>AUTHORIZED ADMIN PORTAL</span>
           </div>
 
@@ -2776,14 +2780,14 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
         <div>
           <div className="sidebar-header">
             <div className="brand-wrapper">
-              <img className="brand-logo-img" src="/assets/logo.png" alt="Paramara Studio Logo" onError={(e) => { e.target.src = '/logo.png'; }} />
+              <img className="brand-logo-img" src="/assets/logo.png" alt="Paramara Group Logo" onError={(e) => { e.target.src = '/logo.png'; }} />
               <div>
-                <h1 className="brand-title" style={{ fontSize: '1.25rem' }}>Paramara Studio</h1>
+                <h1 className="brand-title" style={{ fontSize: '1.25rem' }}>Paramara Group</h1>
               </div>
             </div>
             <div style={{ marginTop: 6 }}>
               <div style={{ fontSize: '0.8rem', color: 'var(--primary)', fontWeight: 700 }}>Welcome back, Malikh</div>
-              <div style={{ fontSize: '0.675rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.03em', marginTop: 2 }}>SUPER ADMIN • PARAMARA STUDIO</div>
+              <div style={{ fontSize: '0.675rem', color: 'var(--text-dim)', fontWeight: 600, letterSpacing: '0.03em', marginTop: 2 }}>SUPER ADMIN • PARAMARA GROUP</div>
             </div>
           </div>
 
@@ -4033,7 +4037,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
           <div className="tab-content main-inner">
             <div className="glass-card" style={{ padding: '1.25rem 1.5rem', marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
               <div>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UserCheck style={{ color: 'var(--primary)' }} /> Manajemen Akun Admin Paramara Studio</h3>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><UserCheck style={{ color: 'var(--primary)' }} /> Manajemen Akun Admin Paramara Group</h3>
                 <p style={{ fontSize: '0.825rem', color: 'var(--text-muted)' }}>Kelola hak akses pengguna internal admin portal (Tambah, Edit Profil Admin, & Hapus Akun Admin).</p>
               </div>
               <button className="btn btn-primary" onClick={() => setModalType('addAdmin')}>
@@ -4164,7 +4168,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                 <div style={{ flex: 1, minWidth: 260 }}>
                   <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>Unduh Cadangan Manual (Offline Backup)</span>
                   <p style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: 4, lineHeight: 1.5 }}>
-                    Unduh seluruh basis data Paramara Studio (.json) langsung ke komputer Anda sebagai cadangan ekstra offline.
+                    Unduh seluruh basis data Paramara Group (.json) langsung ke komputer Anda sebagai cadangan ekstra offline.
                   </p>
                   <button className="btn btn-secondary btn-sm" style={{ marginTop: '0.75rem', display: 'flex', alignItems: 'center', gap: 6 }} onClick={handleExportBackupData}>
                     <Save style={{ width: 14, height: 14 }} /> Ekspor & Unduh Data (.json)
@@ -5977,7 +5981,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
         {/* Footer */}
         <footer>
-          <p>© 2026 <strong>Paramara Studio</strong> — Authorized Admin Portal for Malikh</p>
+          <p>© 2026 <strong>Paramara Group</strong> — Authorized Admin Portal for Malikh</p>
         </footer>
       </main>
 

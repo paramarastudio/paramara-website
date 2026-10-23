@@ -1,10 +1,10 @@
 /**
- * Paramara Studio Data Model & Initial State
+ * Paramara Group Data Model & Initial State
  */
 
 export const INITIAL_STUDIO_DATA = {
   studioInfo: {
-    name: "Paramara Studio",
+    name: "Paramara Group",
     tagline: "",
     logoUrl: "/assets/logo.png",
     primaryColor: "#082F26",

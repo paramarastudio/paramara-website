@@ -22,7 +22,7 @@ class ErrorBoundary extends React.Component {
       return (
         <div style={{ background: '#09110F', minHeight: '100vh', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem', textAlign: 'center', fontFamily: 'sans-serif' }}>
           <img src="/assets/logo.png" alt="Paramara Logo" style={{ width: 60, height: 60, borderRadius: 14, marginBottom: 16 }} onError={(e) => { e.target.src = '/logo.png'; }} />
-          <h2 style={{ fontSize: '1.25rem', color: '#EAB308', marginBottom: 8 }}>Paramara Studio Portal</h2>
+          <h2 style={{ fontSize: '1.25rem', color: '#EAB308', marginBottom: 8 }}>Paramara Group Portal</h2>
           <p style={{ fontSize: '0.875rem', color: '#9CA3AF', maxWidth: 360, marginBottom: 20 }}>
             Terjadi pembaruan tampilan pada browser Anda. Silakan muat ulang halaman.
           </p>
