@@ -218,17 +218,50 @@ export function downloadCsv(filename, rows) {
   document.body.removeChild(link);
 }
 
+// ====== MULTI-SESSION TITLE & DURATION HELPERS ======
+export function formatSessionTitleWithNumber(rawTitle, channelType, dateFormatted, sessionNumber) {
+  const cleanSession = (sessionNumber || '').trim();
+  const isShopeeFood = channelType === 'ShopeeFood Live' || (rawTitle || '').toLowerCase().includes('shopeefood');
+  let baseTitle = (rawTitle || '')
+    .replace(/\s*\(\s*Sesi\s*[^)]+\)/gi, '')
+    .replace(/\s*-\s*Sesi\s*(?:\d+|Pagi|Siang|Sore|Malam|Subuh)\b/gi, '')
+    .trim();
+  if (isShopeeFood && dateFormatted) {
+    baseTitle = `ShopeeFood Live ${dateFormatted}`;
+  } else if (!baseTitle && dateFormatted) {
+    baseTitle = `Shopee Live ${dateFormatted}`;
+  }
+  return cleanSession ? `${baseTitle} (${cleanSession})` : baseTitle;
+}
+
+export function sumDurations(d1, d2) {
+  const toSec = (str) => {
+    if (!str || typeof str !== 'string') return 0;
+    const parts = str.trim().split(':').map(n => parseInt(n, 10) || 0);
+    if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    if (parts.length === 2) return parts[0] * 60 + parts[1];
+    return 0;
+  };
+  const totalSec = toSec(d1) + toSec(d2);
+  if (totalSec <= 0) return d1 || d2 || '01:30:00';
+  const hh = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+  const mm = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+  const ss = String(totalSec % 60).padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+
 // ====== STRICT DEDUPLICATION & DATE/DURATION NORMALIZER ======
 export function normalizeSessionDate(s) {
   if (!s) return s;
   const title = s.title || '';
   const titleDateMatch = title.match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
   const startDateMatch = (s.startTime || s.dateFormatted || '').match(/\b(\d{1,2})[-/.](\d{1,2})[-/.](\d{4})\b/);
-  const isoMatch = String(s.dateISO || '').match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
-  const timeMatch = (s.startTime || s.dateFormatted || '').match(/\b(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\b/);
+  const isoMatch = String(s.dateISO || s.startTime || s.dateFormatted || '').match(/\b(\d{4})[-/.](\d{1,2})[-/.](\d{1,2})\b/);
+  const timeMatch = (s.sessionTime || s.startTime || s.dateFormatted || '').match(/\b(\d{1,2})[:.](\d{2})(?:[:.]\d{2})?\b/);
   const timePart = timeMatch ? `${timeMatch[1].padStart(2, '0')}:${timeMatch[2]}` : '14:30';
 
   let resolved = { ...s };
+  resolved.sessionTime = timePart;
 
   if (titleDateMatch) {
     const d = titleDateMatch[1].padStart(2, '0');
@@ -253,11 +286,21 @@ export function normalizeSessionDate(s) {
     resolved.startTime = `${resolved.dateFormatted} ${timePart}`;
   }
 
-  // Ensure ShopeeFood Live sessions always keep title format: "ShopeeFood Live DD-MM-YYYY"
+  // Extract or preserve sessionNumber (e.g. "Sesi 1", "Sesi 2", "Sesi Pagi", etc.)
+  const titleSessionMatch = title.match(/\(\s*(Sesi\s*[^)]+)\)/i) || title.match(/\b(Sesi\s*(?:\d+|Pagi|Siang|Sore|Malam|Subuh))\b/i);
+  const resolvedSessionNumber = (
+    s.sessionNumber !== undefined
+      ? String(s.sessionNumber)
+      : (titleSessionMatch ? titleSessionMatch[1].replace(/\s+/g, ' ') : '')
+  ).trim();
+  resolved.sessionNumber = resolvedSessionNumber;
+
   const isShopeeFood = resolved.channelType === 'ShopeeFood Live' || (resolved.title || '').toLowerCase().includes('shopeefood');
-  if (isShopeeFood && resolved.dateFormatted) {
+  if (isShopeeFood) {
     resolved.channelType = 'ShopeeFood Live';
-    resolved.title = `ShopeeFood Live ${resolved.dateFormatted}`;
+  }
+  if (resolved.dateFormatted && (isShopeeFood || s.sessionNumber !== undefined || resolvedSessionNumber)) {
+    resolved.title = formatSessionTitleWithNumber(resolved.title, resolved.channelType, resolved.dateFormatted, resolvedSessionNumber);
   }
 
   // Fix Duration vs avgWatchDuration:
@@ -300,8 +343,9 @@ export function deduplicateSessions(sessions) {
     s = normalizeSessionDate(s);
     const normTitle = (s.title || '').trim().toLowerCase();
     const normTime = (s.startTime || s.dateFormatted || '').trim();
-    // Unique key: prefer ID, fallback to Title + StartTime/Date
-    const uniqueKey = s.id ? `id_${s.id}` : `key_${normTitle}_${normTime}`;
+    const normSession = (s.sessionNumber || '').trim().toLowerCase();
+    // Unique key: prefer ID, fallback to Title + SessionNumber + StartTime + Revenue
+    const uniqueKey = s.id ? `id_${s.id}` : `key_${normTitle}_${normSession}_${normTime}_${s.revenue || 0}`;
     
     if (!seen.has(uniqueKey)) {
       seen.add(uniqueKey);
@@ -1000,6 +1044,12 @@ export default function App() {
       if (!dA) return 1;
       if (!dB) return -1;
 
+      if ( dA.getTime() === dB.getTime() ) {
+        const sA = String(a.sessionNumber || a.title || '');
+        const sB = String(b.sessionNumber || b.title || '');
+        if (sortBy === 'date_asc') return sA.localeCompare(sB, 'id', { numeric: true });
+        return sB.localeCompare(sA, 'id', { numeric: true });
+      }
       if (sortBy === 'date_asc') return dA.getTime() - dB.getTime();
       return dB.getTime() - dA.getTime(); // default: date_desc
     });
@@ -1262,12 +1312,25 @@ export default function App() {
     try {
       // Analyze INSTANTLY with Gemini Vision AI via Vercel serverless proxy
       const result = await analyzeShopeeScreenshots(filesToProcess);
+      result.id = "live_" + Date.now();
       result.grossCommission = "";
       if (scanChannelPreset === 'ShopeeFood Live') {
         result.channelType = 'ShopeeFood Live';
       }
 
-      setScannedPreview(normalizeSessionDate(result));
+      let normalized = normalizeSessionDate(result);
+      const sameDateExisting = (studioData.shopeeSessions || []).filter(s =>
+        (s.dateISO && normalized.dateISO && s.dateISO === normalized.dateISO) ||
+        (s.dateFormatted && normalized.dateFormatted && s.dateFormatted === normalized.dateFormatted)
+      );
+      if (!normalized.sessionNumber) {
+        normalized.sessionNumber = sameDateExisting.length > 0
+          ? `Sesi ${sameDateExisting.length + 1}`
+          : 'Sesi 1';
+        normalized = normalizeSessionDate(normalized);
+      }
+
+      setScannedPreview(normalized);
       remoteLog.info('AI Scan success (Shopee Live)', { revenue: result.revenue, orders: result.orders });
     } catch (err) {
       showToast('Gagal membaca screenshot: ' + err.message, 'error');
@@ -1277,35 +1340,146 @@ export default function App() {
     }
   };
 
-  // Save Session & Asynchronously Upload to Firebase in background
-  const handleSaveScannedSession = async () => {
-    const sessionToSave = { 
-      ...scannedPreview,
-      grossCommission: parseInt(scannedPreview.grossCommission) || 0
-    };
-
-    // 1. Immediately Save to Local State so UI updates instantly (with deduplication & batch commission sync)!
-    setStudioData(prev => {
-      const list = prev.shopeeSessions || [];
-      const normTitle = (sessionToSave.title || '').trim().toLowerCase();
-      const normTime = (sessionToSave.startTime || sessionToSave.dateFormatted || '').trim();
-
-      const existingIndex = list.findIndex(s => 
-        s.id === sessionToSave.id ||
-        ((s.title || '').trim().toLowerCase() === normTitle && (s.startTime || s.dateFormatted || '').trim() === normTime)
-      );
-
-      let updatedList = [...list];
-      if (existingIndex >= 0) {
-        updatedList[existingIndex] = { ...updatedList[existingIndex], ...sessionToSave };
+  // Scan screenshot directly inside Edit Session Modal (fill current session, accumulate, or create new session on same date)
+  const handleQuickScanInEditModal = async (e, actionMode = 'fill') => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !editingSession) return;
+    setScanning(true);
+    try {
+      const scanned = await analyzeShopeeScreenshots(files);
+      const normScanned = normalizeSessionDate(scanned);
+      if (actionMode === 'accumulate') {
+        const mergedComments = (parseInt(editingSession.commentsCount ?? editingSession.chatCount, 10) || 0) + (parseInt(normScanned.commentsCount ?? normScanned.chatCount, 10) || 0);
+        const mergedLikes = (parseInt(editingSession.likes ?? editingSession.likeCount, 10) || 0) + (parseInt(normScanned.likes ?? normScanned.likeCount, 10) || 0);
+        setEditingSession(prev => normalizeSessionDate({
+          ...prev,
+          duration: sumDurations(prev.duration, normScanned.duration),
+          avgWatchDuration: normScanned.avgWatchDuration || prev.avgWatchDuration,
+          revenue: (parseInt(prev.revenue, 10) || 0) + (parseInt(normScanned.revenue, 10) || 0),
+          totalOrders: (parseInt(prev.totalOrders, 10) || 0) + (parseInt(normScanned.totalOrders, 10) || 0),
+          activeViewers: (parseInt(prev.activeViewers, 10) || 0) + (parseInt(normScanned.activeViewers, 10) || 0),
+          commentsCount: mergedComments,
+          chatCount: mergedComments,
+          comments: mergedComments,
+          totalViews: (parseInt(prev.totalViews, 10) || 0) + (parseInt(normScanned.totalViews, 10) || 0),
+          cartAdditions: (parseInt(prev.cartAdditions, 10) || 0) + (parseInt(normScanned.cartAdditions, 10) || 0),
+          likes: mergedLikes,
+          likeCount: mergedLikes,
+          peakConcurrentViewers: Math.max(parseInt(prev.peakConcurrentViewers, 10) || 0, parseInt(normScanned.peakConcurrentViewers, 10) || 0)
+        }));
+        showToast('Data screenshot berhasil diakumulasikan (dijumlahkan) ke sesi ini!');
       } else {
-        updatedList.unshift(sessionToSave);
+        setEditingSession(prev => normalizeSessionDate({
+          ...prev,
+          duration: normScanned.duration || prev.duration,
+          avgWatchDuration: normScanned.avgWatchDuration || prev.avgWatchDuration,
+          sessionTime: normScanned.sessionTime || prev.sessionTime,
+          revenue: normScanned.revenue ?? prev.revenue,
+          totalOrders: normScanned.totalOrders ?? prev.totalOrders,
+          activeViewers: normScanned.activeViewers ?? prev.activeViewers,
+          commentsCount: normScanned.commentsCount ?? normScanned.chatCount ?? prev.commentsCount,
+          chatCount: normScanned.commentsCount ?? normScanned.chatCount ?? prev.chatCount,
+          totalViews: normScanned.totalViews ?? prev.totalViews,
+          cartAdditions: normScanned.cartAdditions || prev.cartAdditions,
+          clickRatePercent: normScanned.clickRatePercent || prev.clickRatePercent,
+          ordersPerClickPercent: normScanned.ordersPerClickPercent || prev.ordersPerClickPercent,
+          likes: normScanned.likes ?? prev.likes,
+          peakConcurrentViewers: normScanned.peakConcurrentViewers || prev.peakConcurrentViewers,
+          products: (normScanned.products && normScanned.products.length > 0) ? normScanned.products : prev.products
+        }));
+        showToast('Data screenshot berhasil dimasukkan ke form sesi ini!');
+      }
+    } catch (err) {
+      showToast('Gagal memindai screenshot: ' + err.message, 'error');
+    } finally {
+      setScanning(false);
+      e.target.value = '';
+    }
+  };
+
+  // Save Session & Asynchronously Upload to Firebase in background
+  const handleSaveScannedSession = async (saveMode = 'separate') => {
+    const editedComments = parseInt(scannedPreview.commentsCount ?? scannedPreview.chatCount ?? scannedPreview.comments, 10) || 0;
+    const sessionToSave = normalizeSessionDate({ 
+      ...scannedPreview,
+      id: scannedPreview.id || ("live_" + Date.now()),
+      revenue: parseInt(scannedPreview.revenue, 10) || 0,
+      grossCommission: parseInt(scannedPreview.grossCommission, 10) || 0,
+      totalOrders: parseInt(scannedPreview.totalOrders, 10) || 0,
+      activeViewers: parseInt(scannedPreview.activeViewers, 10) || 0,
+      commentsCount: editedComments,
+      chatCount: editedComments,
+      comments: editedComments,
+      totalViews: parseInt(scannedPreview.totalViews, 10) || 0,
+      cartAdditions: parseInt(scannedPreview.cartAdditions, 10) || 0,
+      peakConcurrentViewers: parseInt(scannedPreview.peakConcurrentViewers, 10) || 0
+    });
+    isRemoteUpdate.current = false;
+
+    // 1. Immediately Save to Local State & Cloud so UI updates instantly!
+    setStudioData(prev => {
+      const list = [...(prev.shopeeSessions || [])];
+
+      if (saveMode === 'accumulate') {
+        const targetIdx = list.findIndex(s =>
+          (s.dateISO && sessionToSave.dateISO && s.dateISO === sessionToSave.dateISO) ||
+          (s.dateFormatted && sessionToSave.dateFormatted && s.dateFormatted === sessionToSave.dateFormatted)
+        );
+        if (targetIdx >= 0) {
+          const ex = list[targetIdx];
+          const sumComm = (parseInt(ex.commentsCount ?? ex.chatCount, 10) || 0) + editedComments;
+          list[targetIdx] = normalizeSessionDate({
+            ...ex,
+            duration: sumDurations(ex.duration, sessionToSave.duration),
+            avgWatchDuration: sessionToSave.avgWatchDuration || ex.avgWatchDuration,
+            revenue: (Number(ex.revenue) || 0) + (Number(sessionToSave.revenue) || 0),
+            grossCommission: (Number(ex.grossCommission) || 0) + (Number(sessionToSave.grossCommission) || 0),
+            totalOrders: (Number(ex.totalOrders) || 0) + (Number(sessionToSave.totalOrders) || 0),
+            activeViewers: (Number(ex.activeViewers) || 0) + (Number(sessionToSave.activeViewers) || 0),
+            commentsCount: sumComm,
+            chatCount: sumComm,
+            comments: sumComm,
+            totalViews: (Number(ex.totalViews) || 0) + (Number(sessionToSave.totalViews) || 0),
+            cartAdditions: (Number(ex.cartAdditions) || 0) + (Number(sessionToSave.cartAdditions) || 0),
+            likes: (Number(ex.likes ?? ex.likeCount) || 0) + (Number(sessionToSave.likes ?? sessionToSave.likeCount) || 0),
+            peakConcurrentViewers: Math.max(Number(ex.peakConcurrentViewers) || 0, Number(sessionToSave.peakConcurrentViewers) || 0)
+          });
+        } else {
+          list.unshift(sessionToSave);
+        }
+      } else {
+        // Save as separate session (never overwrite another session on the same date unless exact same ID)
+        const existingIdIdx = list.findIndex(s => s.id && sessionToSave.id && s.id === sessionToSave.id);
+        if (existingIdIdx >= 0) {
+          list[existingIdIdx] = { ...list[existingIdIdx], ...sessionToSave };
+        } else {
+          // If another session exists on the same date without a sessionNumber, label it "Sesi 1" automatically
+          if (sessionToSave.sessionNumber) {
+            list.forEach((s, idx) => {
+              const sameDate = (s.dateISO && sessionToSave.dateISO && s.dateISO === sessionToSave.dateISO) ||
+                (s.dateFormatted && sessionToSave.dateFormatted && s.dateFormatted === sessionToSave.dateFormatted);
+              if (sameDate && !s.sessionNumber) {
+                list[idx] = normalizeSessionDate({ ...s, sessionNumber: 'Sesi 1' });
+              }
+            });
+          }
+          list.unshift(sessionToSave);
+        }
       }
 
-      return {
+      const nextData = {
         ...prev,
-        shopeeSessions: allocateBatchCommissionsToSessions(updatedList, prev.otherIncomeList)
+        shopeeSessions: allocateBatchCommissionsToSessions(list, prev.otherIncomeList)
       };
+      try {
+        localStorage.setItem("paramara_studio_admin_data_v2", JSON.stringify(nextData));
+      } catch (e) {}
+      if (isSupabaseConfigured || isFirebaseConfigured) {
+        lastSaveTimestamp.current = Date.now();
+        const saveFn = isSupabaseConfigured ? saveStudioDataToSupabase : saveStudioDataToFirestore;
+        saveFn(nextData);
+      }
+      return nextData;
     });
 
     setScannedPreview(null);
@@ -1315,8 +1489,8 @@ export default function App() {
     setPreviewUrl2(null);
     setModalType(null);
 
-    showToast('Metrik & Komisi Kotor Berhasil Disimpan!');
-    remoteLog.info('Shopee Live session saved', { sessionId: sessionToSave.id, revenue: sessionToSave.revenue });
+    showToast(saveMode === 'accumulate' ? 'Data sesi berhasil diakumulasikan ke tanggal yang sama!' : `Sesi Live (${sessionToSave.sessionNumber || 'Baru'}) berhasil disimpan!`);
+    remoteLog.info('Shopee Live session saved', { sessionId: sessionToSave.id, revenue: sessionToSave.revenue, sessionNumber: sessionToSave.sessionNumber });
 
     // 2. Asynchronously upload to Firebase Storage in background without blocking user UI
     if (firebaseStorage) {
@@ -1336,11 +1510,12 @@ export default function App() {
     }
   };
 
-  const handleSaveEditedSession = () => {
+  const handleSaveEditedSession = (nextSessionToEdit = null) => {
     if (!editingSession) return;
     const editedComments = parseInt(editingSession.commentsCount ?? editingSession.chatCount ?? editingSession.comments, 10) || 0;
     const cleanedSession = {
       ...editingSession,
+      id: editingSession.id || ("live_" + Date.now()),
       revenue: parseInt(editingSession.revenue, 10) || 0,
       grossCommission: parseInt(editingSession.grossCommission, 10) || 0,
       totalOrders: parseInt(editingSession.totalOrders, 10) || 0,
@@ -1353,6 +1528,7 @@ export default function App() {
       cartAdditions: parseInt(editingSession.cartAdditions, 10) || 0,
       likes: parseInt(editingSession.likes ?? editingSession.likeCount, 10) || 0,
       likeCount: parseInt(editingSession.likes ?? editingSession.likeCount, 10) || 0,
+      peakConcurrentViewers: parseInt(editingSession.peakConcurrentViewers, 10) || 0,
       ordersPerClickPercent: parseFloat(editingSession.ordersPerClickPercent ?? editingSession.conversionRatePercent) || 0,
       conversionRatePercent: parseFloat(editingSession.ordersPerClickPercent ?? editingSession.conversionRatePercent) || 0
     };
@@ -1360,15 +1536,29 @@ export default function App() {
     isRemoteUpdate.current = false;
 
     setStudioData(prev => {
-      const updatedSessions = allocateBatchCommissionsToSessions(
-        (prev.shopeeSessions || []).map(s => {
-          if (s.id && normalized.id && s.id === normalized.id) return normalized;
-          const sameTitle = (s.title || '').trim().toLowerCase() === (normalized.title || '').trim().toLowerCase();
-          const sameDate = (s.dateISO || s.dateFormatted) && (s.dateISO || s.dateFormatted) === (normalized.dateISO || normalized.dateFormatted);
-          return (sameTitle && sameDate) ? normalized : s;
-        }),
-        prev.otherIncomeList
-      );
+      const existingList = [...(prev.shopeeSessions || [])];
+      const matchIdx = existingList.findIndex(s => s.id && normalized.id && s.id === normalized.id);
+      if (matchIdx >= 0) {
+        existingList[matchIdx] = normalized;
+      } else {
+        existingList.unshift(normalized);
+      }
+
+      // If this session has a sessionNumber (e.g. Sesi 2), ensure any other session on the same date without sessionNumber is labeled Sesi 1
+      if (normalized.sessionNumber) {
+        const sameDateIdxs = existingList
+          .map((s, idx) => (((s.dateISO && normalized.dateISO && s.dateISO === normalized.dateISO) || (s.dateFormatted && normalized.dateFormatted && s.dateFormatted === normalized.dateFormatted)) ? idx : -1))
+          .filter(idx => idx >= 0);
+        if (sameDateIdxs.length > 1) {
+          sameDateIdxs.forEach(idx => {
+            if (!existingList[idx].sessionNumber) {
+              existingList[idx] = normalizeSessionDate({ ...existingList[idx], sessionNumber: 'Sesi 1' });
+            }
+          });
+        }
+      }
+
+      const updatedSessions = allocateBatchCommissionsToSessions(existingList, prev.otherIncomeList);
       const nextData = {
         ...prev,
         shopeeSessions: updatedSessions
@@ -1383,9 +1573,15 @@ export default function App() {
       }
       return nextData;
     });
-    setEditingSession(null);
-    setModalType(null);
-    showToast('Perubahan data sesi berhasil disimpan!');
+
+    if (nextSessionToEdit && typeof nextSessionToEdit === 'object' && !nextSessionToEdit.nativeEvent) {
+      setEditingSession(nextSessionToEdit);
+      showToast(`Tersimpan! Beralih ke ${nextSessionToEdit.sessionNumber || 'Sesi Baru'} di tanggal ${normalized.dateFormatted || normalized.dateISO}`);
+    } else {
+      setEditingSession(null);
+      setModalType(null);
+      showToast('Perubahan data sesi berhasil disimpan!');
+    }
   };
 
   // ====== AI COMMISSION REPORT (RINCIAN KOMISI SHOPEEFOOD & BONUS) HANDLERS ======
@@ -3730,6 +3926,11 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 4 }}>
                               <h3 style={{ fontSize: '1.1rem', color: isShopeeFood ? '#EE4D2D' : 'var(--primary)', margin: 0 }}>{s.title}</h3>
+                              {s.sessionNumber && (
+                                <span style={{ background: 'rgba(184, 142, 57, 0.14)', color: 'var(--accent-gold)', border: '1px solid var(--accent-gold-border)', padding: '2px 9px', borderRadius: 999, fontSize: '0.7rem', fontWeight: 800 }}>
+                                  {s.sessionNumber}
+                                </span>
+                              )}
                               {isShopeeFood ? (
                                 <span style={{ background: 'rgba(238,77,45,0.12)', color: '#EE4D2D', border: '1px solid rgba(238,77,45,0.3)', padding: '2px 8px', borderRadius: 999, fontSize: '0.7rem', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
                                   <Utensils style={{ width: 10, height: 10 }} /> ShopeeFood Live
@@ -3741,9 +3942,10 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                               )}
                             </div>
                             <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                              <span>Waktu: <strong>{s.dateFormatted || s.startTime}</strong></span>
+                              <span>Waktu: <strong>{s.dateFormatted || s.startTime}{s.sessionTime && !(s.dateFormatted || '').includes(':') ? ` • ${s.sessionTime}` : ''}</strong></span>
                               <span>Durasi: <strong>{s.duration || '-'}</strong></span>
                               {s.avgWatchDuration ? <span>Rata-rata Tonton: <strong>{s.avgWatchDuration}</strong></span> : null}
+                              {s.peakConcurrentViewers ? <span>Penonton Terbanyak: <strong>{Number(s.peakConcurrentViewers).toLocaleString('id-ID')}</strong></span> : null}
                               {s.newFollowers ? <span>Pengikut Baru: <strong>{s.newFollowers}</strong></span> : null}
                             </div>
                           </div>
@@ -6122,14 +6324,56 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
 
                 </div>
 
-                <button 
-                  className="btn btn-primary" 
-                  style={{ width: '100%', justifyContent: 'center', padding: '12px' }}
-                  onClick={handleDualAnalysis}
-                  disabled={(!fileSlot1 && !fileSlot2) || scanning}
-                >
-                  <Sparkles /> {scanning ? 'Mengekstrak...' : 'Ekstrak Data Instan dari Galeri'} ({[fileSlot1, fileSlot2].filter(Boolean).length} Foto)
-                </button>
+                <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                  <button 
+                    className="btn btn-primary" 
+                    style={{ flex: 2, minWidth: 240, justifyContent: 'center', padding: '12px' }}
+                    onClick={handleDualAnalysis}
+                    disabled={(!fileSlot1 && !fileSlot2) || scanning}
+                  >
+                    <Sparkles /> {scanning ? 'Mengekstrak...' : 'Ekstrak Data Instan dari Galeri'} ({[fileSlot1, fileSlot2].filter(Boolean).length} Foto)
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary"
+                    style={{ flex: 1, minWidth: 180, justifyContent: 'center', padding: '12px' }}
+                    onClick={() => {
+                      const todayISO = new Date().toISOString().slice(0, 10);
+                      const [y, m, d] = todayISO.split('-');
+                      const formatted = `${d}-${m}-${y}`;
+                      const chType = scanChannelPreset === 'ShopeeFood Live' ? 'ShopeeFood Live' : 'Shopee Live';
+                      const sameDateCount = (studioData.shopeeSessions || []).filter(s => s.dateISO === todayISO || s.dateFormatted === formatted).length;
+                      const sessNum = `Sesi ${sameDateCount + 1}`;
+                      setScannedPreview(normalizeSessionDate({
+                        id: "live_" + Date.now(),
+                        channelType: chType,
+                        sessionNumber: sessNum,
+                        sessionTime: "14:30",
+                        dateISO: todayISO,
+                        dateFormatted: formatted,
+                        startTime: `${formatted} 14:30`,
+                        title: formatSessionTitleWithNumber('', chType, formatted, sessNum),
+                        duration: "01:30:00",
+                        avgWatchDuration: "00:00:30",
+                        revenue: 0,
+                        grossCommission: "",
+                        totalOrders: 0,
+                        activeViewers: 0,
+                        peakConcurrentViewers: 0,
+                        commentsCount: 0,
+                        chatCount: 0,
+                        totalViews: 0,
+                        cartAdditions: 0,
+                        clickRatePercent: 0,
+                        ordersPerClickPercent: 0,
+                        likes: 0,
+                        products: []
+                      }));
+                    }}
+                  >
+                    <Edit3 style={{ width: 15, height: 15 }} /> Input Manual Sesi Baru
+                  </button>
+                </div>
               </div>
             )}
 
@@ -6156,18 +6400,39 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
             )}
 
             {/* SCAN RESULT CONFIRMATION FORM */}
-            {scannedPreview && !scanning && (
+            {scannedPreview && !scanning && (() => {
+              const sameDateExisting = (studioData.shopeeSessions || []).filter(s =>
+                s.id !== scannedPreview.id &&
+                ((s.dateISO && scannedPreview.dateISO && s.dateISO === scannedPreview.dateISO) ||
+                 (s.dateFormatted && scannedPreview.dateFormatted && s.dateFormatted === scannedPreview.dateFormatted))
+              );
+              return (
               <div style={{ marginTop: '0.5rem' }}>
-                <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.2)', padding: '12px 16px', borderRadius: 10, marginBottom: '1.25rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <CheckCircle style={{ width: 20, height: 20 }} />
+                <div style={{ background: 'rgba(5, 150, 105, 0.08)', border: '1px solid rgba(5, 150, 105, 0.2)', padding: '12px 16px', borderRadius: 10, marginBottom: '1rem', color: '#059669', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <CheckCircle style={{ width: 20, height: 20, flexShrink: 0 }} />
                   <div>
-                    <strong style={{ fontSize: '0.9rem', display: 'block' }}>Ekstraksi AI Berhasil! (Sangat Cepat)</strong>
-                    <span style={{ fontSize: '0.775rem' }}>Data telah dibaca. Klik tombol simpan untuk menyimpan metrik ke portal & mengunggah foto ke Firebase di latar belakang.</span>
+                    <strong style={{ fontSize: '0.9rem', display: 'block' }}>Form Input & Konfirmasi Data Sesi Live</strong>
+                    <span style={{ fontSize: '0.775rem' }}>Anda dapat memilih urutan sesi (Sesi 1, Sesi 2, dst.) jika terdapat beberapa sesi live di tanggal yang sama.</span>
                   </div>
                 </div>
+
+                {sameDateExisting.length > 0 && (
+                  <div style={{ background: 'rgba(184, 142, 57, 0.1)', border: '1px solid var(--accent-gold-border)', padding: '10px 14px', borderRadius: 10, marginBottom: '1rem', fontSize: '0.8rem', color: 'var(--text-main)' }}>
+                    <strong style={{ color: 'var(--accent-gold)', display: 'block', marginBottom: 4 }}>
+                      📅 Terdeteksi {sameDateExisting.length} Sesi Lain di Tanggal {scannedPreview.dateFormatted || scannedPreview.dateISO}:
+                    </strong>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {sameDateExisting.map((ex, i) => (
+                        <span key={ex.id || i} style={{ background: 'var(--bg-card)', border: '1px solid var(--border-color)', padding: '3px 8px', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600 }}>
+                          {ex.sessionNumber || `Sesi ${i + 1}`}: Rp {(ex.revenue || 0).toLocaleString('id-ID')} ({ex.duration || '-'})
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
-                  <div className="form-group" style={{ gridColumn: 'span 2' }}>
+                  <div className="form-group">
                     <label className="form-label">Judul Sesi Live</label>
                     <input 
                       className="form-input" 
@@ -6181,7 +6446,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                           const y = dateMatch[3];
                           const formatted = `${d}-${m}-${y}`;
                           const newISO = `${y}-${m}-${d}`;
-                          const timePart = scannedPreview?.startTime?.split(' ')[1] || '14:30';
+                          const timePart = scannedPreview?.sessionTime || scannedPreview?.startTime?.split(' ')[1] || '14:30';
                           setScannedPreview({
                             ...scannedPreview,
                             title: newTitle,
@@ -6200,11 +6465,47 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     <select 
                       className="form-input"
                       value={scannedPreview.channelType || ((scannedPreview.title || '').toLowerCase().includes('shopeefood') ? 'ShopeeFood Live' : 'Shopee Live')}
-                      onChange={e => setScannedPreview({ ...scannedPreview, channelType: e.target.value })}
+                      onChange={e => {
+                        const newChannel = e.target.value;
+                        const formatted = scannedPreview.dateFormatted || '';
+                        setScannedPreview({
+                          ...scannedPreview,
+                          channelType: newChannel,
+                          title: formatSessionTitleWithNumber(scannedPreview.title, newChannel, formatted, scannedPreview.sessionNumber)
+                        });
+                      }}
                       style={{ fontWeight: 700, color: scannedPreview.channelType === 'ShopeeFood Live' ? '#EE4D2D' : 'var(--primary)' }}
                     >
                       <option value="Shopee Live">Shopee Live Regular</option>
                       <option value="ShopeeFood Live">ShopeeFood Live</option>
+                    </select>
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label" style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>Urutan Sesi (Tgl Sama)</label>
+                    <select
+                      className="form-input"
+                      style={{ fontWeight: 700, borderColor: 'var(--accent-gold-border)' }}
+                      value={scannedPreview.sessionNumber ?? ''}
+                      onChange={e => {
+                        const newSess = e.target.value;
+                        const formatted = scannedPreview.dateFormatted || '';
+                        setScannedPreview({
+                          ...scannedPreview,
+                          sessionNumber: newSess,
+                          title: formatSessionTitleWithNumber(scannedPreview.title, scannedPreview.channelType, formatted, newSess)
+                        });
+                      }}
+                    >
+                      <option value="Sesi 1">Sesi 1</option>
+                      <option value="Sesi 2">Sesi 2</option>
+                      <option value="Sesi 3">Sesi 3</option>
+                      <option value="Sesi 4">Sesi 4</option>
+                      <option value="Sesi 5">Sesi 5</option>
+                      <option value="Sesi Pagi">Sesi Pagi</option>
+                      <option value="Sesi Siang">Sesi Siang</option>
+                      <option value="Sesi Sore">Sesi Sore</option>
+                      <option value="Sesi Malam">Sesi Malam</option>
+                      <option value="">Tanpa Label (Gabungan)</option>
                     </select>
                   </div>
 
@@ -6219,15 +6520,13 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                         if (newISO) {
                           const [y, m, d] = newISO.split('-');
                           const formatted = `${d}-${m}-${y}`;
-                          const timePart = scannedPreview?.startTime?.split(' ')[1] || '14:30';
-                          let updatedTitle = scannedPreview.title || '';
-                          if (/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/.test(updatedTitle)) {
-                            updatedTitle = updatedTitle.replace(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/, formatted);
-                          } else if (scannedPreview.channelType === 'ShopeeFood Live' && (!updatedTitle || updatedTitle.startsWith('ShopeeFood Live'))) {
-                            updatedTitle = `ShopeeFood Live ${formatted}`;
-                          }
+                          const timePart = scannedPreview?.sessionTime || scannedPreview?.startTime?.split(' ')[1] || '14:30';
+                          const sameCount = (studioData.shopeeSessions || []).filter(s => s.id !== scannedPreview.id && (s.dateISO === newISO || s.dateFormatted === formatted)).length;
+                          const autoSessionNum = scannedPreview.sessionNumber || (sameCount > 0 ? `Sesi ${sameCount + 1}` : 'Sesi 1');
+                          const updatedTitle = formatSessionTitleWithNumber(scannedPreview.title, scannedPreview.channelType, formatted, autoSessionNum);
                           setScannedPreview({ 
                             ...scannedPreview, 
+                            sessionNumber: autoSessionNum,
                             title: updatedTitle,
                             dateISO: newISO,
                             dateFormatted: formatted,
@@ -6238,11 +6537,30 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     />
                   </div>
                   <div className="form-group">
-                    <label className="form-label">
-                      Durasi Siaran Live 
-                      {scannedPreview.avgWatchDuration && <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 'normal', marginLeft: 6 }}>(Rata-rata: {scannedPreview.avgWatchDuration})</span>}
-                    </label>
-                    <input className="form-input" placeholder="Contoh: 02:00:00" value={scannedPreview.duration} onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} />
+                    <label className="form-label">Jam Sesi (WIB)</label>
+                    <input
+                      className="form-input"
+                      placeholder="Contoh: 00:42 atau 14:30"
+                      value={scannedPreview.sessionTime || (scannedPreview.startTime ? scannedPreview.startTime.split(' ')[1] : '14:30')}
+                      onChange={e => {
+                        const newTime = e.target.value;
+                        const formatted = scannedPreview.dateFormatted || '';
+                        setScannedPreview({
+                          ...scannedPreview,
+                          sessionTime: newTime,
+                          startTime: formatted ? `${formatted} ${newTime}` : newTime
+                        });
+                      }}
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label className="form-label">Durasi Siaran Live</label>
+                    <input className="form-input" placeholder="Contoh: 00:46:49" value={scannedPreview.duration ?? ''} onChange={e => setScannedPreview({ ...scannedPreview, duration: e.target.value })} />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Rata-rata Durasi Tonton</label>
+                    <input className="form-input" placeholder="Contoh: 00:00:35" value={scannedPreview.avgWatchDuration ?? ''} onChange={e => setScannedPreview({ ...scannedPreview, avgWatchDuration: e.target.value })} />
                   </div>
 
                   <div className="form-group">
@@ -6257,7 +6575,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Total Pesanan</label>
+                    <label className="form-label">Total Pesanan (Paid Order)</label>
                     <input className="form-input" type="number" value={scannedPreview.totalOrders ?? ''} onChange={e => setScannedPreview({ ...scannedPreview, totalOrders: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
                   </div>
 
@@ -6286,7 +6604,17 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   </div>
 
                   <div className="form-group">
-                    <label className="form-label">Total Views</label>
+                    <label className="form-label">Penonton Terbanyak (Peak)</label>
+                    <input
+                      className="form-input"
+                      type="number"
+                      value={scannedPreview.peakConcurrentViewers ?? ''}
+                      onChange={e => setScannedPreview({ ...scannedPreview, peakConcurrentViewers: e.target.value === '' ? '' : parseInt(e.target.value, 10) })}
+                    />
+                  </div>
+
+                  <div className="form-group">
+                    <label className="form-label">Total Views (Ditonton)</label>
                     <input
                       className="form-input"
                       type="number"
@@ -6306,31 +6634,152 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                   </div>
                 </div>
 
-                <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1rem' }} onClick={handleSaveScannedSession}>
-                  <Save /> Simpan Seluruh Metrik & Komisi Kotor
-                </button>
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1.25rem', flexWrap: 'wrap' }}>
+                  <button className="btn btn-primary" style={{ flex: 2, minWidth: 220, justifyContent: 'center' }} onClick={() => handleSaveScannedSession('separate')}>
+                    <Save /> Simpan Sebagai {scannedPreview.sessionNumber || 'Sesi Baru'} (Terpisah)
+                  </button>
+                  {sameDateExisting.length > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-secondary"
+                      style={{ flex: 1, minWidth: 200, justifyContent: 'center', borderColor: 'var(--accent-gold)', color: 'var(--accent-gold)', fontWeight: 700 }}
+                      onClick={() => handleSaveScannedSession('accumulate')}
+                    >
+                      <PlusCircle style={{ width: 15, height: 15 }} /> Gabungkan (Akumulasi) ke Tanggal Ini
+                    </button>
+                  )}
+                </div>
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}
 
       {/* Modal: EDIT SESSION DATA */}
-      {modalType === 'editSession' && editingSession && (
+      {modalType === 'editSession' && editingSession && (() => {
+        const sameDateSessions = (studioData.shopeeSessions || []).filter(s =>
+          (s.dateISO && editingSession.dateISO && s.dateISO === editingSession.dateISO) ||
+          (s.dateFormatted && editingSession.dateFormatted && s.dateFormatted === editingSession.dateFormatted)
+        );
+        return (
         <div className="modal-overlay active">
-          <div className="modal-card" style={{ maxWidth: 680 }}>
+          <div className="modal-card" style={{ maxWidth: 740 }}>
             <div className="modal-header">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Edit3 style={{ color: 'var(--primary)' }} /> Edit Data Sesi Shopee Live</h3>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <button type="button" className="btn btn-primary btn-sm" style={{ padding: '6px 14px', fontSize: '0.8rem' }} onClick={handleSaveEditedSession}>
+                <button type="button" className="btn btn-primary btn-sm" style={{ padding: '6px 14px', fontSize: '0.8rem' }} onClick={() => handleSaveEditedSession()}>
                   <Save style={{ width: 14, height: 14 }} /> Simpan Perubahan
                 </button>
                 <button className="close-btn" onClick={() => setModalType(null)}>&times;</button>
               </div>
             </div>
 
+            {/* MULTI-SESSION MANAGEMENT BAR FOR SAME DATE */}
+            <div style={{ background: 'rgba(184, 142, 57, 0.08)', border: '1px solid var(--accent-gold-border)', borderRadius: 10, padding: '10px 14px', marginBottom: '1rem', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 8 }}>
+                <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <span>📅 Sesi Live Tanggal {editingSession.dateFormatted || editingSession.dateISO || '-'}:</span>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontWeight: 600 }}>({sameDateSessions.length || 1} Sesi Terdaftar)</span>
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  <label className="btn btn-secondary btn-sm" style={{ padding: '4px 10px', fontSize: '0.725rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <ImagePlus style={{ width: 13, height: 13, color: 'var(--primary)' }} />
+                    <span>{scanning ? 'Memindai...' : 'Scan Screenshot ke Sesi Ini'}</span>
+                    <input type="file" accept="image/*" multiple onChange={e => handleQuickScanInEditModal(e, 'fill')} style={{ display: 'none' }} disabled={scanning} />
+                  </label>
+                  <label className="btn btn-secondary btn-sm" style={{ padding: '4px 10px', fontSize: '0.725rem', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4, borderColor: 'var(--accent-gold)', color: 'var(--accent-gold)' }}>
+                    <PlusCircle style={{ width: 13, height: 13 }} />
+                    <span>{scanning ? 'Memindai...' : 'Scan & Jumlahkan Sesi Lain'}</span>
+                    <input type="file" accept="image/*" multiple onChange={e => handleQuickScanInEditModal(e, 'accumulate')} style={{ display: 'none' }} disabled={scanning} />
+                  </label>
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    style={{ padding: '4px 10px', fontSize: '0.725rem', display: 'inline-flex', alignItems: 'center', gap: 4 }}
+                    onClick={() => {
+                      const nextNum = `Sesi ${sameDateSessions.length + 1}`;
+                      const chType = editingSession.channelType || ((editingSession.title || '').toLowerCase().includes('shopeefood') ? 'ShopeeFood Live' : 'Shopee Live');
+                      const dFmt = editingSession.dateFormatted || '';
+                      const dISO = editingSession.dateISO || '';
+                      // First ensure current session has "Sesi 1" if it had no sessionNumber
+                      if (!editingSession.sessionNumber) {
+                        editingSession.sessionNumber = 'Sesi 1';
+                      }
+                      const newSameDateSession = normalizeSessionDate({
+                        id: "live_" + Date.now(),
+                        channelType: chType,
+                        sessionNumber: nextNum,
+                        sessionTime: "19:00",
+                        dateISO: dISO,
+                        dateFormatted: dFmt,
+                        startTime: `${dFmt} 19:00`,
+                        title: formatSessionTitleWithNumber('', chType, dFmt, nextNum),
+                        duration: "01:00:00",
+                        avgWatchDuration: "00:00:35",
+                        revenue: 0,
+                        grossCommission: 0,
+                        totalOrders: 0,
+                        activeViewers: 0,
+                        peakConcurrentViewers: 0,
+                        commentsCount: 0,
+                        chatCount: 0,
+                        totalViews: 0,
+                        cartAdditions: 0,
+                        clickRatePercent: 0,
+                        ordersPerClickPercent: 0,
+                        likes: 0,
+                        streamerNotes: "",
+                        products: []
+                      });
+                      handleSaveEditedSession(newSameDateSession);
+                    }}
+                  >
+                    <PlusCircle style={{ width: 13, height: 13 }} /> + Tambah Sesi Baru (Sesi {sameDateSessions.length + 1})
+                  </button>
+                </div>
+              </div>
+
+              {sameDateSessions.length > 0 && (
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                  {sameDateSessions.map((sess, idx) => {
+                    const isCurrent = sess.id === editingSession.id;
+                    return (
+                      <button
+                        key={sess.id || idx}
+                        type="button"
+                        onClick={() => {
+                          if (!isCurrent) {
+                            handleSaveEditedSession({ ...sess });
+                          }
+                        }}
+                        style={{
+                          padding: '4px 10px',
+                          borderRadius: 999,
+                          fontSize: '0.725rem',
+                          fontWeight: 700,
+                          cursor: isCurrent ? 'default' : 'pointer',
+                          border: '1px solid',
+                          background: isCurrent ? 'var(--primary)' : 'var(--bg-card)',
+                          color: isCurrent ? '#fff' : 'var(--text-main)',
+                          borderColor: isCurrent ? 'var(--primary)' : 'var(--border-color)'
+                        }}
+                      >
+                        {sess.sessionNumber || `Sesi ${idx + 1}`} • Rp {(sess.revenue || 0).toLocaleString('id-ID')} ({sess.duration || '-'})
+                      </button>
+                    );
+                  })}
+                  {!sameDateSessions.some(s => s.id === editingSession.id) && (
+                    <span style={{ padding: '4px 10px', borderRadius: 999, fontSize: '0.725rem', fontWeight: 700, background: '#EE4D2D', color: '#fff' }}>
+                      ✨ {editingSession.sessionNumber || 'Sesi Baru'} (Sedang Diinput)
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.875rem' }}>
-              <div className="form-group" style={{ gridColumn: 'span 2' }}>
+              <div className="form-group">
                 <label className="form-label">Judul Sesi Live</label>
                 <input 
                   className="form-input" 
@@ -6344,7 +6793,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                       const y = dateMatch[3];
                       const formatted = `${d}-${m}-${y}`;
                       const newISO = `${y}-${m}-${d}`;
-                      const timePart = editingSession?.startTime?.split(' ')[1] || '14:30';
+                      const timePart = editingSession?.sessionTime || editingSession?.startTime?.split(' ')[1] || '14:30';
                       setEditingSession({
                         ...editingSession,
                         title: newTitle,
@@ -6363,11 +6812,47 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                 <select 
                   className="form-input"
                   value={editingSession.channelType || ((editingSession.title || '').toLowerCase().includes('shopeefood') ? 'ShopeeFood Live' : 'Shopee Live')}
-                  onChange={e => setEditingSession({ ...editingSession, channelType: e.target.value })}
+                  onChange={e => {
+                    const newChannel = e.target.value;
+                    const formatted = editingSession.dateFormatted || '';
+                    setEditingSession({
+                      ...editingSession,
+                      channelType: newChannel,
+                      title: formatSessionTitleWithNumber(editingSession.title, newChannel, formatted, editingSession.sessionNumber)
+                    });
+                  }}
                   style={{ fontWeight: 700, color: editingSession.channelType === 'ShopeeFood Live' ? '#EE4D2D' : 'var(--primary)' }}
                 >
                   <option value="Shopee Live">Shopee Live Regular</option>
                   <option value="ShopeeFood Live">ShopeeFood Live</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label className="form-label" style={{ color: 'var(--accent-gold)', fontWeight: 700 }}>Urutan Sesi (Tgl Sama)</label>
+                <select
+                  className="form-input"
+                  style={{ fontWeight: 700, borderColor: 'var(--accent-gold-border)' }}
+                  value={editingSession.sessionNumber ?? ''}
+                  onChange={e => {
+                    const newSess = e.target.value;
+                    const formatted = editingSession.dateFormatted || '';
+                    setEditingSession({
+                      ...editingSession,
+                      sessionNumber: newSess,
+                      title: formatSessionTitleWithNumber(editingSession.title, editingSession.channelType, formatted, newSess)
+                    });
+                  }}
+                >
+                  <option value="">Tanpa Label (1 Sesi Penuh)</option>
+                  <option value="Sesi 1">Sesi 1</option>
+                  <option value="Sesi 2">Sesi 2</option>
+                  <option value="Sesi 3">Sesi 3</option>
+                  <option value="Sesi 4">Sesi 4</option>
+                  <option value="Sesi 5">Sesi 5</option>
+                  <option value="Sesi Pagi">Sesi Pagi</option>
+                  <option value="Sesi Siang">Sesi Siang</option>
+                  <option value="Sesi Sore">Sesi Sore</option>
+                  <option value="Sesi Malam">Sesi Malam</option>
                 </select>
               </div>
 
@@ -6382,13 +6867,8 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                     if (newISO) {
                       const [y, m, d] = newISO.split('-');
                       const formatted = `${d}-${m}-${y}`;
-                      const timePart = editingSession?.startTime?.split(' ')[1] || '14:30';
-                      let updatedTitle = editingSession.title || '';
-                      if (/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/.test(updatedTitle)) {
-                        updatedTitle = updatedTitle.replace(/\b\d{1,2}[-/.]\d{1,2}[-/.]\d{4}\b/, formatted);
-                      } else if (editingSession.channelType === 'ShopeeFood Live' && (!updatedTitle || updatedTitle.startsWith('ShopeeFood Live'))) {
-                        updatedTitle = `ShopeeFood Live ${formatted}`;
-                      }
+                      const timePart = editingSession?.sessionTime || editingSession?.startTime?.split(' ')[1] || '14:30';
+                      const updatedTitle = formatSessionTitleWithNumber(editingSession.title, editingSession.channelType, formatted, editingSession.sessionNumber);
                       setEditingSession({ 
                         ...editingSession, 
                         title: updatedTitle,
@@ -6401,11 +6881,30 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
                 />
               </div>
               <div className="form-group">
-                <label className="form-label">
-                  Durasi Siaran Live
-                  {editingSession.avgWatchDuration && <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)', fontWeight: 'normal', marginLeft: 6 }}>(Rata-rata: {editingSession.avgWatchDuration})</span>}
-                </label>
-                <input className="form-input" placeholder="Contoh: 02:00:00" value={editingSession.duration} onChange={e => setEditingSession({ ...editingSession, duration: e.target.value })} />
+                <label className="form-label">Jam Sesi (WIB)</label>
+                <input
+                  className="form-input"
+                  placeholder="Contoh: 00:42 atau 14:30"
+                  value={editingSession.sessionTime || (editingSession.startTime ? editingSession.startTime.split(' ')[1] : '14:30')}
+                  onChange={e => {
+                    const newTime = e.target.value;
+                    const formatted = editingSession.dateFormatted || '';
+                    setEditingSession({
+                      ...editingSession,
+                      sessionTime: newTime,
+                      startTime: formatted ? `${formatted} ${newTime}` : newTime
+                    });
+                  }}
+                />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Durasi Siaran Live</label>
+                <input className="form-input" placeholder="Contoh: 00:46:49" value={editingSession.duration ?? ''} onChange={e => setEditingSession({ ...editingSession, duration: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Rata-rata Durasi Tonton</label>
+                <input className="form-input" placeholder="Contoh: 00:00:35" value={editingSession.avgWatchDuration ?? ''} onChange={e => setEditingSession({ ...editingSession, avgWatchDuration: e.target.value })} />
               </div>
 
               <div className="form-group">
@@ -6419,7 +6918,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
               </div>
 
               <div className="form-group">
-                <label className="form-label">Total Pesanan</label>
+                <label className="form-label">Total Pesanan (Paid Order)</label>
                 <input className="form-input" type="number" value={editingSession.totalOrders ?? ''} onChange={e => setEditingSession({ ...editingSession, totalOrders: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
@@ -6431,6 +6930,11 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
               <div className="form-group">
                 <label className="form-label">Penonton Aktif</label>
                 <input className="form-input" type="number" value={editingSession.activeViewers ?? ''} onChange={e => setEditingSession({ ...editingSession, activeViewers: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Penonton Terbanyak (Peak)</label>
+                <input className="form-input" type="number" value={editingSession.peakConcurrentViewers ?? ''} onChange={e => setEditingSession({ ...editingSession, peakConcurrentViewers: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
               <div className="form-group">
@@ -6448,7 +6952,7 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
               </div>
 
               <div className="form-group">
-                <label className="form-label">Total Views</label>
+                <label className="form-label">Total Views (Ditonton)</label>
                 <input className="form-input" type="number" value={editingSession.totalViews ?? ''} onChange={e => setEditingSession({ ...editingSession, totalViews: e.target.value === '' ? '' : parseInt(e.target.value, 10) })} />
               </div>
 
@@ -6602,12 +7106,13 @@ ShopeeFood Live GMV & Free Cash Flow Margin`;
               )}
             </div>
 
-            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem' }} onClick={handleSaveEditedSession}>
+            <button className="btn btn-primary" style={{ width: '100%', justifyContent: 'center', marginTop: '1.25rem' }} onClick={() => handleSaveEditedSession()}>
               <Save /> Simpan Perubahan Data Sesi
             </button>
           </div>
         </div>
-      )}
+        );
+      })()}
 
       {/* Modal: SHOPEE VIDEO DUAL SCREENSHOT SCANNER */}
       {modalType === 'scan_video' && (

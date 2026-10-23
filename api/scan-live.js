@@ -2,7 +2,7 @@ export const GEMINI_PROMPT = `
 Anda adalah pakar AI Vision OCR terdepan untuk mengekstrak data Laporan Shopee Live dan ShopeeFood Live dari screenshot aplikasi HP.
 Screenshot yang diberikan bisa berupa:
 1. Laporan Shopee Live Regular (Data Penjualan, Interaksi, Produk Terjual, Traffic Source).
-2. Laporan ShopeeFood Live (Logo ShopeeFood Live di latar/banner, Penjualan GMV besar, Penonton Aktif, Komentar, Pesanan / Pesanan Voucher Diskon, Persentase Klik, Pesanan per Klik, Penonton Terbanyak, Total Dilihat / Ditonton, Durasi Rata-rata Menonton, Total Suka, Total Dibagikan, serta Daftar Produk Makanan Terjual & Klik).
+3. Layar "Live Streaming Berakhir" (tertera "Durasi: HH:mm:ss" di atas, "Terakhir Diperbarui: YYYY-MM-DD HH:mm", Penjualan (Rp), Penonton Aktif, Komentar, Paid Order, Ditonton, Rata-rata Durasi Menonton, Penonton Terbanyak).
 
 Tugas Anda:
 Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gambar yang diberikan, lalu kembalikan JSON murni persis dengan struktur ini (tanpa markdown triple backticks):
@@ -10,22 +10,22 @@ Bacalah seluruh teks, angka, metrik interaksi, dan daftar produk dari SEMUA gamb
 {
   "title": "string (Jika terdeteksi logo/tulisan ShopeeFood atau produk makanan, beri judul 'ShopeeFood Live [Tanggal DD-MM-YYYY]', jika regular beri judul sesuai sesi)",
   "channelType": "string ('ShopeeFood Live' jika terdapat logo/indikasi ShopeeFood Live atau produk makanan resto, atau 'Shopee Live' jika live toko biasa)",
-  "startTime": "string (Format: DD-MM-YYYY HH:mm. Waktu live dan tanggal aktual dari screenshot. Jangan gunakan tanggal contoh, cari tanggal dari teks/banner screenshot jika ada)",
-  "duration": "string (Durasi SIARAN LIVE sebenarnya, contoh: 02:00:00. PENTING: JANGAN isi kolom ini dengan 'Durasi Rata-rata Menonton'! Jika durasi total siaran tidak tertera di screenshot, kosongkan '')",
-  "revenue": number (Penjualan / GMV Rp tanpa titik/koma/spasi, contoh dari 5.464.798 menjadi 5464798),
-  "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 546480),
-  "activeViewers": number (Penonton Aktif / Penonton >= 1 menit, contoh: 96),
-  "commentsCount": number (Total Komentar / Komentar angka murni tanpa titik, contoh: 768 atau 1606. Jika ada 'Komentar' di bagian atas dan 'Total Komentar' di bagian tengah, ambil angka Total Komentar terbesar),
-  "chatCount": number (Sama dengan commentsCount: Total Komentar / Komentar angka murni, contoh: 768),
+  "startTime": "string (Format: DD-MM-YYYY HH:mm. Waktu live dan tanggal aktual dari screenshot, misal dari 'Terakhir Diperbarui: 2026-10-23 00:42' konversi menjadi '23-10-2026 00:42')",
+  "duration": "string (Durasi SIARAN LIVE sebenarnya, contoh: '00:46:49' atau '02:00:00'. PENTING: Ambil dari teks 'Durasi: HH:mm:ss' di bagian atas layar. JANGAN isi kolom ini dengan 'Rata-rata Durasi Menonton'!)",
+  "revenue": number (Penjualan / GMV Rp tanpa titik/koma/spasi, contoh dari 2.508.043 menjadi 2508043),
+  "grossCommission": number (Estimasi Komisi Kotor Studio 10% dari GMV Rp, contoh: 250804),
+  "activeViewers": number (Penonton Aktif / Penonton >= 1 menit, contoh dari 2.587 menjadi 2587),
+  "commentsCount": number (Total Komentar / Komentar angka murni tanpa titik, contoh: 577 atau 1606. Jika ada 'Komentar' di bagian atas dan 'Total Komentar' di bagian tengah, ambil angka Total Komentar terbesar),
+  "chatCount": number (Sama dengan commentsCount: Total Komentar / Komentar angka murni, contoh: 577),
   "cartAdditions": number (Masuk Keranjang, jika tidak ada isi 0),
   "clickRatePercent": number (Persentase Klik, contoh: 4.1),
   "ordersPerClickPercent": number (Pesanan per Klik, contoh: 5.5),
-  "totalOrders": number (Pesanan / Pesanan Voucher Diskon, contoh dari 1.478 menjadi 1478),
+  "totalOrders": number (Pesanan / Paid Order / Pesanan Voucher Diskon tanpa titik, contoh dari 2.037 menjadi 2037),
   
-  "totalViews": number (Total Dilihat / Ditonton / Total Penonton, contoh dari 662.082 menjadi 662082),
-  "avgWatchDuration": "string (Durasi Rata-rata Menonton penonton, contoh: 00:00:21)",
+  "totalViews": number (Total Dilihat / Ditonton / Total Penonton tanpa titik, contoh dari 54.970 menjadi 54970),
+  "avgWatchDuration": "string (Durasi Rata-rata Menonton / Rata-rata Durasi Menonton penonton, contoh: 00:00:35)",
   "commentRatePercent": number (Persentase Komentar, jika tidak tertera isi 0),
-  "peakConcurrentViewers": number (Penonton Terbanyak, contoh: 832),
+  "peakConcurrentViewers": number (Penonton Terbanyak tanpa titik, contoh dari 1.330 menjadi 1330),
   "likes": number (Disukai / Total Suka, contoh dari 118.235 menjadi 118235),
   "shares": number (Dibagikan / Total Dibagikan, contoh: 76),
 
